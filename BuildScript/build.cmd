@@ -2,7 +2,7 @@
 
 echo Updating SPlayer Mecurial repo
 hg_bin\hg pull --update ../
-if %ERRORLEVEL% NEQ 0 goto error
+
 
 echo Trying to clone splayer-pkg repo
 hg_bin\hg clone https://splayer-pkg.googlecode.com/hg/ ../thirdparty/pkg
