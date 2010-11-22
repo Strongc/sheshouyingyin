@@ -15,6 +15,9 @@
 #include <vector>
 #include <fstream>
 
+#include "..\Controller\HashController.h"
+
+
 #define CHAR4TOINT(szBuf) \
   ( ((int)szBuf[0] & 0xff) << 24) | ( ((int)szBuf[1] & 0xff) << 16) | ( ((int)szBuf[2] & 0xff) << 8) |  szBuf[3] & 0xff
 
@@ -565,12 +568,7 @@ std::wstring SubTransFormat::GetSubFileByTempid_STL(size_t iTmpID, std::wstring 
     std::wstring szTarget = szBasename + szLangExt + szSubTmpDetail[0];
     szTargetBaseName = szBasename + szLangExt ;
 
-    char str[300];
-    int len;
-    szSource.push_back(0);
-    szSource.push_back(0);
-    hash_file(HASH_MOD_FILE_STR, HASH_ALGO_MD5, szSource.c_str(), str, &len);
-    std::wstring szSourceMD5 = Strings::StringToWString((std::string)str);
+    std::wstring szSourceMD5 = HashController::GetInstance()->GetMD5Hash(szSource.c_str());
     std::wstring szTargetMD5;
     //check if target exist
     wchar_t szTmp[128];
@@ -579,10 +577,8 @@ std::wstring SubTransFormat::GetSubFileByTempid_STL(size_t iTmpID, std::wstring 
     while(IfFileExist_STL(szTarget))
     {
       //TODO: compare if its the same file
-      szTarget.push_back(0);
-      szTarget.push_back(0);
-      hash_file(HASH_MOD_FILE_STR, HASH_ALGO_MD5, szTarget.c_str(), str, &len);
-      szTargetMD5 = Strings::StringToWString((std::string)str);
+      //szTargetMD5 = Strings::StringToWString((std::string)str);
+      szTargetMD5 = HashController::GetInstance()->GetMD5Hash(szTarget.c_str());
       if(szTargetMD5 == szSourceMD5)
       {
         // TODO: if there is a diffrence in delay

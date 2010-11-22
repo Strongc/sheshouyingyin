@@ -294,8 +294,7 @@ void SubTransController::_thread_download()
 
   
   std::vector<std::wstring> szaSubDescs, tmpfiles;
-  HashController::GetInstance()->SetFileName(m_videofile.c_str());
-  std::wstring szFileHash = HashController::GetInstance()->GetHash();
+  std::wstring szFileHash = HashController::GetInstance()->GetSPHash(m_videofile.c_str());
   
   refptr<pool> pool = pool::create_instance();
   refptr<task> task = task::create_instance();
@@ -404,8 +403,7 @@ void SubTransController::_thread_download()
 
 void SubTransController::_thread_upload()
 {
-  HashController::GetInstance()->SetFileName(m_videofile.c_str());
-  std::wstring szFileHash = HashController::GetInstance()->GetHash();
+  std::wstring szFileHash = HashController::GetInstance()->GetSPHash(m_videofile.c_str());
 
   std::vector<std::wstring> szaSubFiles;
   FindAllSubfile(m_subfile.c_str(), &szaSubFiles);
@@ -418,20 +416,8 @@ void SubTransController::_thread_upload()
       subfilestr += L"\0";
     subfilestr += (*it).c_str();
   }
-  // the subfile string end with double null-terminating
-  subfilestr.push_back(0);
-  subfilestr.push_back(0);
 
-  char subhash[300];
-  int hashsize;
-  
-  hash_file(HASH_MOD_FILE_STR, HASH_ALGO_MD5,
-            subfilestr.c_str(), subhash, &hashsize);
-  if (hashsize == 0)
-    return;
-
-  std::string subhashstr(subhash);
-  std::wstring szSubHash = Strings::StringToWString(subhashstr);
+  std::wstring szSubHash = HashController::GetInstance()->GetMD5Hash(subfilestr.c_str());
   if (szSubHash.empty())
     return;
 

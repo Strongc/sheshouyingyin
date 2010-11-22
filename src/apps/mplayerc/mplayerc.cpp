@@ -57,6 +57,7 @@
 #include "Utils/FileAssoc_Win.h"
 #include "Controller/UbdUploadController.h"
 #include "Controller/UsrBehaviorController.h"
+#include "Utils\Strings.h"
 
 //Update URL
 char* szUrl = "http://svplayer.shooter.cn/api/updater.php";
@@ -4741,16 +4742,8 @@ void CMPlayerCApp::Settings::DelFavByFn(favtype ft, BOOL bRecent, CString szMatc
 	GetFav(ft, sl, bRecent);
 	//SVP_LogMsg5(L" DelFavByFn  ");
 	if(bRecent){
-    CStringA szMD5data(szMatch);
-
-    int bufflen = max(szMD5data.GetLength()+2,33);
-    char* buff = (char*)calloc(bufflen, sizeof(char));
-    memcpy_s(buff, bufflen, szMD5data.GetBuffer(), szMD5data.GetLength());
-    int len = strlen(buff);
-    hash_data(HASH_MOD_BINARY_STR, HASH_ALGO_MD5, buff, &len);
-    CString szMatchmd5(buff);
-    free(buff);
-
+    std::string str = Strings::WStringToString(szMatch.GetBuffer());
+    CString szMatchmd5 = HashController::GetInstance()->GetMD5Hash(str.c_str(), str.length()).c_str();
 
 		POSITION pos = sl.GetHeadPosition();
 		while(pos){
@@ -4782,14 +4775,16 @@ void CMPlayerCApp::Settings::AddFav(favtype ft, CString s, BOOL bRecent, CString
 	if(bRecent){
 		CStringA szMD5data(szMatch);
 		
-    int bufflen = max(szMD5data.GetLength()+2,33);
-    char* buff = (char*)calloc(bufflen, sizeof(char));
-    memcpy_s(buff, bufflen, szMD5data.GetBuffer(), szMD5data.GetLength());
-    int len = strlen(buff);
-    hash_data(HASH_MOD_BINARY_STR, HASH_ALGO_MD5, buff, &len);
-    CString szMatchmd5(buff);
-    free(buff);
+    //int bufflen = max(szMD5data.GetLength()+2,33);
+    //char* buff = (char*)calloc(bufflen, sizeof(char));
+    //memcpy_s(buff, bufflen, szMD5data.GetBuffer(), szMD5data.GetLength());
+    //int len = strlen(buff);
+    //hash_data(HASH_MOD_BINARY_STR, HASH_ALGO_MD5, buff, &len);
+    //CString szMatchmd5(buff);
+    //free(buff);
 
+    std::wstring str = HashController::GetInstance()->GetMD5Hash((wchar_t *)szMD5data.GetBuffer());
+    CString szMatchmd5 = str.c_str();
 
 		POSITION pos = sl.GetHeadPosition();
 		while(pos){

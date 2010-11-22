@@ -97,8 +97,8 @@
 #include "Controller/UbdUploadController.h"
 #include "Controller/UsrBehaviorController.h"
 #include "Controller/HashController.h"
+#include ".\Utils\Strings.h"
 
-#include "..\..\..\Thirdparty\pkg\sphash.h"
 
 // begin,
 // the following headers are included because HotkeyController mechanism broke the original inclusion
@@ -8309,8 +8309,7 @@ void CMainFrame::OnPlayAudio(UINT nID)
 	{
 		pSS->Enable(i, AMSTREAMSELECTENABLE_ENABLE);
         //TODO： Save Audio Channel Selection
-    HashController::GetInstance()->SetFileName(m_fnCurPlayingFile);
-    std::wstring szFileHash = HashController::GetInstance()->GetHash();
+    std::wstring szFileHash = HashController::GetInstance()->GetSPHash(m_fnCurPlayingFile);
 
         CString szSQLUpdate, szSQLInsert;
 
@@ -8456,8 +8455,7 @@ void CMainFrame::OnPlaySubtitles(UINT nID)
 	}
 	else if(i >= 0) //选择字幕
 	{
-    HashController::GetInstance()->SetFileName(m_fnCurPlayingFile);
-    std::wstring szFileHash = HashController::GetInstance()->GetHash();
+    std::wstring szFileHash = HashController::GetInstance()->GetSPHash(m_fnCurPlayingFile);
 
     CString FPath = szFileHash.c_str();
 
@@ -11966,8 +11964,7 @@ bool CMainFrame::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
 
 		if(m_fOpeningAborted) throw aborted;
 
-    HashController::GetInstance()->SetFileName(m_fnCurPlayingFile);
-    std::wstring szFileHash = HashController::GetInstance()->GetHash();
+    std::wstring szFileHash = HashController::GetInstance()->GetSPHash(m_fnCurPlayingFile);
 
     CString FPath = szFileHash.c_str();
 
@@ -15096,16 +15093,8 @@ void CMainFrame::OpenCurPlaylistItem(REFERENCE_TIME rtStart)
 		favtype ft ;
 		ft = FAV_FILE;
 		if (!fn.IsEmpty() && s.autoResumePlay){
-			//CMD5Checksum cmd5;
-			//CStringA szMD5data(fn);
-			//CString szMatchmd5 = cmd5.GetMD5((BYTE*)szMD5data.GetBuffer() , szMD5data.GetLength()).c_str();
-			//szMD5data.ReleaseBuffer();
-
-    char buffx[4096];
-    memset(buffx, 0, 4096);
-    int len = strlen(buffx);
-    hash_data(HASH_MOD_BINARY_STR, HASH_ALGO_MD5, buffx, &len);
-    CString szMatchmd5 = buffx;
+      std::string str = Strings::WStringToString(fn.GetBuffer());
+      CString szMatchmd5 = HashController::GetInstance()->GetMD5Hash(str.c_str(), str.length()).c_str();
 
 SVP_LogMsg5(L"GetFav Start %s", szMatchmd5);
 			CAtlList<CString> sl;
@@ -17474,8 +17463,7 @@ void CMainFrame::_StartSnap()
   pref->SetIntVar(INTVAR_CURSNAPTIME, (unsigned int)(playtime / 10000));
   pref->SetIntVar(INTVAR_CURTOTALPLAYTIME, (unsigned int)(totaltime / 10000));
 
-  HashController::GetInstance()->SetFileName(m_fnCurPlayingFile);
-  std::wstring szFileHash = HashController::GetInstance()->GetHash();
+  std::wstring szFileHash = HashController::GetInstance()->GetSPHash(m_fnCurPlayingFile);
   m_suc.Start(szFileHash.c_str());
 }
 

@@ -11,6 +11,7 @@
 #include "../src/apps/mplayerc/revision.h"
 #include "..\Thirdparty\pkg\sphash.h"
 #include "..\src\apps\mplayerc\Utils\Strings.h"
+#include "..\src\apps\mplayerc\Controller\HashController.h"
 
 //static size_t handleWebQuery( void *ptr, size_t size, size_t nmemb, void *stream)
 //{
@@ -175,13 +176,8 @@ BOOL cupdatenetlib::downloadList(){
 			}
 		}
 		if(svpToolBox.ifFileExist(szPlayerPath) ){
-      std::wstring szSource = szPlayerPath.GetBuffer();
-      char str[300];
-      int len;
-      szSource.push_back(0);
-      szSource.push_back(0);
-      hash_file(HASH_MOD_FILE_STR, HASH_ALGO_MD5, szSource.c_str(), str, &len);
-      szBranch = str;
+      std::wstring str = HashController::GetInstance()->GetMD5Hash(szPlayerPath.GetBuffer());
+      szBranch = str.c_str();
 		}
 		else
 			szBranch = _T("stable");
@@ -240,23 +236,6 @@ void cupdatenetlib::tryRealUpdate(BOOL bNoWaiting){
 
     bool bUpdateThis = pInfo->bReadyToCopy ? true : false;
 	
-		////check file hash
-		//CMD5Checksum cmd5;
-		//CString updTmpHash ;
-		//CString currentHash ;
-		//if( svpToolBox.ifFileExist(szUpdfilesPath + pInfo->strTempName ) ){
-		//	updTmpHash = cmd5.GetMD5(szUpdfilesPath + pInfo->strTempName ); //Get Hash for current Temp File
-		//}
-		//
-		//if( svpToolBox.ifFileExist(szBasePath + szSetupPath ) ){
-		//	currentHash = cmd5.GetMD5(szBasePath + szSetupPath); //Get Hash for bin file
-		//}
-
-
-		//if (currentHash.CompareNoCase( pInfo->strFileMd5 ) != 0 && updTmpHash.CompareNoCase( pInfo->strFileMd5 ) == 0 ){
-		//	bUpdateThis = TRUE;
-		//}
-
 		if(bUpdateThis){
 			//if not match download
 			szaMoveFile mFiles;
@@ -342,14 +321,9 @@ bool cupdatenetlib::IsMd5Match(CString strFileName, CString strMd5)
 {
     if(svpToolBox.ifFileExist(strFileName))
     {
-      std::wstring szSource = strFileName.GetBuffer();
-      char str[300];
-      int len;
-      szSource.push_back(0);
-      szSource.push_back(0);
-      hash_file(HASH_MOD_FILE_STR, HASH_ALGO_MD5, szSource.c_str(), str, &len);
+      std::wstring str = HashController::GetInstance()->GetMD5Hash(strFileName.GetBuffer());
 
-      return (strMd5.CompareNoCase((CString)(CStringA)str) == 0 );
+      return (strMd5.CompareNoCase((CString)str.c_str()) == 0 );
     }
     else
         return false;
