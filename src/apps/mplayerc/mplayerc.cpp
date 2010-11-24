@@ -57,6 +57,7 @@
 #include "Controller/UbdUploadController.h"
 #include "Controller/UsrBehaviorController.h"
 #include "Utils\Strings.h"
+#include "Controller\UpdateController.h"
 
 //Update URL
 char* szUrl = "http://svplayer.shooter.cn/api/updater.php";
@@ -67,6 +68,7 @@ DECLARE_LAZYINSTANCE(PlaylistController);
 DECLARE_LAZYINSTANCE(HashController);
 DECLARE_LAZYINSTANCE(UbdUploadController);
 DECLARE_LAZYINSTANCE(UsrBehaviorController);
+DECLARE_LAZYINSTANCE(UpdateController);
 
 /////////
 typedef BOOL (WINAPI* MINIDUMPWRITEDUMP)(HANDLE hProcess, DWORD dwPid, HANDLE hFile, MINIDUMP_TYPE DumpType,
@@ -1649,7 +1651,7 @@ SVP_LogMsg5(L"Settings::InitInstanceThreaded 16");
 				}
 				if(!pFrame->m_bCheckingUpdater){
 					pFrame->m_bCheckingUpdater = true;
-					// TODO: replace SVP_RealCheckUpdaterExe( &(pFrame->m_bCheckingUpdater) );
+          UpdateController::GetInstance()->CheckUpdateEXEUpdate();
 
 				}
 				SVP_LogMsg5(L"Settings::InitInstanceThreaded 17");

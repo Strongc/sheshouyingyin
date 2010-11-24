@@ -59,43 +59,6 @@ void StringMap2PostData(refptr<postdata> data ,std::map<std::wstring, std::wstri
   }
 }
 
-std::wstring GetServerUrl(int req_type , int tryid)
-{
-
-  std::wstring apiurl;
-  wchar_t str[100] = L"https://www.shooter.cn/";
-
-  if (tryid > 1 && tryid <= 11)
-  {
-    if (tryid >= 4)
-    {
-      int iSvrId = 4 + rand()%7;    
-      if (tryid%2)
-        wsprintf(str, L"https://splayer%d.shooter.cn/", iSvrId-1);
-      else
-        wsprintf(str, L"http://splayer%d.shooter.cn/", iSvrId-1);
-    }
-    else
-      wsprintf(str, L"https://splayer%d.shooter.cn/", tryid-1);
-  }
-  else if (tryid > 11)
-    wsprintf(str, L"http://svplayer.shooter.cn/");
-
-  apiurl.assign(str);
-  switch(req_type)
-  {
-    case 'upda':
-      apiurl += L"api/updater.php";
-      break;
-    case 'upsb':
-      apiurl += L"api/subup.php";
-      break;
-    case 'sapi':
-      apiurl += L"api/subapi.php";
-      break;
-  }
-  return apiurl;
-}
 
 int FindAllSubfile(std::wstring szSubPath , std::vector<std::wstring>* szaSubFiles)
 {
@@ -125,7 +88,7 @@ int FindAllSubfile(std::wstring szSubPath , std::vector<std::wstring>* szaSubFil
   return 0;
 }
 
-void WetherNeedUploadSub(refptr<pool> pool, refptr<task> task, refptr<request> req,
+void SubTransController::WetherNeedUploadSub(refptr<pool> pool, refptr<task> task, refptr<request> req,
                         std::wstring fnVideoFilePath, std::wstring szFileHash, 
                         std::wstring fnSubHash, int iDelayMS, int sid, std::wstring oem)
 {
@@ -155,7 +118,7 @@ void WetherNeedUploadSub(refptr<pool> pool, refptr<task> task, refptr<request> r
   pool->execute(task);
 }
 
-void UploadSubFileByVideoAndHash(refptr<pool> pool,refptr<task> task,
+void SubTransController::UploadSubFileByVideoAndHash(refptr<pool> pool,refptr<task> task,
                                 refptr<request> req,
                                 std::wstring fnVideoFilePath,
                                 std::wstring szFileHash,
@@ -224,11 +187,6 @@ SubTransController::~SubTransController(void)
 void SubTransController::SetFrame(HWND hwnd)
 {
   m_frame = hwnd;
-}
-
-void SubTransController::SetOemTitle(std::wstring str)
-{
-  m_oemtitle = str;
 }
 
 void SubTransController::SetLanuage(std::wstring str)

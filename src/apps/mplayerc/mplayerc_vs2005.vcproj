@@ -1845,6 +1845,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Controller\NetworkControlerImpl.cc"
+				>
+			</File>
+			<File
+				RelativePath=".\Controller\NetworkControlerImpl.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Controller\OSDController.cc"
 				>
 			</File>
@@ -1902,6 +1910,14 @@
 			</File>
 			<File
 				RelativePath=".\Controller\UbdUploadController.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Controller\UpdateController.cc"
+				>
+			</File>
+			<File
+				RelativePath=".\Controller\UpdateController.h"
 				>
 			</File>
 			<File
