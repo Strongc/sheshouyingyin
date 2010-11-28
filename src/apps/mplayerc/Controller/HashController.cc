@@ -67,15 +67,18 @@ std::wstring HashController::GetMD5Hash(const wchar_t* filename)
 std::wstring HashController::GetMD5Hash(const char* data, int len)
 {
   AutoCSLock lock(m_cs);
-
-  char *buff = new char[len+1];
+  int buff_size = len+1;
+  if (buff_size < 300)
+    buff_size = 300;
+  char *buff = new char[buff_size];
   if( buff == NULL )
     return L"";
 
-  strcpy(buff, data);
+  memcpy_s(buff, buff_size, data, len);
   hash_data(HASH_MOD_BINARY_STR, HASH_ALGO_MD5, buff, &len);
 
-  m_hash = Strings::StringToWString(buff);
+  std::string hex(buff, len);
+  m_hash = Strings::StringToWString(hex);
   delete[] buff;
   return m_hash;
 }
