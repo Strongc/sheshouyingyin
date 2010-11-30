@@ -1193,11 +1193,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\res\icon\DVD.ico"
+				RelativePath=".\res\ecio.icons\dvd.ico"
 				>
 			</File>
 			<File
-				RelativePath=".\res\ecio.icons\dvd.ico"
+				RelativePath=".\res\icon\DVD.ico"
 				>
 			</File>
 			<File
@@ -1932,6 +1932,14 @@
 		<Filter
 			Name="Model"
 			>
+			<File
+				RelativePath=".\Model\appSQLlite.cc"
+				>
+			</File>
+			<File
+				RelativePath=".\Model\appSQLlite.h"
+				>
+			</File>
 			<File
 				RelativePath=".\Model\HotkeyCmd.cc"
 				>
