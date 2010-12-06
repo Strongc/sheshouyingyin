@@ -84,3 +84,15 @@ void NetworkControlerImpl::SinetConfig(sinet::refptr<sinet::config> cfg, int ret
   if (!proxy.empty())
     cfg->set_strvar(CFG_STR_PROXY, proxy);
 }
+
+void NetworkControlerImpl::MapToPostData(refptr<postdata> data ,std::map<std::wstring, std::wstring> &postform)
+{
+    for (std::map<std::wstring, std::wstring>::iterator it = postform.begin();
+        it != postform.end(); it++)
+    {
+        refptr<postdataelem> elem = postdataelem::create_instance();
+        elem->set_name((it->first).c_str());
+        elem->setto_text((it->second).c_str());
+        data->add_elem(elem);
+    }
+}

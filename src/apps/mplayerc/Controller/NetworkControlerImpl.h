@@ -16,4 +16,5 @@ public:
   void SetOemTitle(std::wstring str);
   std::wstring m_oemtitle;
   
+  void MapToPostData(refptr<postdata> data ,std::map<std::wstring, std::wstring> &postform);
 };

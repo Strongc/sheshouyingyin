@@ -4,62 +4,11 @@
 #include "../Resource.h"
 #include "HashController.h"
 #include <Strings.h>
-#include <sinet.h>
 #include <sys/stat.h>
 #include "PlayerPreference.h"
 #include "SPlayerDefs.h"
 #include "../revision.h"
 #include <logging.h>
-
-using namespace sinet;
-
-
-void SinetConfig(refptr<config> cfg, int sid, std::wstring oem)
-{
-  wchar_t agentbuff[MAX_PATH];
-  if(oem.empty())
-    wsprintf(agentbuff, L"SPlayer Build %d", SVP_REV_NUMBER);
-  else
-    wsprintf(agentbuff, L"SPlayer Build %d OEM%s", SVP_REV_NUMBER ,oem.c_str());
-  cfg->set_strvar(CFG_STR_AGENT, agentbuff);
-
-  std::wstring proxy;
-  if (sid%2 == 0)
-  {
-    DWORD ProxyEnable = 0;
-    wchar_t ProxyServer[256];
-    DWORD ProxyPort = 0;
-
-    ULONG len;
-    CRegKey key;
-    if( ERROR_SUCCESS == key.Open(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings"), KEY_READ)
-      && ERROR_SUCCESS == key.QueryDWORDValue(_T("ProxyEnable"), ProxyEnable) && ProxyEnable
-      && ERROR_SUCCESS == key.QueryStringValue(_T("ProxyServer"), ProxyServer, &len))
-    {
-      proxy += L"http://";
-      std::wstring proxystr(ProxyServer);
-      proxy += proxystr.c_str();
-    }
-  }
- 
-  if (proxy.empty())
-    cfg->set_strvar(CFG_STR_PROXY, L"");
-  else
-    cfg->set_strvar(CFG_STR_PROXY, proxy);
-}
-
-void StringMap2PostData(refptr<postdata> data ,std::map<std::wstring, std::wstring> &postform)
-{
-  for (std::map<std::wstring, std::wstring>::iterator it = postform.begin();
-    it != postform.end(); it++)
-  {
-    refptr<postdataelem> elem = postdataelem::create_instance();
-    elem->set_name((it->first).c_str());
-    elem->setto_text((it->second).c_str());
-    data->add_elem(elem);
-  }
-}
-
 
 int FindAllSubfile(std::wstring szSubPath , std::vector<std::wstring>* szaSubFiles)
 {
@@ -105,7 +54,7 @@ void SubTransController::WetherNeedUploadSub(refptr<pool> pool, refptr<task> tas
   postform[L"subdelay"] = delay;
 
   refptr<postdata> data = postdata::create_instance();
-  StringMap2PostData(data, postform);
+  MapToPostData(data, postform);
 
   int rret = -1;
   SinetConfig(cfg, sid);
@@ -146,7 +95,7 @@ void SubTransController::UploadSubFileByVideoAndHash(refptr<pool> pool,refptr<ta
     postform[L"vhash"]  = vhash;
 
   refptr<postdata> data = postdata::create_instance();
-  StringMap2PostData(data, postform);
+  MapToPostData(data, postform);
 
   size_t iTotalFiles = fnSubPaths->size();
   for (size_t i = 0; i < iTotalFiles; i++)
@@ -280,7 +229,7 @@ void SubTransController::_thread_download()
     postform[L"pathinfo"] = m_videofile;
     postform[L"filehash"] = szFileHash;
     postform[L"shortname"] = shortname;
-    StringMap2PostData(data, postform);
+    MapToPostData(data, postform);
 
     req->set_postdata(data);
     req->set_request_url(url.c_str());
