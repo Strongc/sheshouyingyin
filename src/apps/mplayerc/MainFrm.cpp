@@ -12470,11 +12470,14 @@ void CMainFrame::SetupOpenCDSubMenu()
 			pSub->AppendMenu(MF_BYCOMMAND|MF_STRING|MF_ENABLED, id++, str);
 	}
 }
+
 void CMainFrame::OnThemeChangeMenu(UINT nID){
 	AppSettings& s = AfxGetAppSettings();
 	switch(nID){
 		case ID_THEME_AEROGLASS:
 			s.bAeroGlass = !s.bAeroGlass && s.bAeroGlassAvalibility;
+      SendMessage(WM_COMMAND, ID_VIEW_PRESETS_NORMAL);
+      SendMessage(WM_COMMAND, ID_FILE_RESTART);
 			break;
 		
 	}
@@ -14959,27 +14962,22 @@ bool CMainFrame::StopCapture()
 //
 void CMainFrame::OnAdvOptions()
 {
-	AppSettings& s = AfxGetAppSettings();
+  AppSettings& s = AfxGetAppSettings();
+  OptionDlg options(OPTIONDLG_ADVANCED);
 
-	
+  if (options.DoModal() == IDOK)
+  {
+    if (!m_fFullScreen)
+      SetAlwaysOnTop(s.iOnTop);
+    m_wndView.LoadLogo();
+    s.UpdateData(true);
+  }
 
-	
-		OptionDlg options(OPTIONDLG_ADVANCED);
-
-		if(options.DoModal() == IDOK)
-		{
-			if(!m_fFullScreen)
-				SetAlwaysOnTop(s.iOnTop);
-
-			m_wndView.LoadLogo();
-
-			s.UpdateData(true);
-		}		
-	
-		m_btnList.SetHideStat( MYHTMINTOTRAY,   s.fTrayIcon);
-		ShowTrayIcon(s.fTrayIcon);
-		RedrawNonClientArea();
+  m_btnList.SetHideStat( MYHTMINTOTRAY, s.fTrayIcon);
+  ShowTrayIcon(s.fTrayIcon);
+  RedrawNonClientArea();
 }
+
 void CMainFrame::OnSettingFinished(){
 	AppSettings& s = AfxGetAppSettings();
 
@@ -14993,37 +14991,25 @@ void CMainFrame::OnSettingFinished(){
 void CMainFrame::ShowOptions(int idPage /*=0*/)
 {
   // Option Dialog is a modal dialog.
+  AppSettings& s = AfxGetAppSettings();
+  int bAeroGlass = s.bAeroGlass;
   OptionDlg dlg(idPage);
   if (dlg.DoModal() == IDOK)
   {
-    if(!m_fFullScreen)
+    if (!m_fFullScreen)
       SetAlwaysOnTop(AfxGetAppSettings().iOnTop);
 
     m_wndView.LoadLogo();
 
-    AppSettings& s = AfxGetAppSettings();
     ShowTrayIcon(s.fTrayIcon);
     s.UpdateData(true);
 
     UpdateSubtitle(true);
     UpdateSubtitle2(true);
+
+    if (bAeroGlass != s.bAeroGlass)
+      SendMessage(WM_COMMAND, ID_FILE_RESTART);
   }
-  //dlg.DoModal();
-//  dlg.Create(NULL);
-// 	
-// 	if(HWND hWnd = ::FindWindow(NULL, ResStr(IDS_DIALOG_UESETTING_PANNEL_TITLE)))
-// 	{
-// 		
-// 		::SetForegroundWindow(hWnd);
-// 		
-// 	}else{
-// 		CUESettingPanel* ueOption = new CUESettingPanel(pGB, this, idPage);
-// 		ueOption->Create(IDD_DHTML_SETTING, this);
-// 		ueOption->ShowWindow(SW_SHOW);
-// 	}
-
-
-
 }
 
 

@@ -701,6 +701,7 @@ public:
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnAppAbout();
 	afx_msg void OnFileExit();
+  afx_msg void OnFileRestart();
 	afx_msg void OnHelpShowcommandlineswitches();
 	bool m_bMouseIn;
 	bool m_bMouseInOutUnknown;
