@@ -2006,7 +2006,7 @@ LRESULT CMainFrame::OnNotifyIcon(WPARAM wParam, LPARAM lParam)
 
 	return 0;
 }
-	
+
 void CMainFrame::ShowTrayIcon(bool fShow)
 {
     //BOOL bWasVisible = ShowWindow(SW_HIDE);
@@ -2037,6 +2037,11 @@ void CMainFrame::ShowTrayIcon(bool fShow)
 			Shell_NotifyIcon(NIM_DELETE, &tnid); 
 
 			m_fTrayIcon = false;
+
+            if (IsIconic())
+            {
+                ShowWindow(SW_RESTORE);
+            }
 		}
 	}
 
