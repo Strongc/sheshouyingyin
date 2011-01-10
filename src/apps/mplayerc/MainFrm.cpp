@@ -10194,28 +10194,16 @@ void CMainFrame::ZoomVideoWindow(double scale)
 
 		DWORD style = GetStyle();
 
-		CRect r1, r2, r3 ,r4;
+		CRect r3 ,r4;
 		GetWindowRect(r3);
 		m_wndView.GetWindowRect(r4);
 		//GetClientRect(&r1);
 		//m_wndView.GetClientRect(&r2);
+        int wDelta = 0;
+        int hDelta = 0;
 
-		w = + r3.Width() - r4.Width()
-		//		+ r1.Width() - r2.Width()
-				+ lWidth;
-
-		
-		/*
-MENUBARINFO mbi;
-		memset(&mbi, 0, sizeof(mbi));
-		mbi.cbSize = sizeof(mbi);
-		::GetMenuBarInfo(m_hWnd, OBJID_MENU, 0, &mbi);
-*/
-
-		h = r3.Height() - r4.Height()
-//				+ (mbi.rcBar.bottom - mbi.rcBar.top)
-		//		+ r1.Height() - r2.Height()
-				+ lHeight;
+		wDelta = r3.Width() - r4.Width();
+		hDelta = r3.Height() - r4.Height();
 
 		if(style&WS_CAPTION)
 		{
@@ -10226,8 +10214,27 @@ MENUBARINFO mbi;
 
 		GetWindowRect(r);
 
-		w = max(w, 480);
-		h = max(h, 280);
+        if (lHeight + hDelta < 280 || lWidth + wDelta < 480) {
+            int w1 = 480 - wDelta;
+            int h1 = 280 - hDelta;
+            SVP_ASSERT(w1 > 0);
+            SVP_ASSERT(h1 > 0);
+
+            // Re-evaluate current 'w' and 'h' to keep aspect ratio
+            int h2 = arxy.cy * w1 / arxy.cx, w2 = arxy.cx * h1 / arxy.cy;
+            // Choose by the fitting rectangle.
+            if (h2 + hDelta >= 280) {
+                w = 480;
+                h = h2 + hDelta;
+            } else {
+                w = w2 + wDelta;
+                h = 280;
+            }
+
+        } else {
+            h = lHeight + hDelta;
+            w = lWidth + wDelta;
+        }
 
 		if(bThisIsAutoZoom && 0){
 			double mratio = (double)lHeight/lWidth;
