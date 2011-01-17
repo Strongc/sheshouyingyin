@@ -26,6 +26,16 @@
 #include "VolumeCtrl.h"
 
 // CPlayerToolBar
+struct button  
+{
+  std::wstring buttonname;
+  int          id;
+  CSUIButton*  pbutton;
+  int          width;
+  BOOL         bhide;
+  int          align;
+  CRect        rect;
+};
 
 class CPlayerToolBar : public CToolBar
 {
@@ -49,6 +59,13 @@ private:
 	CPoint m_lastMouseMove;
 	int m_lastLeftText;
 	CSUIButton* btnSubSwitch;
+
+  BOOL breadfromfile;
+  std::map<std::wstring, int> m_align1_map;
+  std::map<std::wstring, int> m_align2_map;
+  std::map<std::wstring, int> m_id_map;
+  //std::map<std::wstring, std::pair<CSUIButton*, int> > m_buttoninitlize;
+  struct button m_buttoninitlize[30];
 public:
 	CString m_timerstr;
 	CString m_timerqueryedstr;
@@ -108,6 +125,14 @@ protected:
 	afx_msg BOOL OnTtnNeedText(UINT id, NMHDR *pNMHDR, LRESULT *pResult);
 
 	virtual INT_PTR OnToolHitTest(	CPoint point,TOOLINFO* pTI 	) const;
+
+  BOOL ReadFromFile();
+
+  void DefaultInitializeButton();
+
+  void GetCRect(std::wstring rectstr, CRect& rect);
+
+  LONG PlayTimeRect(LONG Mlen, LONG wW);
 	
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
