@@ -124,6 +124,7 @@ static UINT WM_NOTIFYICON = RegisterWindowMessage(TEXT("MYWM_NOTIFYICON"));
 #include "../../filters/misc/SyncClock/SyncClock.h"
 
 #include "..\..\filters\transform\svpfilter\SVPSubFilter.h"
+#include "UserInterface\Dialogs\Snapshot_Win.h"
 
 bool g_bNoDuration = false;
 bool g_bExternalSubtitleTime = false;
@@ -300,6 +301,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_FILE_SAVE_COPY, OnFileSaveAs)
 	ON_UPDATE_COMMAND_UI(ID_FILE_SAVE_COPY, OnUpdateFileSaveAs)
 	ON_COMMAND(ID_FILE_SAVE_IMAGE, OnFileSaveImage)
+  ON_COMMAND(ID_SCREEN_SNAPSHOT, OnScreenSnapshot)
   ON_COMMAND(ID_CONTROLLER_SAVE_IMAGE, OnControllerSaveImage)
   ON_COMMAND(ID_COMPLETE_QUERY_SUBTITLE, OnCompleteQuerySubtitle)
 	ON_COMMAND(ID_FILE_COPYTOCLIPBOARD, OnFileCopyImageToCLipBoard)
@@ -6180,6 +6182,26 @@ BOOL CMainFrame::IsRendererCompatibleWithSaveImage()
 		}
 	}
 	return result;
+}
+
+void CMainFrame::OnScreenSnapshot()
+{
+  OAFilterState fs = GetMediaState();
+  bool bResumePlay = false;
+  if (fs == State_Running)
+  {
+    pMC->Pause();
+    GetMediaState();
+    bResumePlay = true;
+  }
+
+  CSnapshot_Win wndSnapshot;
+  wndSnapshot.DoModal();
+
+  if (bResumePlay)
+  {
+    pMC->Run();
+  }
 }
 
 void CMainFrame::OnFileSaveImage()

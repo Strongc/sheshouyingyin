@@ -1196,11 +1196,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\res\ecio.icons\dvd.ico"
+				RelativePath=".\res\icon\DVD.ico"
 				>
 			</File>
 			<File
-				RelativePath=".\res\icon\DVD.ico"
+				RelativePath=".\res\ecio.icons\dvd.ico"
 				>
 			</File>
 			<File
@@ -1728,6 +1728,30 @@
 				</File>
 				<File
 					RelativePath=".\UserInterface\Dialogs\OptionSubtitlePage_Win.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\Snapshot_FloatTip.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\Snapshot_FloatTip.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\Snapshot_Viewfinder.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\Snapshot_Viewfinder.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\Snapshot_Win.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\Snapshot_Win.h"
 					>
 				</File>
 			</Filter>
