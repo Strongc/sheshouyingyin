@@ -15,7 +15,7 @@
 #include <fstream>
 
 #include "..\Controller\HashController.h"
-
+#include <logging.h>
 
 #define CHAR4TOINT(szBuf) \
   ( ((int)szBuf[0] & 0xff) << 24) | ( ((int)szBuf[1] & 0xff) << 16) | ( ((int)szBuf[2] & 0xff) << 8) |  szBuf[3] & 0xff
@@ -592,8 +592,28 @@ std::wstring SubTransFormat::GetSubFileByTempid_STL(size_t iTmpID, std::wstring 
     }
 
     if (!CopyFile(szSource.c_str(), szTarget.c_str(), false))
+    {
+      LPVOID lpMsgBuf;
+      DWORD dw = GetLastError(); 
       szDefaultSubPath = szSource;
 
+      FormatMessage(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+        FORMAT_MESSAGE_FROM_SYSTEM |
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,
+        dw,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPTSTR) &lpMsgBuf,
+        0, NULL );
+
+      // Display the error message and exit the process
+
+      Logging(L"fail to copying subtitle file %x %s from %s to %s",
+         dw, lpMsgBuf, szSource.c_str(), szTarget.c_str()); 
+      
+      LocalFree(lpMsgBuf);
+    }
     else if (((bIsIdxSub && szSubTmpDetail[0].compare(L"idx") == 0)
       || !bIsIdxSub) && szDefaultSubPath.empty())
       szDefaultSubPath = szTarget;
