@@ -112,7 +112,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
+				CommandLine="$(SolutionDir)BuildScript/post-build.cmd"
 				ExcludedFromBuild="false"
 			/>
 		</Configuration>
@@ -1192,11 +1192,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\res\ecio.icons\dvd.ico"
-				>
-			</File>
-			<File
-				RelativePath=".\res\icon\DVD.ico"
+				RelativePath="..\..\..\..\..\-=SVN=-\svplayer\src\apps\mplayerc\res\ecio.icons\dvd.ico"
 				>
 			</File>
 			<File
