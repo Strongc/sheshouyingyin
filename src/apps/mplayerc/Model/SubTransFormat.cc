@@ -201,6 +201,7 @@ int SubTransFormat::ExtractEachSubFile(FILE* fp, std::vector<std::wstring> &tmpf
   of1 = otmpfilename;
   of2 = otmpfilenameraw;
   int gzret = UnpackGZFile(of1 , of2);
+  Logging(L"UnpackGZFile %s %s %d", of1.c_str(), of2.c_str(), gzret);
 
   // add filename and tmp name to szaTmpFileNames
   std::wstring str;
@@ -240,9 +241,9 @@ int SubTransFormat::UnpackGZFile(std::wstring fnin, std::wstring fnout)
     return -1; //output file open error
   }
 
-  std::string szFnin = Strings::WStringToUtf8String(fnin).c_str();
+  std::string szFnin = Strings::WStringToString(fnin);
 
-  gzFile gzfIn = gzopen( szFnin.c_str() , "rb");	
+  gzFile gzfIn = gzopen( szFnin.c_str(), "rb");	
   if (gzfIn){
 
     char buff[4096];
