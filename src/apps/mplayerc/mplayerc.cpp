@@ -4282,30 +4282,7 @@ void CMPlayerCApp::Settings::UpdateData(bool fSave)
 		}
 
     // create accelerator table according to HotkeyController
-    std::vector<ACCEL> accel;
-    HotkeyController* con = HotkeyController::GetInstance();
-    // load hotkeyscheme
-    PlayerPreference* pref = PlayerPreference::GetInstance();
-    std::wstring hotkey_file = pref->GetStringVar(STRVAR_HOTKEYSCHEME);
-    if (hotkey_file.empty())
-      hotkey_file = L"\\hotkey\\SPlayer.key";
-
-    wchar_t path[256];
-    GetModuleFileName(NULL, path, 256);
-    PathRemoveFileSpec(path);
-    wcscat_s(path, 256, hotkey_file.c_str());
-    con->UpdateSchemeFromFile(path);
-    
-    std::vector<HotkeyCmd> scheme = con->GetScheme();
-    accel.resize(scheme.size());
-
-    if (accel.size() > 0)
-    {
-      for (size_t i = 0; i < accel.size(); i++)
-        accel[i] = scheme[i];
-
-      hAccel = CreateAcceleratorTable(&accel[0], accel.size());
-    }
+    hAccel = GetAcceleratorTable();
 
 		WinLircAddr = pApp->GetProfileString(ResStr(IDS_R_SETTINGS), ResStr(IDS_RS_WINLIRCADDR), _T("127.0.0.1:8765"));
 		fWinLirc = !!pApp->GetProfileInt(ResStr(IDS_R_SETTINGS), ResStr(IDS_RS_WINLIRC), 0);
@@ -4995,6 +4972,37 @@ void GetSystemFontWithScale(CFont* pFont, double dDefaultSize, int iWeight, CStr
 		_T("MS Sans Serif"));
 
 	
+}
+
+HACCEL GetAcceleratorTable()
+{
+  std::vector<ACCEL> accel;
+  HotkeyController* con = HotkeyController::GetInstance();
+  // load hotkeyscheme
+  PlayerPreference* pref = PlayerPreference::GetInstance();
+  std::wstring hotkey_file = pref->GetStringVar(STRVAR_HOTKEYSCHEME);
+  if (hotkey_file.empty())
+    hotkey_file = L"\\hotkey\\SPlayer.key";
+
+  wchar_t path[256];
+  GetModuleFileName(NULL, path, 256);
+  PathRemoveFileSpec(path);
+  wcscat_s(path, 256, hotkey_file.c_str());
+  con->UpdateSchemeFromFile(path);
+
+  std::vector<HotkeyCmd> scheme = con->GetScheme();
+  accel.resize(scheme.size());
+
+  HACCEL hAccel = 0;
+  if (accel.size() > 0)
+  {
+    for (size_t i = 0; i < accel.size(); i++)
+      accel[i] = scheme[i];
+
+    hAccel = CreateAcceleratorTable(&accel[0], accel.size());
+  }
+
+  return hAccel;
 }
 
 void CMPlayerCApp::GainAdminPrivileges(UINT idd, BOOL bWait){
