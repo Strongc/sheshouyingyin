@@ -1641,10 +1641,12 @@ SVP_LogMsg5(L"Settings::InitInstanceThreaded 16");
 				if(!m_cnetupdater)
 					m_cnetupdater = new cupdatenetlib();
 
-				if(m_cnetupdater->downloadList()){
-					m_cnetupdater->downloadFiles();
-					m_cnetupdater->tryRealUpdate(TRUE);
-				}
+        // why execute the updater.exe before do this?
+        // updater.exe has include it and cupdatenetlib has been destory.
+// 				if(m_cnetupdater->downloadList()){
+// 					m_cnetupdater->downloadFiles();
+// 					m_cnetupdater->tryRealUpdate(TRUE);
+// 				}
 				if(!pFrame->m_bCheckingUpdater){
 					pFrame->m_bCheckingUpdater = true;
           UpdateController::GetInstance()->CheckUpdateEXEUpdate();
