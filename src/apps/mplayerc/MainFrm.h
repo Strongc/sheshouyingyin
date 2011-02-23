@@ -89,7 +89,6 @@ public:
   int m_AngleX, m_AngleY, m_AngleZ;
 
   // Subtitles
-  bool LoadSubtitle(CString fn, int sub_delay_ms = 0, BOOL bIsForPlayList = false);
   void UpdateSubtitle(bool fApplyDefStyle = true);
   void UpdateSubtitle2(bool fApplyDefStyle = true);
   void SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyle = true, bool bShowOSD = true);
