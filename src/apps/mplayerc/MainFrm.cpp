@@ -4586,7 +4586,8 @@ void CMainFrame::OnFilePostOpenmedia()
        if (!m_fFullScreen)
        {
          PlayerPreference* pref = PlayerPreference::GetInstance();
-         if (pref->GetIntVar(INTVAR_TOGGLEFULLSCRENWHENPLAYBACKSTARTED))
+         m_fFullScreen = pref->GetIntVar(INTVAR_TOGGLEFULLSCRENWHENPLAYBACKSTARTED);
+         if (m_fFullScreen)
          {
           ToggleFullscreen(true, true);
           SetCursor(NULL);
