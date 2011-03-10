@@ -2,7 +2,6 @@
 #define SUBTRANSCONTROLLER_H
 #include "NetworkControlerImpl.h"
 #include <threadhelper.h>
-
 #define ID_COMPLETE_QUERY_SUBTITLE 32931
 
 class SubTransController:
@@ -35,6 +34,8 @@ public:
   void _Thread();
 
 private:
+
+
   void _thread_download();
   void _thread_upload();
 

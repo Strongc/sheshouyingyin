@@ -1590,6 +1590,7 @@
 #define IDS_VDF_AR_MODE                 33211
 #define ID_MENU_DVDNAV                  33212
 #define IDS_MENU_ITEM_DVDNAV            33213
+#define ID_PHASH_COLLECTEND             1984   //Soleo Shao
 
 // Next default values for new objects
 // 

@@ -103,6 +103,7 @@
 #include "Utils/SPlayerGUID.h"
 
 
+
 // begin,
 // the following headers are included because HotkeyController mechanism broke the original inclusion
 #include "PPageFormats.h"
@@ -215,6 +216,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_MESSAGE(WM_USER+31, OnStatusMessage)
 	ON_MESSAGE(WM_USER+32, OnSuggestVolume)
 	ON_MESSAGE(WM_USER+33, OnFailedInDXVA )
+
 
 	ON_MESSAGE(WM_IME_SETCONTEXT, OnImeSetContext)
 
@@ -576,6 +578,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_WM_KEYUP()
   ON_COMMAND(ID_MOVIESHARE, OnMovieShare)
   ON_COMMAND(ID_MOVIESHARE_RESPONSE, OnMovieShareResponse)
+  ON_COMMAND(ID_PHASH_COLLECTEND, OnFilledUp4pHash)
 	END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -8225,8 +8228,8 @@ void CMainFrame::OnPlayAudio(UINT nID)
         
         if(AfxGetMyApp()->sqlite_local_record)
             AfxGetMyApp()->sqlite_local_record->exec_insert_update_sql_u(szSQLInsert.GetBuffer(), szSQLUpdate.GetBuffer());
-
 	}
+ 
 }
 
 void CMainFrame::OnUpdatePlayAudio(CCmdUI* pCmdUI)
@@ -11864,8 +11867,18 @@ bool CMainFrame::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
       if(m_fOpeningAborted) throw aborted;
 
       std::wstring szFileHash = HashController::GetInstance()->GetSPHash(m_fnCurPlayingFile);
-
       CString FPath = szFileHash.c_str();
+      
+      //Soleo: TODO I need to get pHash, begin from here.
+      Logging(L"++++++++++++++++++++++++++phash mainfrm.h SetpHashControl begin+++++++++++++++++++++++++++++\n");
+            
+      if( CComQIPtr<IAudioSwitcherFilter> pASF = FindFilter(__uuidof(CAudioSwitcherFilter), pGB))
+      {
+        pASF->SetpHashControl(&m_phashblock);
+        Logging(L"pASF->SetpHashControl\n");
+      }
+      Logging(L"++++++++++++++++++++++++++phash mainfrm.hSet pHashControl end++++++++++++++++++++++++++++++\n");
+
 
       if(m_pCAP && (!m_fAudioOnly || m_fRealMediaGraph))
       {
@@ -17410,4 +17423,35 @@ void CMainFrame::OnMovieShare()
 void CMainFrame::OnMovieShareResponse()
 {
   m_wndToolBar.HideMovieShareBtn(FALSE);
+}
+
+void CMainFrame::OnFilledUp4pHash()
+{
+  // Soleo TODO: Reponse one special message of pHash
+  Logging("===========================pHash: CMainFrame::OnFilledUp4pHash. begin============================\n");
+  //Logging("channels:%d\tsamplerate:%d\trtStartpHash:%ld\trtStoppHash:%ld\n",m_phashblock.channels, m_phashblock.samplerate, m_phashblock.rtStartpHash, m_phashblock.rtStoppHash); // Soleo TODO:Something wrong with rtStartpHash and rtStoppHash
+  // Start dealing with the data from audioswitcher filter
+  pHashController::GetInstance()->SetSwitchStatus(pHashController::CALCHASH);
+  //HRESULT stat = pHashController::GetInstance()->DigestpHashData(&m_phashblock);
+  if (pHashController::GetInstance()->GetSwitchStatus())
+  {
+//     pHashController::GetInstance()->_thread_DigestpHashData(&m_phashblock);
+    if (pHashController::GetInstance()->SetpHashData(&m_phashblock) == S_OK)
+    {
+      m_phashblock.phashdata.clear();
+      m_phashblock.phashdata.resize(0);
+      pHashController::GetInstance()->_Stop();
+      pHashController::GetInstance()->_Start();
+    }
+    
+    
+  }
+ 
+//   if (stat == S_OK)
+//   {
+//     std::wstring pHash = pHashController::GetInstance()->GetAudiopHash();
+ 
+    Logging(L"HAHA PHASH TIME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+ // }
+  Logging("===========================pHash: CMainFrame::OnFilledUp4pHash. end============================\n");
 }

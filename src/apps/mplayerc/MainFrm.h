@@ -69,8 +69,12 @@
 
 #include "Controller/SnapUploadController.h"
 #include "Controller/SubTransController.h"
+#include "Controller/pHashController.h"
+#include "phashbase.h"//Soleo
 
 enum {PM_NONE, PM_FILE, PM_DVD, PM_CAPTURE};
+
+
 
 class OpenMediaData
 {
@@ -929,7 +933,9 @@ public:
 	LRESULT OnFailedInDXVA(  WPARAM wParam, LPARAM lParam);
 	bool m_bAllowVolumeSuggestForThisPlaylist;
 	LRESULT OnImeSetContext(  WPARAM wParam, LPARAM lParam);
-	
+ 
+  void OnFilledUp4pHash(); // Soleo Shao: reponse to data filled up
+  struct phashblock m_phashblock; //Soleo: Global Val :pHash block
 
 	//afx_msg void OnNcCalcSize( BOOL bCalcValidRects, NCCALCSIZE_PARAMS* lpncsp);
 	void RedrawNonClientArea();
@@ -989,6 +995,7 @@ public:
 	afx_msg void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
   afx_msg void OnMovieShareResponse();
   afx_msg void OnAudioSettingUpdated();
+ 
 private:
   void _HandleTimer_Stats();
   void _HandleTimer_StreamPosPoller();

@@ -3,7 +3,6 @@
 
 #include "LazyInstance.h"
 #include <CriticalSection.h>
-
 //////////////////////////////////////////////////////////////////////////
 //
 //  HashController is a global instance controller that calculates
@@ -22,11 +21,14 @@ public:
   std::wstring GetMD5Hash(const char* data, int len);
 
   std::wstring GetVersionHash(const wchar_t* filename);
+  
+
 private:
   CriticalSection m_cs;
 
   std::wstring m_filename;
   std::wstring m_hash;
+
 };
 
 #endif // HASHCONTROLLER_H
