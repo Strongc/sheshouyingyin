@@ -187,6 +187,7 @@ void SubTransController::_Thread()
   Logging( L"SubTransController::_thread exit %x", m_operation);
 }
 
+
 void SubTransController::_thread_download()
 {
   std::vector<std::wstring> subtitles;

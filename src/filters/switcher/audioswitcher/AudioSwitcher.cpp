@@ -116,6 +116,7 @@ CAudioSwitcherFilter::CAudioSwitcherFilter(LPUNKNOWN lpunk, HRESULT* phr)
 	, m_tPlayedtime(0)
 	, m_dRate(1.0)
 	, m_fUpSampleTo(0)
+  , m_pHashFlag(TRUE)
 	, m_iSS(0)
 {
 	//memset(m_pSpeakerToChannelMap, 0, sizeof(m_pSpeakerToChannelMap));
@@ -330,7 +331,38 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
 
 	int lTotalInputChannels = wfe->nChannels;
 	int lTotalOutputChannels =  wfeout->nChannels;
-	
+  
+  // TODO:  Pass some data to pHash , Soleo Shao  
+  // MAIN Strategy: if time is Y mins ,the following X secs is what we want, pass them to another function
+  //          Then get downsampled and mixed, pass to phash cal function
+  //          Then send the result to get compared and return a confidence value(0~1) which shows the similarity of two samples
+  // 
+
+  REFERENCE_TIME rtStartpHash = (10000000i64)*10; // begin at 10 secs
+  REFERENCE_TIME rtDurpHash = (10000000i64)*60 // get 60 secs to cal
+                             + rtStartpHash;  
+  //DWORD BufferLen = lenout*bps*wfeout->nChannels;
+  m_pHashPtr->format = *wfe;
+  if(SUCCEEDED(pOut->GetTime(&rtStart, &rtStop)))
+  {
+    if (rtStartpHash < rtStart && rtDurpHash > rtStart)
+    {
+      //Logging(L"=========================================pHash Filling Data begin=================================================\n");
+      //Logging(L"pOut->GetTime:%ld\t%ld\n",rtStart,rtStop);
+      //m_pHashPtr->rtStartpHash = rtStart;
+      FillData4pHash(pDataIn, pIn->GetActualDataLength()); //TODO
+      m_pHashFlag = false;
+      // Logging(L"========================================pHash Filling Data end====================================================\n");
+    }
+    else if (rtDurpHash <= rtStart && m_pHashFlag == false)
+    {
+      m_pHashFlag = true;
+      //m_pHashPtr->rtStoppHash = rtStart + 10000000i64*len/wfe->nSamplesPerSec;
+      //Logging(L"End of pHash time:==============%ld\n",m_pHashPtr->rtStoppHash);
+      PostMessage(AfxGetApp()->m_pMainWnd->m_hWnd, WM_COMMAND, ID_PHASH_COLLECTEND, NULL);
+    }
+  }
+
 	SVP_LogMsg5(L"Chan %d %d %d %d %d %d %d %d %d",lTotalInputChannels ,lTotalOutputChannels , wfe->nSamplesPerSec , wfeout->nSamplesPerSec, wfe->wBitsPerSample, wfeout->wBitsPerSample
 		,wfe->nBlockAlign , wfeout->nBlockAlign, pIn->GetActualDataLength());
 	if(m_lastInputChannelCount2 != lTotalInputChannels || m_lastOutputChannelCount2 != lTotalOutputChannels )
@@ -821,9 +853,9 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
 	
 			if(m_fEQControlOn || sample_mul > 1 || bChangeRate || m_fUpSampleTo ){
 				//SVP_LogMsg5(L"maul %f %f %f %f" ,m_boost , log10(m_boost) , sample_mul, sample_mul * (1+log10(m_boost)) );
-SVP_LogMsg5(L"Buffer Size %d, ActualLength %d", pOut->GetSize(), samples);
+      SVP_LogMsg5(L"Buffer Size %d, ActualLength %d", pOut->GetSize(), samples);
 				
-				
+				//Logging(L"=========================================================iWePCMType");
 				switch(iWePCMType){
 								case WETYPE_PCM8:
 									samples = min (  pOut->GetSize() ,samples);
@@ -849,11 +881,13 @@ SVP_LogMsg5(L"Buffer Size %d, ActualLength %d", pOut->GetSize(), samples);
 									samples = min (  pOut->GetSize()/4 ,samples);
 									for(int i = 0; i < samples; i++)
 										((float*)pDataOut)[i] = clamp<float>( buff[i] , -1, +1 );
+                //  Logging(L"WETYPE_FPCM32");
 									break;
 								case WETYPE_FPCM64:
 									samples = min (  pOut->GetSize()/8 ,samples);
 									for(int i = 0; i < samples; i++)
 										((double*)pDataOut)[i] = clamp<double>( buff[i] , -1, +1 );
+                 // Logging(L"WETYPE_FPCM64");
 									break;
 				}
 
@@ -863,12 +897,13 @@ SVP_LogMsg5(L"Buffer Size %d, ActualLength %d", pOut->GetSize(), samples);
 		}
 	}
 
-	
 	SVP_LogMsg5(L"Buffer Size %d, ActualLength %d", pOut->GetSize(), lenout*bps*wfeout->nChannels);
 	SVP_LogMsg5(L"Out %d %d %d %d %d %d %d" , ((short*)pDataOut)[1], ((short*)pDataOut)[11], ((short*)pDataOut)[21], ((short*)pDataOut)[61], ((short*)pDataOut)[91], ((short*)pDataOut)[111], ((short*)pDataOut)[121]);
-
+  //Logging(L"Out %d %d %d %d %d %d %d" , ((short*)pDataOut)[1], ((short*)pDataOut)[11], ((short*)pDataOut)[21], ((short*)pDataOut)[61], ((short*)pDataOut)[91], ((short*)pDataOut)[111], ((short*)pDataOut)[121]);
 	pOut->SetActualDataLength(lenout*bps*wfeout->nChannels);
-	
+ 
+
+
 	return S_OK;
 }
 
@@ -1283,4 +1318,28 @@ STDMETHODIMP CAudioSwitcherFilter::SetEQControl ( int lEQBandControlPreset, floa
 
 	return S_OK;
 
+}
+
+// Soleo Shao: phash data filler
+STDMETHODIMP CAudioSwitcherFilter::FillData4pHash(BYTE* pDataIn, long BufferLen)
+{
+  //Logging(L"BufferLen: %d", BufferLen);
+  // TODO: Get Data and filling 
+ //Logging(L"Get Bufferlen:%d\n",BufferLen);
+   for (int i = 0; i < BufferLen; i++ )
+   {
+      m_pHashPtr->phashdata.push_back(((unsigned char *)pDataIn)[i]); // I am not sure but it seems right.
+      /*Logging("--------==============----------phashdata[%d]: %d, outdata: %d", i,  m_pHashPtr->phashdata.at(i), ((unsigned char *)pDataOut)[i]);*/
+   }
+
+// Logging(L"Size: %d",m_pHashPtr->phashdata.size()); 
+  return S_OK;
+}
+// Soleo
+STDMETHODIMP CAudioSwitcherFilter::SetpHashControl(struct phashblock* pbPtr)
+{
+  // init everything pHash need
+  m_pHashPtr = pbPtr;
+
+  return S_OK;
 }

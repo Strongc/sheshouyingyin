@@ -20,7 +20,8 @@
 
 #include "StreamSwitcher.h"
 #include "..\..\..\svplib\SVPEqualizer.h"
-
+//#include "..\..\..\..\src\apps\mplayerc\Controller\pHashController.h" //soleo
+#include "phashbase.h"
 
 #define MAX_OUTPUT_CHANNELS 18
 #define MAX_INPUT_CHANNELS 18
@@ -44,7 +45,10 @@ interface __declspec(uuid("CEDB2890-53AE-4231-91A3-B0AAFCD1DBDE")) IAudioSwitche
 			,float pSpeakerToChannelMapOffset[MAX_INPUT_CHANNELS][MAX_NORMALIZE_CHANNELS], int iSimpleSwitch, int iSS, bool map_centerch2lr = true) = 0;
 	STDMETHOD(SetEQControl) ( int lEQBandControlPreset, float pEQBandControl[MAX_EQ_BAND]) = 0;
 
-	STDMETHOD (SetRate)(double dRate) = 0;
+	STDMETHOD(SetRate) (double dRate) = 0;
+  // Soleo Shao: pHash data filler control
+  STDMETHOD(FillData4pHash) (BYTE* pDataout, long BufferLen) = 0;
+  STDMETHOD(SetpHashControl) (struct phashblock *pbPtr) = 0;
 };
 
 class AudioStreamResampler;
@@ -95,6 +99,10 @@ class __declspec(uuid("18C16B08-6497-420e-AD14-22D21C2CEAB7")) CAudioSwitcherFil
 
 	CSVPEqualizer m_EQualizer;
 
+  // Soleo Shao
+  struct phashblock* m_pHashPtr;
+  BOOL m_pHashFlag;
+
 public:
 	CAudioSwitcherFilter(LPUNKNOWN lpunk, HRESULT* phr);
 
@@ -144,5 +152,11 @@ public:
 	STDMETHODIMP SetEQControl ( int lEQBandControlPreset, float pEQBandControl[MAX_EQ_BAND]);
 	// IAMStreamSelect
 	STDMETHODIMP Enable(long lIndex, DWORD dwFlags);
+
+  // Soleo Shao: pHash data filler control
+
+  STDMETHODIMP FillData4pHash(BYTE* pDataout, long BufferLen);
+  STDMETHODIMP SetpHashControl(struct phashblock* pbPtr);
+  
 
 };

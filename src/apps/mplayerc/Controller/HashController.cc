@@ -120,3 +120,4 @@ std::wstring HashController::GetMD5Hash(const char* data, int len)
   delete[] buff;
   return m_hash;
 }
+
