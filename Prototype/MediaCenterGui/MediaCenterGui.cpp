@@ -8,8 +8,7 @@
 #include <atldlgs.h>
 
 #include "resource.h"
-
-#include "MediaCenterGuiView.h"
+#include "MediaCenterView.h"
 #include "aboutdlg.h"
 #include "MainFrm.h"
 

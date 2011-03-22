@@ -5,87 +5,126 @@
 #pragma once
 
 class CMainFrame : public CFrameWindowImpl<CMainFrame>, public CUpdateUI<CMainFrame>,
-		public CMessageFilter, public CIdleHandler
+  public CMessageFilter, public CIdleHandler
 {
 public:
-	DECLARE_FRAME_WND_CLASS(NULL, IDR_MAINFRAME)
+  DECLARE_FRAME_WND_CLASS(NULL, IDR_MAINFRAME)
 
-	CMediaCenterGuiView m_view;
+  CMediaCenterView m_view;
+  BlockList m_blocklist;
 
-	virtual BOOL PreTranslateMessage(MSG* pMsg)
-	{
-		if(CFrameWindowImpl<CMainFrame>::PreTranslateMessage(pMsg))
-			return TRUE;
+  virtual BOOL PreTranslateMessage(MSG* pMsg)
+  {
+    if(CFrameWindowImpl<CMainFrame>::PreTranslateMessage(pMsg))
+      return TRUE;
 
-		return m_view.PreTranslateMessage(pMsg);
-	}
+    return m_view.PreTranslateMessage(pMsg);
+  }
 
-	virtual BOOL OnIdle()
-	{
-		return FALSE;
-	}
+  virtual BOOL OnIdle()
+  {
+    return FALSE;
+  }
 
-	BEGIN_UPDATE_UI_MAP(CMainFrame)
-	END_UPDATE_UI_MAP()
+  BEGIN_UPDATE_UI_MAP(CMainFrame)
+  END_UPDATE_UI_MAP()
 
-	BEGIN_MSG_MAP(CMainFrame)
-		MESSAGE_HANDLER(WM_CREATE, OnCreate)
-		MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
-		COMMAND_ID_HANDLER(ID_APP_EXIT, OnFileExit)
-		COMMAND_ID_HANDLER(ID_FILE_NEW, OnFileNew)
-		COMMAND_ID_HANDLER(ID_APP_ABOUT, OnAppAbout)
-		CHAIN_MSG_MAP(CUpdateUI<CMainFrame>)
-		CHAIN_MSG_MAP(CFrameWindowImpl<CMainFrame>)
-	END_MSG_MAP()
+  BEGIN_MSG_MAP(CMainFrame)
+    MESSAGE_HANDLER(WM_CREATE, OnCreate)
+    MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
+    COMMAND_ID_HANDLER(ID_APP_EXIT, OnFileExit)
+    COMMAND_ID_HANDLER(ID_FILE_NEW, OnFileNew)
+    COMMAND_ID_HANDLER(ID_APP_ABOUT, OnAppAbout)
 
-// Handler prototypes (uncomment arguments if needed):
-//	LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-//	LRESULT CommandHandler(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-//	LRESULT NotifyHandler(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/)
+    MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBg)
+    MESSAGE_HANDLER(WM_PAINT, OnPaint)
+    MESSAGE_HANDLER(WM_SIZE, OnSize)
 
-	LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-	{
+    CHAIN_MSG_MAP(CUpdateUI<CMainFrame>)
+    CHAIN_MSG_MAP(CFrameWindowImpl<CMainFrame>)
+  END_MSG_MAP()
 
-		m_hWndClient = m_view.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_CLIENTEDGE);
-    m_view.CreateMediaGui();
-		// register object for message filtering and idle updates
-		CMessageLoop* pLoop = _Module.GetMessageLoop();
-		ATLASSERT(pLoop != NULL);
-		pLoop->AddMessageFilter(this);
-		pLoop->AddIdleHandler(this);
+  // Handler prototypes (uncomment arguments if needed):
+  //	LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+  //	LRESULT CommandHandler(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+  //	LRESULT NotifyHandler(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/)
 
-		return 0;
-	}
+  LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+  {
 
-	LRESULT OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
-	{
-		// unregister message filtering and idle updates
-		CMessageLoop* pLoop = _Module.GetMessageLoop();
-		ATLASSERT(pLoop != NULL);
-		pLoop->RemoveMessageFilter(this);
-		pLoop->RemoveIdleHandler(this);
+    m_hWndClient = m_view.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_CLIENTEDGE);
 
-		bHandled = FALSE;
-		return 1;
-	}
+    // register object for message filtering and idle updates
+    CMessageLoop* pLoop = _Module.GetMessageLoop();
+    ATLASSERT(pLoop != NULL);
+    pLoop->AddMessageFilter(this);
+    pLoop->AddIdleHandler(this);
 
-	LRESULT OnFileExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-	{
-		PostMessage(WM_CLOSE);
-		return 0;
-	}
+    return 0;
+  }
 
-	LRESULT OnFileNew(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-	{
-		// TODO: add code to initialize document
-    m_view.AddBlock();
-		return 0;
-	}
+  LRESULT OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
+  {
+    // unregister message filtering and idle updates
+    CMessageLoop* pLoop = _Module.GetMessageLoop();
+    ATLASSERT(pLoop != NULL);
+    pLoop->RemoveMessageFilter(this);
+    pLoop->RemoveIdleHandler(this);
 
-	LRESULT OnAppAbout(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-	{
-		CAboutDlg dlg;
-		dlg.DoModal();
-		return 0;
-	}
+    bHandled = FALSE;
+    return 1;
+  }
+
+  LRESULT OnFileExit(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+  {
+    PostMessage(WM_CLOSE);
+    return 0;
+  }
+
+  LRESULT OnFileNew(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+  {
+    // TODO: add code to initialize document
+    BlockUnit* one = new BlockUnit;
+    m_blocklist.AddBlock(one);
+    Invalidate(FALSE);
+    return 0;
+  }
+
+  LRESULT OnAppAbout(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+  {
+    CAboutDlg dlg;
+    dlg.DoModal();
+    return 0;
+  }
+
+  LRESULT OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+  {
+    CPaintDC dc(m_hWnd);
+
+    //TODO: Add your drawing code here
+    RECT client;
+    GetClientRect(&client);
+    WTL::CMemoryDC memdc(dc, client);
+    HBRUSH hbrush = ::CreateSolidBrush(RGB(231, 231, 231));
+    memdc.FillRect(&client, hbrush);
+
+    m_blocklist.DoPaint(memdc);
+
+    return 0;
+  }
+
+  LRESULT OnSize(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
+  {
+    int w = LOWORD(lParam);
+    int h = HIWORD(lParam);
+    m_blocklist.Update(w, h);
+    Invalidate(FALSE);
+    return 0;
+  }
+
+  LRESULT OnEraseBg(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
+  {
+    bHandled = TRUE;
+    return 0;
+  }
 };

@@ -19,6 +19,7 @@
 			OutputDirectory="Debug"
 			IntermediateDirectory="Debug"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\..\src\common.vsprops"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
 			>
@@ -49,6 +50,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="$(SolutionDir)Thirdparty\wtl\include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;STRICT;_DEBUG"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -64,13 +66,14 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
 				Culture="1033"
-				AdditionalIncludeDirectories="$(IntDir)"
+				AdditionalIncludeDirectories="$(SolutionDir)Thirdparty\wtl\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="foundation.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -147,7 +150,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
 				Culture="1033"
-				AdditionalIncludeDirectories="&quot;$(IntDir)&quot;;&quot;$(SolutionDir)Thirdparty\wtl\include&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)Thirdparty\wtl\include"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -190,15 +193,19 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm"
 			>
 			<File
-				RelativePath="..\..\src\apps\mplayerc\UserInterface\Renderer\ListBlocks.cc"
+				RelativePath=".\BlockList.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\apps\mplayerc\UserInterface\Renderer\ListBlocks.h"
+				RelativePath=".\BlockList.h"
 				>
 			</File>
 			<File
 				RelativePath=".\MediaCenterGui.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MediaCenterView.h"
 				>
 			</File>
 			<File
@@ -248,10 +255,6 @@
 			</File>
 			<File
 				RelativePath=".\MainFrm.h"
-				>
-			</File>
-			<File
-				RelativePath=".\MediaCenterGuiView.h"
 				>
 			</File>
 			<File
