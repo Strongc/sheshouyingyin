@@ -77,7 +77,7 @@ DECLARE_LAZYINSTANCE(UsrBehaviorController);
 DECLARE_LAZYINSTANCE(UpdateController);
 DECLARE_LAZYINSTANCE(MediaCenterController);
 DECLARE_LAZYINSTANCE(UserShareController);
-DECLARE_LAZYINSTANCE(pHashController); // Soleo
+DECLARE_LAZYINSTANCE(pHashController);
 
 /////////
 
