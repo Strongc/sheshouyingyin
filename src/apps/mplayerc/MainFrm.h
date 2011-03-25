@@ -70,7 +70,7 @@
 #include "Controller/SnapUploadController.h"
 #include "Controller/SubTransController.h"
 #include "Controller/pHashController.h"
-#include "phashbase.h"//Soleo
+#include "phashbase.h"
 
 enum {PM_NONE, PM_FILE, PM_DVD, PM_CAPTURE};
 
@@ -934,8 +934,8 @@ public:
 	bool m_bAllowVolumeSuggestForThisPlaylist;
 	LRESULT OnImeSetContext(  WPARAM wParam, LPARAM lParam);
  
-  void OnFilledUp4pHash(); // Soleo Shao: reponse to data filled up
-  struct phashblock m_phashblock; //Soleo: Global Val :pHash block
+  void OnFilledUp4pHash(); // response to data filled up
+  struct phashblock m_phashblock; 
 
 	//afx_msg void OnNcCalcSize( BOOL bCalcValidRects, NCCALCSIZE_PARAMS* lpncsp);
 	void RedrawNonClientArea();
