@@ -6,7 +6,7 @@
 #include "Windows.h"
 #include <string>
 #include "cmdmap.h"
-#include <fstream>
+#include "boost/interprocess/ipc/message_queue.hpp"
 
 static wchar_t *service_name = L"SPRemote";
 static wchar_t *service_desc = L"SPlayer Service. See more http://splayer.org.";
@@ -62,8 +62,22 @@ void* SPCall(enum mg_event event,
     std::string cmd = uri.substr(6, uri.length());
     if (cmds[cmd])
     {
-      // TODO: Send cmd to splayer.
-      printf("cmd: %s, msg: %d\n", cmd.c_str(), cmds[cmd]);
+      RemoteMsg msg;
+      msg.cmd = cmd;
+      msg.msgid = cmds[cmd];
+      msg.timestamp = time(NULL);
+
+      try
+      {
+        boost::interprocess::message_queue mq(boost::interprocess::open_only,
+          REMOTEMSG_CHANNELNAME);
+        
+        mq.send(&msg, sizeof(msg), 0);
+      }
+      catch (boost::interprocess::interprocess_exception& e)
+      {
+        ;
+      }
 
       // if return NULL, this request do other thing.
       return &SPCall;
@@ -143,10 +157,11 @@ void WINAPI ServiceMain(void)
   ss.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
   
   GetRemoteCmdMap(cmds);
-  char* tmp = new char[wcslen(path)+1];
+
   size_t n;
-  wcstombs_s(&n, tmp, wcslen(path)+1, path, wcslen(path));
   std::string root;
+  char* tmp = new char[wcslen(path)+1];
+  wcstombs_s(&n, tmp, wcslen(path)+1, path, wcslen(path));
   root.assign(tmp);
   delete [] tmp;
   root = root.substr(0, root.find_last_of('\\'));
