@@ -61,7 +61,7 @@ private:
   int m_bufferlen;
   int m_sr;                                               // sample rate to convert the stream
   int m_phashswitcher;
-  int hashcount;
+  int m_hashcount;
   
   // Sample to float and normalized
   BOOL SampleToFloat(const unsigned char* const indata, float* outdata, int samples, int type);
