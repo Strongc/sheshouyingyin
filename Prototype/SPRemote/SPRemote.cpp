@@ -73,10 +73,11 @@ void* SPCall(enum mg_event event,
           REMOTEMSG_CHANNELNAME);
         
         mq.send(&msg, sizeof(msg), 0);
+        send_http(conn, 200, "OK");
       }
       catch (boost::interprocess::interprocess_exception& e)
       {
-        ;
+        send_http(conn, 500, "Command send fail");
       }
 
       // if return NULL, this request do other thing.

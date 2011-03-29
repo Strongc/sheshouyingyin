@@ -210,6 +210,8 @@ const char *mg_version(void);
 //   mg_md5(buf, "aa", "bb", NULL);
 void mg_md5(char *buf, ...);
 
+void send_http(struct mg_connection *conn, int status,
+             const char *reason);
 
 #ifdef __cplusplus
 }
