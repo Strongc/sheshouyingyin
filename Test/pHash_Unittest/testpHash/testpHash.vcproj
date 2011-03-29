@@ -204,19 +204,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\audiophash.h"
-				>
-			</File>
-			<File
-				RelativePath=".\pHash-config.h"
-				>
-			</File>
-			<File
-				RelativePath=".\pHash.h"
-				>
-			</File>
-			<File
-				RelativePath=".\phashImpl.h"
+				RelativePath=".\phashapi.h"
 				>
 			</File>
 			<File
