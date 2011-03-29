@@ -21,7 +21,7 @@ pHashController::pHashController(void) :
   m_phashswitcher(0),
   m_bufferlen(0),
   m_phashlen(0),
-  hashcount(0)
+  m_hashcount(0)
 {
   m_hashes = (uint32_t**)malloc(8*sizeof(uint32_t*));
   m_lens = (int*)malloc(8*sizeof(int));
@@ -109,17 +109,17 @@ HRESULT pHashController::_thread_MonopHash()
     float* outmem = NULL;
     int outnums;
     DownSample(tmpmem, nsample, m_sr, m_pbPtr->format.nSamplesPerSec, &outmem, outnums);
-    m_hashes[hashcount] = ph_audiohash(outmem, outnums, m_sr, m_phashlen);
-    m_lens[hashcount] = m_phashlen;
+    m_hashes[m_hashcount] = ph_audiohash(outmem, outnums, m_sr, m_phashlen);
+    m_lens[m_hashcount] = m_phashlen;
 
     free(outmem);
-    hashcount++;
+    m_hashcount++;
   }
   
   delete [] tmpmem;
   FREE_PHASHMEM();
 
-  if (hashcount < 7)
+  if (m_hashcount < 7)
     return S_OK;
 
 

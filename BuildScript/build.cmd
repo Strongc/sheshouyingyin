@@ -52,6 +52,9 @@ copy "..\thirdparty\sinet\trunk\sinet\sinet.h" "..\thirdparty\sinet\"
 copy "..\thirdparty\sinet\trunk\sinet\task.h" "..\thirdparty\sinet\"
 copy "..\thirdparty\sinet\trunk\sinet\task_observer.h" "..\thirdparty\sinet\"
 copy "..\thirdparty\sinet\trunk\release\sinet.dll" "..\..\"
+copy "..\thirdparty\pHash\release\libpHash.dll" "..\..\"
+copy "..\thirdparty\pHash\release\libsamplerate-0.dll" "..\..\"
+copy "..\thirdparty\phash\release\libsndfile-1.dll" "..\..\"
 
 set /p ans=Do you want to build SPlayer now? Building splayer will take much longer time [y/n]^>
 if "%ans%"== "y" (
