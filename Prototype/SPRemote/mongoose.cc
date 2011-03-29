@@ -4064,3 +4064,14 @@ struct mg_context *mg_start(mg_callback_t user_callback, const char **options) {
 
   return ctx;
 }
+
+void send_http(struct mg_connection *conn, int status,
+               const char *reason)
+{
+  conn->request_info.status_code = status;
+  (void) mg_printf(conn,
+    "HTTP/1.1 %d %s\r\n"
+    "Connection: close\r\n"
+    "Content-Type: text/html; charset=utf-8\r\n\r\n",
+    status, reason);
+}
