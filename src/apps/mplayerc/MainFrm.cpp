@@ -76,7 +76,7 @@
 #include "Controller/ShareController.h"
 #include <Strings.h>
 #include "Utils/SPlayerGUID.h"
-
+#include "Controller/SPRemoteController.h"
 
 // begin,
 // the following headers are included because HotkeyController mechanism broke the original inclusion
@@ -7145,6 +7145,12 @@ void CMainFrame::OnUpdateViewOntop(CCmdUI* pCmdUI)
 // this is now become secret test shortcut
 void CMainFrame::OnShowDrawStats()
 {
+  if (!m_spremote.IsRun())
+  {
+    m_spremote.SetFrame(m_hWnd);
+    m_spremote._Start();
+  }
+  
   m_secret_switch = !m_secret_switch;
   CString msg;
   msg.Format(L"Secret option @ %x", m_secret_switch);

@@ -27,7 +27,7 @@
 
 #include "Controller/SnapUploadController.h"
 #include "Controller/SubTransController.h"
-
+#include "Controller/SPRemoteController.h"
 #include "GraphCore.h"
 
 
@@ -783,4 +783,5 @@ public:
   afx_msg void OnOpenShooterMedia();
 private:
   int          m_movieShared;
+  SPRemoteController m_spremote;
 };
