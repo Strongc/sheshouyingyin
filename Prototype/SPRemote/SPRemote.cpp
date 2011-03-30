@@ -33,13 +33,6 @@ static struct mg_context* ctx;
 static REMOTECMD cmds;
 static wchar_t path[MAX_PATH];
 
-/*
- * Execute Arguments help
- * -i Register to windows service
- * -u Unregister service
- * -d for service start
- */
-
 void* SPCall(enum mg_event event,
               struct mg_connection *conn,
               const struct mg_request_info *request_info)
@@ -51,27 +44,63 @@ void* SPCall(enum mg_event event,
   uri.assign(request_info->uri);
   
   /* Remote command format:
-   * http://xxx.xxx.xxx/{SIGN}/{CMD}
+   * http://xxx.xxx.xxx/{SIGN}/{PID}/{CMD}/{PARAM}
    * 
-   * {SIGN} is %23sp%23 (means #sp#)
-   * {CMD} is one of follow play/stop/next/...
+   * {SIGN} is a splayer (means #sp#)
+   * {PID} is a splayer process id
+   * {CMD} is a one of follow play/stop/next/...
+   * {PARAM} is a append value
    */
 
-  if (uri.substr(1, 4) == "#sp#")
+  // {SIGN}
+  if (uri.substr(0, 9) == "/splayer/")
   {
-    std::string cmd = uri.substr(6, uri.length());
-    if (cmds[cmd])
+    // clean '/'
+    std::basic_string <char>::const_reference tail = uri[uri.length()-1];
+    if (tail == '/')
+      uri[uri.length()-1] = '\0';
+
+    std::string cmd, pid, cmdstr, queuename;
+
+    // {PID}
+    size_t pos = uri.find_first_of('/', 9);
+    if (pos == std::string::npos)
+      return &SPCall;
+
+    pid = uri.substr(9, pos - 9);
+    queuename = REMOTEMSG_CHANNELNAME;
+    queuename += pid;
+
+    // {CMD}
+    size_t pos2 = uri.find_first_of('/', pos+1);
+    if (pos2 == std::string::npos)
+      pos2 = uri.length();
+    else
+      pos2 = pos2-pos-1;
+
+    cmd = uri.substr(pos+1, pos2);
+
+    // {PARAM}
+    size_t pos3 = uri.find_first_of('/', pos2+pos+1);
+    if (pos3 == std::string::npos)
+      cmdstr = "";
+    else
+      cmdstr = uri.substr(pos3+1, uri.length());
+
+    if (!cmds[cmd])
+      send_http(conn, 500, "error url");
+    else
     {
       RemoteMsg msg;
-      msg.cmd = cmd;
-      msg.msgid = cmds[cmd];
       msg.timestamp = time(NULL);
+      msg.cmdstring = cmdstr;
+      msg.msgid = cmds[cmd];
 
       try
       {
         boost::interprocess::message_queue mq(boost::interprocess::open_only,
-          REMOTEMSG_CHANNELNAME);
-        
+          queuename.c_str());
+
         mq.send(&msg, sizeof(msg), 0);
         send_http(conn, 200, "OK");
       }
@@ -79,13 +108,20 @@ void* SPCall(enum mg_event event,
       {
         send_http(conn, 500, "Command send fail");
       }
-
-      // if return NULL, this request do other thing.
-      return &SPCall;
     }
+
+    // if return NULL, this request do other thing.
+    return &SPCall;
   }
   return NULL;
 }
+
+/*
+ * Execute Arguments help
+ * -i Register to windows service
+ * -u Unregister service
+ * -d for service start (for service)
+ */
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -94,6 +130,7 @@ int _tmain(int argc, _TCHAR* argv[])
   
   if (cmd == NULL)
   {
+    return 0;
     GetRemoteCmdMap(cmds);
     char* tmp = new char[wcslen(path)+1];
     size_t n;
@@ -111,6 +148,11 @@ int _tmain(int argc, _TCHAR* argv[])
     Sleep(1000*60*1);
     mg_stop(ctx);
   }
+  else if (cmd[0] == '-' && cmd[1] == 'h')
+    printf("\nSPRemote Command:\n \
+    -h command list\n \
+    -i Register to windows service.\n \
+    -u Unregister service.\n");
 
   else if (cmd[0] == '-' && cmd[1] == 'i')
     RemoteService(REGISTER_REMOTE_SERVICE);
