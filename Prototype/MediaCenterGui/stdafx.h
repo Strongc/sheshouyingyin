@@ -17,6 +17,7 @@
 #include <vector>
 #include <string>
 #include <ResLoader.h>
+#include "atlsync.h"
 extern CAppModule _Module;
 
 #include <atlwin.h>

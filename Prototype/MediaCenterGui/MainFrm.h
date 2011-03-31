@@ -4,6 +4,8 @@
 
 #pragma once
 
+#define TIMER_OFFSET 11
+
 class CMainFrame : public CFrameWindowImpl<CMainFrame>, public CUpdateUI<CMainFrame>,
   public CMessageFilter, public CIdleHandler
 {
@@ -12,7 +14,8 @@ public:
 
   CMediaCenterView m_view;
   BlockList m_blocklist;
-
+  int m_offsetspeed;
+  
   virtual BOOL PreTranslateMessage(MSG* pMsg)
   {
     if(CFrameWindowImpl<CMainFrame>::PreTranslateMessage(pMsg))
@@ -35,11 +38,15 @@ public:
     COMMAND_ID_HANDLER(ID_APP_EXIT, OnFileExit)
     COMMAND_ID_HANDLER(ID_FILE_NEW, OnFileNew)
     COMMAND_ID_HANDLER(ID_APP_ABOUT, OnAppAbout)
-
+    
     MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBg)
     MESSAGE_HANDLER(WM_PAINT, OnPaint)
     MESSAGE_HANDLER(WM_SIZE, OnSize)
-
+    MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
+    MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
+    MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
+    MESSAGE_HANDLER(WM_TIMER, OnTimer)
+    
     CHAIN_MSG_MAP(CUpdateUI<CMainFrame>)
     CHAIN_MSG_MAP(CFrameWindowImpl<CMainFrame>)
   END_MSG_MAP()
@@ -51,15 +58,15 @@ public:
 
   LRESULT OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
   {
-
+    
     m_hWndClient = m_view.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_CLIENTEDGE);
-
+    
     // register object for message filtering and idle updates
     CMessageLoop* pLoop = _Module.GetMessageLoop();
     ATLASSERT(pLoop != NULL);
     pLoop->AddMessageFilter(this);
     pLoop->AddIdleHandler(this);
-
+    
     return 0;
   }
 
@@ -86,6 +93,9 @@ public:
     // TODO: add code to initialize document
     BlockUnit* one = new BlockUnit;
     m_blocklist.AddBlock(one);
+    RECT rc;
+    GetClientRect(&rc);
+    m_blocklist.Update(rc.right - rc.left, rc.bottom - rc.top);
     Invalidate(FALSE);
     return 0;
   }
@@ -107,7 +117,7 @@ public:
     WTL::CMemoryDC memdc(dc, client);
     HBRUSH hbrush = ::CreateSolidBrush(RGB(231, 231, 231));
     memdc.FillRect(&client, hbrush);
-
+    
     m_blocklist.DoPaint(memdc);
 
     return 0;
@@ -127,4 +137,70 @@ public:
     bHandled = TRUE;
     return 0;
   }
+
+  LRESULT OnLButtonDown(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
+  {
+    POINT pt;
+    pt.x = LOWORD(lParam);
+    pt.y = HIWORD(lParam);
+    RECT rc = {0,0,0,0};
+    BOOL bscroll = m_blocklist.OnScrollBarHittest(pt, TRUE, m_offsetspeed, m_hWnd);
+    BOOL blayer = m_blocklist.OnHittest(pt, TRUE);
+    SetCapture();
+    return 0;
+  }
+
+  LRESULT OnLButtonUp(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
+  {
+    ReleaseCapture();
+    POINT pt;
+    pt.x = LOWORD(lParam);
+    pt.y = HIWORD(lParam);
+    RECT rc = {0,0,0,0};
+    BOOL bscroll = m_blocklist.OnScrollBarHittest(pt, FALSE, m_offsetspeed, m_hWnd);
+    BOOL blayer = m_blocklist.OnHittest(pt, FALSE);
+    if (!bscroll)
+    {
+      RECT rc = m_blocklist.GetScrollBarHittest();
+      RECT rcclient;
+      GetClientRect(&rcclient);
+      rc.top = 0;
+      rc.bottom = rcclient.bottom;
+      InvalidateRect(&rc);
+    }
+    
+    return 0;
+  }
+
+  LRESULT OnMouseMove(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
+  {
+    POINT pt;
+    pt.x = LOWORD(lParam);
+    pt.y = HIWORD(lParam);
+    RECT rc = {0,0,0,0};
+    BOOL bscroll = m_blocklist.OnScrollBarHittest(pt, -1, m_offsetspeed, m_hWnd);
+    BOOL blayer = m_blocklist.OnHittest(pt, -1);
+    if (bscroll)
+      InvalidateRect(FALSE);
+    if (blayer)
+     InvalidateRect(FALSE);
+    return 0;
+  }
+
+  LRESULT OnTimer(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
+  {
+    switch (wParam)
+    {
+    case TIMER_OFFSET:
+      m_blocklist.SetOffset(m_offsetspeed);
+      break;
+    }
+    
+    RECT rc;
+    GetClientRect(&rc);
+    m_blocklist.Update(rc.right - rc.left, rc.bottom - rc.top);
+    InvalidateRect(&rc);
+    return 0;
+  }
 };
+

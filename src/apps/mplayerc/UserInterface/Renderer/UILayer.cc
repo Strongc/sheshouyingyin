@@ -6,7 +6,8 @@ UILayer::UILayer(std::wstring respath, BOOL display /* = TRUE */)
 {
   ResLoader rs;
   SetTexture(rs.LoadBitmap(respath));
-  SetDisplay(display);
+  m_fixdisplay = display;
+  SetDisplay(FALSE);
 }
 
 UILayer::~UILayer()
@@ -43,10 +44,10 @@ BOOL UILayer::SetTexture(HBITMAP texture)
 
 BOOL UILayer::GetTextureRect(RECT& rc)
 {
-  rc.top = 0;
-  rc.left = 0;
-  rc.right = m_bm.bmWidth;
-  rc.bottom = m_bm.bmHeight;
+  rc.top = m_texturepos.y;
+  rc.left = m_texturepos.x;
+  rc.right = m_texturepos.x + m_bm.bmWidth;
+  rc.bottom = m_texturepos.y + m_bm.bmHeight;
 
   return TRUE;
 }
@@ -71,7 +72,7 @@ BOOL UILayer::SetDisplay(BOOL display)
 
 BOOL UILayer::DoPaint(WTL::CDC& dc)
 {
-  if (m_display == FALSE)
+  if (!m_display && !m_fixdisplay)
     return FALSE;
 
   WTL::CDC texturedc;
@@ -88,4 +89,15 @@ BOOL UILayer::DoPaint(WTL::CDC& dc)
   texturedc.DeleteDC();
   
   return TRUE;
+}
+
+void UILayer::OnHittest(POINT pt, BOOL blbtndown)
+{
+  RECT hittestrc = {m_texturepos.x, m_texturepos.y, m_texturepos.x + m_bm.bmWidth,
+             m_texturepos.y + m_bm.bmHeight};
+  BOOL bl = PtInRect(&hittestrc, pt);
+  if (bl)
+    SetDisplay(TRUE);
+  else
+    SetDisplay(FALSE);
 }

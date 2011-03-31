@@ -205,6 +205,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MediaCenterScrollBar.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MediaCenterScrollBar.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MediaCenterView.h"
 				>
 			</File>
@@ -229,6 +237,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\stdafx.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\apps\mplayerc\UserInterface\Renderer\UILayer.cc"
 				>
 			</File>
@@ -247,7 +259,6 @@
 		</Filter>
 		<Filter
 			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc"
 			>
 			<File
 				RelativePath=".\AboutDlg.h"
@@ -259,10 +270,6 @@
 			</File>
 			<File
 				RelativePath=".\resource.h"
-				>
-			</File>
-			<File
-				RelativePath=".\stdafx.h"
 				>
 			</File>
 		</Filter>

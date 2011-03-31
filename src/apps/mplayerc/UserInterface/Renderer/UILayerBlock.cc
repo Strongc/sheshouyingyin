@@ -72,3 +72,11 @@ BOOL UILayerBlock::DeleteAllLayer()
 
   return TRUE;
 }
+
+void UILayerBlock::OnHittest(POINT pt, BOOL blbtndown)
+{
+  BOOL bl = FALSE;
+  for (std::map<std::wstring, UILayer*>::iterator it = m_layers.begin();
+       it != m_layers.end(); ++it)
+    it->second->OnHittest(pt, blbtndown);
+}
