@@ -17,9 +17,12 @@ public:
 
   virtual BOOL DoPaint(WTL::CDC& dc);
 
+  void OnHittest(POINT pt, BOOL blbtndown);
+
 private:
   WTL::CBitmap   m_texture;
   POINT          m_texturepos;
+  BOOL           m_fixdisplay;
   BOOL           m_display;
   BITMAP         m_bm;
 };
