@@ -91,7 +91,7 @@ BOOL UILayer::DoPaint(WTL::CDC& dc)
   return TRUE;
 }
 
-void UILayer::OnHittest(POINT pt, BOOL blbtndown)
+BOOL UILayer::OnHittest(POINT pt, BOOL blbtndown)
 {
   RECT hittestrc = {m_texturepos.x, m_texturepos.y, m_texturepos.x + m_bm.bmWidth,
              m_texturepos.y + m_bm.bmHeight};
@@ -100,4 +100,5 @@ void UILayer::OnHittest(POINT pt, BOOL blbtndown)
     SetDisplay(TRUE);
   else
     SetDisplay(FALSE);
+  return bl;
 }

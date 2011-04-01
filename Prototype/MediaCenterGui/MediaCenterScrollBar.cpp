@@ -3,9 +3,11 @@
 #include <ResLoader.h>
 
 #define  TIMER_OFFSET 11
+#define  TIMER_SLOWOFFSET 12
 
 MediaCenterScrollBar::MediaCenterScrollBar(void):
  m_lastlbtstate(FALSE)
+,m_preoffset(0)
 {
   m_prepos.x = 0;
   m_prepos.y = 0;
@@ -89,20 +91,28 @@ BOOL MediaCenterScrollBar::OnHittest(POINT pt, BOOL bLbtdown, int& offsetspeed, 
     m_pos.y = min(m_pos.y, m_winh - m_bm.bmHeight);
 
     int offset = m_pos.y - m_prepos.y;
-    int i = (m_winh - m_bm.bmHeight) / 2 / 8;
-    int j = (m_winh - m_bm.bmHeight) / 2 / 20;
+    int i = (m_winh - m_bm.bmHeight) / 2 / 20;
+/*    int j = (m_winh - m_bm.bmHeight) / 2 / 20;*/
     if (offset > 0)
       offsetspeed = (offset + i - 1) / i;
     else
       offsetspeed = (offset - i + 1) / i;
-    DWORD timer = max(63 - (abs(offset) + j - 1) / j * 3, 1);
-    SetTimer(hwnd, TIMER_OFFSET, timer, NULL);
-    if (offset != 0)
-      bhit = TRUE;
+/*    DWORD timer = max(63 - (abs(offset) + j - 1) / j * 3, 1);*/
+    DWORD timer = 42 - (abs(offset) + i - 1) / i * 2;
+    if (m_preoffset != offset)
+    {
+      SetTimer(hwnd, TIMER_SLOWOFFSET, 1, 0);
+      m_preoffset = offset;
+    }
+    else
+      SetTimer(hwnd, TIMER_OFFSET, timer, NULL);
+    
+    bhit = TRUE;
   }
   else
   { 
     KillTimer(hwnd, TIMER_OFFSET);
+    KillTimer(hwnd, TIMER_SLOWOFFSET);
     m_pos = m_prepos;
     bhit = FALSE; 
   }

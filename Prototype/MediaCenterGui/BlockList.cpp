@@ -4,6 +4,11 @@
 
 // BlockOne
 
+#define  BEHITTEST 11
+#define  BEDELETE   12
+#define  BEPLAY    13
+
+
 BlockUnit::BlockUnit() :
   m_layer(new UILayerBlock)
 {
@@ -59,18 +64,9 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   dc.TextOut(pt.x, pt.y+140, str);
 }
 
-BOOL BlockUnit::OnHittest(POINT pt, BOOL blbtndown)
+int BlockUnit::OnHittest(POINT pt, BOOL blbtndown)
 {
-  m_layer->OnHittest(pt, blbtndown);
-  
-  RECT rc;
-  UILayer* mark;
-  m_layer->GetUILayer(L"mark", &mark);
-  mark->GetTextureRect(rc);
-  
-  BOOL bl = PtInRect(&rc, pt);
-
-  return bl;
+  return m_layer->OnHittest(pt, blbtndown);
 }
 
 
@@ -85,8 +81,8 @@ BlockList::BlockList()
   m_blockw = 138;
   m_blockh = 138;
   m_spacing = 10;
+  m_scrollbarwidth = 20;
   m_top = 30;
-  m_y.push_back(0.0);
   m_start = m_list.begin();
   m_offsettotal = 0;
   m_scrollbar = 0;
@@ -100,7 +96,7 @@ BlockList::~BlockList()
 
 void BlockList::DoPaint(WTL::CDC& dc)
 {
-  if (m_maxcolumn == 0)
+  if (m_x.empty() || m_y.empty())
     return;
 
   int rows = 0;
@@ -126,7 +122,7 @@ void BlockList::DoPaint(WTL::CDC& dc)
     POINT pt = {*itx, *ity};
     (*it)->DoPaint(dc, pt);
     ++itx;
-  }
+  } 
 }
 
 void BlockList::AddBlock(BlockUnit* unit)
@@ -161,11 +157,11 @@ void BlockList::AlignColumnBlocks()
 {
   m_x.clear();
   float x = m_spacing;
-  while (x + m_blockw + m_spacing < m_winw)
+  while (x + m_blockw + m_spacing  + m_scrollbarwidth < m_winw)
   {
     m_x.push_back(x);
     // next block
-    if (x + m_blockw + m_spacing < m_winw)
+    if (x + m_blockw + m_spacing + m_scrollbarwidth < m_winw)
       x += m_blockw + m_spacing;
     else
       break;
@@ -185,7 +181,11 @@ void BlockList::AlignColumnBlocks()
 
 void BlockList::AlignRowBlocks()
 {
-  float y = m_y.front();
+  float y;
+  if (m_y.empty())
+    y = 0;
+  else
+    y = m_y.front();
   m_y.clear();
   
   while (y + m_blockh +m_top < m_winh + m_blockh + m_top)
@@ -205,7 +205,7 @@ void BlockList::AlignScrollBar()
   POINT pt;
   POINT ptcurrt;
   RECT rc = m_scrollbar->GetRect();
-  pt.x = max(m_x.back() + m_blockw + 1, m_winw - rc.right - 1);
+  pt.x = m_winw - rc.right - 1;
   pt.y = (m_winh - rc.bottom) / 2;
   ptcurrt = m_scrollbar->GetPosition();
   if (ptcurrt.y != pt.y || ptcurrt.x != pt.x)
@@ -234,9 +234,12 @@ void BlockList::SetOffset(float offset)
 
 int BlockList::IsListEnd(std::list<BlockUnit*>::iterator it)
 {
-  int height = m_blockh + m_top;
+  int height = (int)m_blockh + (int)m_top;
   int minitem;
-  minitem = m_winh % height == 0? m_winh / height * m_maxcolumn:(m_winh / height + 1) * m_maxcolumn;
+  if ((int)m_winh % height == 0)
+    minitem = (int)m_winh / height * m_maxcolumn;
+  else
+    minitem = ((int)m_winh / height + 1) * m_maxcolumn;
   
   while (minitem--)
   {
@@ -261,7 +264,7 @@ int BlockList::SetStartOffset(float offset)
 {
   std::list<BlockUnit*>::iterator start = m_start;
   int listState = 0;
-  int height = m_blockh + m_top;
+  int height = (int)m_blockh + (int)m_top;
   int column = m_maxcolumn;
   int minoffset = (int)m_winh % height == 0? 0:height - (int)m_winh % height;
   m_offsettotal += offset;
@@ -303,7 +306,7 @@ int BlockList::SetStartOffset(float offset)
 void BlockList::SetYOffset(float offset, int result)
 {
   float y = m_y.front();
-  int height = m_blockh + m_top;
+  int height = (int)m_blockh + (int)m_top;
   int ymin =  ((int)m_winh % height == 0? 0 : (int)m_winh % height - height);
   y = y - offset;
 
@@ -331,20 +334,116 @@ BOOL BlockList::OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetspeed, H
   return m_scrollbar->OnHittest(pt, blbtndown, offsetspeed, hwnd);
 }
 
-BOOL BlockList::OnHittest(POINT pt, BOOL blbtndown)
+int BlockList::OnHittest(POINT pt, BOOL blbtndown)
 {
-  BOOL bl = FALSE;
+  int state = 0;
   std::list<BlockUnit*>::iterator it = m_start;
   for (; it != m_end; ++it)
   {
-    bl = (*it)->OnHittest(pt, blbtndown);
-    if (bl)
-      break;
+    state = (*it)->OnHittest(pt, blbtndown);
+    switch (state)
+    {
+    case BEDELETE:
+      DeleteBlock(it);
+      return state;
+    case BEPLAY:
+      return state;
+    case BEHITTEST:
+      return state;
+    }
   }
-  return bl;
+  return state;
 }
 
 RECT BlockList::GetScrollBarHittest()
 {
   return m_scrollbar->GetHittest();
+}
+
+void BlockList::DeleteBlock(std::list<BlockUnit*>::iterator it)
+{
+  if (it == m_start)
+  {
+    if (m_start == m_list.begin())
+    {
+      m_list.erase(it);
+      m_start = m_list.begin();
+    }
+    else
+    {
+      --m_start;
+      m_list.erase(it);
+    }
+  }
+  else
+    m_list.erase(it);
+}
+
+//BlockListView
+
+BlockListView::BlockListView():
+m_lbtndown(FALSE)
+{
+
+}
+
+BlockListView::~BlockListView()
+{
+
+}
+
+void BlockListView::SetFrameHwnd(HWND hwnd)
+{
+  m_hwnd = hwnd;
+}
+
+void BlockListView::SetScrollSpeed(int* speed)
+{
+  m_scrollspeed = speed;
+}
+
+void BlockListView::HandleLButtonDown(POINT pt, RECT rcclient)
+{
+  BOOL bscroll = OnScrollBarHittest(pt, TRUE, *m_scrollspeed, m_hwnd);
+  int layerstate = OnHittest(pt, TRUE);
+  
+  if (bscroll)
+  {
+    ::SetCapture(m_hwnd);
+    m_lbtndown = TRUE;
+  }
+  
+  if (layerstate == BEDELETE)
+  {
+    Update(rcclient.right, rcclient.bottom);
+    InvalidateRect(m_hwnd, &rcclient, FALSE);
+  }
+}
+
+void BlockListView::HandleLButtonUp(POINT pt, RECT rcclient)
+{
+
+  BOOL bscroll = OnScrollBarHittest(pt, FALSE, *m_scrollspeed, m_hwnd);
+  int blayer = OnHittest(pt, FALSE);
+
+  if (m_lbtndown)
+    ::ReleaseCapture();
+  
+  if (!bscroll)
+  {
+    RECT rc = GetScrollBarHittest();
+    rc.top = 0;
+    rc.bottom = rcclient.bottom;
+    InvalidateRect(m_hwnd, &rcclient, FALSE);
+  }
+}
+
+void BlockListView::HandleMouseMove(POINT pt, RECT rcclient)
+{
+  BOOL bscroll = OnScrollBarHittest(pt, -1, *m_scrollspeed, m_hwnd);
+  int blayer = OnHittest(pt, -1);
+  if (bscroll)
+    ::InvalidateRect(m_hwnd, &rcclient, FALSE);
+  if (blayer == BEHITTEST)
+    ::InvalidateRect(m_hwnd, &rcclient, FALSE);
 }
