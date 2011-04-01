@@ -34,10 +34,11 @@ public:
   ~BlockList();
 
   void AddBlock(BlockUnit* unit);  
+  void DeleteBlock(std::list<BlockUnit*>::iterator it);
   BOOL AddScrollBar();
   void DoPaint(WTL::CDC& dc);
   BOOL OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetspeed, HWND hwnd);
-  BOOL OnHittest(POINT pt, BOOL blbtndown);
+  int OnHittest(POINT pt, BOOL blbtndown);
   
   // logic
   void SetOffset(float offset);
@@ -56,12 +57,13 @@ public:
 private:
   float m_spacing;
   float m_top;
+  float m_scrollbarwidth;
 
   float m_blockh;
   float m_blockw;
 
   float m_winw;
-  int m_winh;
+  float m_winh;
 
   float m_offsettotal;
 
@@ -80,4 +82,25 @@ private:
   int m_listendstate;
   int m_listbeginstate;
 
+};
+
+class BlockListView : public BlockList
+{
+public:
+  BlockListView();
+  ~BlockListView();
+
+  void HandleLButtonDown(POINT pt, RECT rcclient);
+  void HandleLButtonUp(POINT pt, RECT rcclient);
+  void HandleMouseMove(POINT pt, RECT rcclient);
+
+  void SetFrameHwnd(HWND hwnd);
+  void SetScrollSpeed(int* speed);
+  void SetOffsetBool(BOOL* bl);
+
+private:
+  HWND m_hwnd;
+  int*  m_scrollspeed;
+  BOOL* m_boffset; 
+  BOOL m_lbtndown;
 };

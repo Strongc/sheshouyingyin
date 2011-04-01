@@ -5,6 +5,7 @@
 #pragma once
 
 #define TIMER_OFFSET 11
+#define  TIMER_SLOWOFFSET 12
 
 class CMainFrame : public CFrameWindowImpl<CMainFrame>, public CUpdateUI<CMainFrame>,
   public CMessageFilter, public CIdleHandler
@@ -13,14 +14,15 @@ public:
   DECLARE_FRAME_WND_CLASS(NULL, IDR_MAINFRAME)
 
   CMediaCenterView m_view;
-  BlockList m_blocklist;
+  BlockListView m_blocklist;
   int m_offsetspeed;
+  int m_preoffsetspeed;
   
   virtual BOOL PreTranslateMessage(MSG* pMsg)
   {
     if(CFrameWindowImpl<CMainFrame>::PreTranslateMessage(pMsg))
       return TRUE;
-
+   
     return m_view.PreTranslateMessage(pMsg);
   }
 
@@ -66,12 +68,16 @@ public:
     ATLASSERT(pLoop != NULL);
     pLoop->AddMessageFilter(this);
     pLoop->AddIdleHandler(this);
+
+    m_blocklist.SetFrameHwnd(m_hWnd);
+    m_blocklist.SetScrollSpeed(&m_offsetspeed);
     
     return 0;
   }
 
   LRESULT OnDestroy(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& bHandled)
   {
+    KillTimer(123);
     // unregister message filtering and idle updates
     CMessageLoop* pLoop = _Module.GetMessageLoop();
     ATLASSERT(pLoop != NULL);
@@ -143,32 +149,22 @@ public:
     POINT pt;
     pt.x = LOWORD(lParam);
     pt.y = HIWORD(lParam);
-    RECT rc = {0,0,0,0};
-    BOOL bscroll = m_blocklist.OnScrollBarHittest(pt, TRUE, m_offsetspeed, m_hWnd);
-    BOOL blayer = m_blocklist.OnHittest(pt, TRUE);
-    SetCapture();
+    RECT rc;
+    GetClientRect(&rc);
+    m_blocklist.HandleLButtonDown(pt, rc);
     return 0;
   }
 
   LRESULT OnLButtonUp(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM lParam, BOOL& /*bHandled*/)
   {
-    ReleaseCapture();
+    
     POINT pt;
     pt.x = LOWORD(lParam);
     pt.y = HIWORD(lParam);
-    RECT rc = {0,0,0,0};
-    BOOL bscroll = m_blocklist.OnScrollBarHittest(pt, FALSE, m_offsetspeed, m_hWnd);
-    BOOL blayer = m_blocklist.OnHittest(pt, FALSE);
-    if (!bscroll)
-    {
-      RECT rc = m_blocklist.GetScrollBarHittest();
-      RECT rcclient;
-      GetClientRect(&rcclient);
-      rc.top = 0;
-      rc.bottom = rcclient.bottom;
-      InvalidateRect(&rc);
-    }
-    
+    RECT rc;
+    GetClientRect(&rc);
+    m_blocklist.HandleLButtonUp(pt, rc);
+
     return 0;
   }
 
@@ -177,13 +173,9 @@ public:
     POINT pt;
     pt.x = LOWORD(lParam);
     pt.y = HIWORD(lParam);
-    RECT rc = {0,0,0,0};
-    BOOL bscroll = m_blocklist.OnScrollBarHittest(pt, -1, m_offsetspeed, m_hWnd);
-    BOOL blayer = m_blocklist.OnHittest(pt, -1);
-    if (bscroll)
-      InvalidateRect(FALSE);
-    if (blayer)
-     InvalidateRect(FALSE);
+    RECT rc;
+    GetClientRect(&rc);
+    m_blocklist.HandleMouseMove(pt, rc);
     return 0;
   }
 
@@ -192,7 +184,13 @@ public:
     switch (wParam)
     {
     case TIMER_OFFSET:
+      m_preoffsetspeed = m_offsetspeed;
       m_blocklist.SetOffset(m_offsetspeed);
+      break;
+    case TIMER_SLOWOFFSET:
+      m_blocklist.SetOffset(m_offsetspeed);
+      if (m_preoffsetspeed == m_offsetspeed)
+        KillTimer(TIMER_SLOWOFFSET);
       break;
     }
     

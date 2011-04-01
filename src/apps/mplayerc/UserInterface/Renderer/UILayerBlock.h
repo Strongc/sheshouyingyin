@@ -15,9 +15,10 @@ public:
   BOOL DelUILayer(std::wstring key);
   BOOL DoPaint(WTL::CDC& dc);
   BOOL DeleteAllLayer();
-  void OnHittest(POINT pt, BOOL blbtndown);
+  BOOL OnHittest(POINT pt, BOOL blbtndown);
 
 private:
   std::map<std::wstring, UILayer*> m_layers;
+  BOOL m_lastbtnstate;
 
 };

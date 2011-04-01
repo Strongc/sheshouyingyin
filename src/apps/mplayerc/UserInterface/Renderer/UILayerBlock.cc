@@ -1,7 +1,12 @@
 #include "stdafx.h"
 #include "UILayerBlock.h"
 
-UILayerBlock::UILayerBlock()
+#define  BEHITTEST 11
+#define  BEDELETE   12
+#define  BEPLAY    13
+
+UILayerBlock::UILayerBlock():
+m_lastbtnstate(FALSE)
 {
 
 }
@@ -73,10 +78,24 @@ BOOL UILayerBlock::DeleteAllLayer()
   return TRUE;
 }
 
-void UILayerBlock::OnHittest(POINT pt, BOOL blbtndown)
+int UILayerBlock::OnHittest(POINT pt, BOOL blbtndown)
 {
-  BOOL bl = FALSE;
+  if (blbtndown == -1)
+    blbtndown = m_lastbtnstate;
+  else
+    m_lastbtnstate = blbtndown;
+
+  int state = 0;
   for (std::map<std::wstring, UILayer*>::iterator it = m_layers.begin();
        it != m_layers.end(); ++it)
-    it->second->OnHittest(pt, blbtndown);
+  {
+    BOOL bl = it->second->OnHittest(pt, blbtndown);
+    if (it->first.find(L"del") != std::wstring::npos && blbtndown && bl)
+      return BEDELETE;
+    else if (it->first.find(L"play") != std::wstring::npos && blbtndown && bl)
+      return BEPLAY;
+    else if (bl)
+      state = BEHITTEST;
+  }
+  return state;
 }
