@@ -4,9 +4,11 @@
 #include <threadhelper.h>
 #include "NetworkControlerImpl.h"
 #include "LazyInstance.h"
-#include "..\..\..\..\Thirdparty\pHash\phashapi.h"
+#include "phashapi.h"
 #include "pHashController.h"
 #include <fstream>
+
+
 //////////////////////////////////////////////////////////////////////////
 //
 //  pHashController is a global instance controller that calculates
@@ -32,8 +34,7 @@
 
 class pHashController:
   public LazyInstanceImpl<pHashController>,
-  public ThreadHelperImpl<pHashController>,
-  public NetworkControlerImpl
+  public ThreadHelperImpl<pHashController>
 {
 public:
   pHashController(void);
