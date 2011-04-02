@@ -1,21 +1,11 @@
 #include "StdAfx.h"
 
 #include "MediaSpiderDisk.h"
+#include "../Controller/MediaCenterController.h"
 #include "MediaComm.h"
 #include <algorithm>
 #include "..\Controller\PlayerPreference.h"
 #include "..\Controller\SPlayerDefs.h"
-
-////////////////////////////////////////////////////////////////////////////////
-// Note: All the path must use '\' for their delimiter
-//       If the path is a folder, it must have a '\' follow the end
-//       If the path is a file, it mustn't have a '\' follow the end
-// Warn: All the case is sensitive!!!
-
-////////////////////////////////////////////////////////////////////////////////
-// Global variables used in this file
-static std::vector<std::wstring> g_vtExcludeItems;
-static std::vector<std::wstring> g_vtMediaTypes;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Normal part
@@ -27,21 +17,20 @@ MediaSpiderDisk::MediaSpiderDisk()
 
   // Init the media type and the exclude folders & files from the database
   // Warning: the case is sensitive !!!
-  g_vtMediaTypes.push_back(L".avi");
-  g_vtMediaTypes.push_back(L".wmv");
-  g_vtMediaTypes.push_back(L".mkv");
-  g_vtMediaTypes.push_back(L".rmvb");
-  g_vtMediaTypes.push_back(L".rm");
-  g_vtMediaTypes.push_back(L".asf");
-  g_vtMediaTypes.push_back(L".mov");
-  g_vtMediaTypes.push_back(L".mp4");
-  g_vtMediaTypes.push_back(L".mpeg");
-  g_vtMediaTypes.push_back(L".3gp");
+  SetSupportExtension(L".avi");
+  SetSupportExtension(L".wmv");
+  SetSupportExtension(L".mkv");
+  SetSupportExtension(L".rmvb");
+  SetSupportExtension(L".rm");
+  SetSupportExtension(L".asf");
+  SetSupportExtension(L".mov");
+  SetSupportExtension(L".mp4");
+  SetSupportExtension(L".mpeg");
+  SetSupportExtension(L".3gp");
 
-  g_vtExcludeItems.push_back(L"c:\\Windows\\");
-  g_vtExcludeItems.push_back(L"C:\\cjbw1234\\crayzedsgui\\");
-  g_vtExcludeItems.push_back(L"C:\\Program Files\\");
-  g_vtExcludeItems.push_back(L"C:\\Program Files (x86)\\");
+  SetExcludePath(L"c:\\Windows\\");
+  SetExcludePath(L"C:\\Program Files\\");
+  SetExcludePath(L"C:\\Program Files (x86)\\");
 }
 
 MediaSpiderDisk::~MediaSpiderDisk()
@@ -51,12 +40,13 @@ MediaSpiderDisk::~MediaSpiderDisk()
   PlayerPreference::GetInstance()->SetStringVar(STRVAR_LASTSPIDERPATH, m_sLastSearchPath);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Main thread and the helper functions
-
 void MediaSpiderDisk::_Thread()
 {
+  SearchDisk(L"\\\\FILE_01\\reflections\\-=HDTV=-\\");
+  return;
+
   using std::vector;
   using std::wstring;
 
@@ -141,6 +131,10 @@ void MediaSpiderDisk::SearchDisk(const std::wstring& sPath)
   using std::vector;
   using std::wstring;
 
+  // see if need to be stop
+  if (_Exit_state(0))
+    return;  
+
   // Search the disk, this is the really function that do the main job
   WIN32_FIND_DATA fdFindData = {0};
   HANDLE hFindPos = ::FindFirstFile((sPath + L"*").c_str(), &fdFindData);
@@ -152,6 +146,9 @@ void MediaSpiderDisk::SearchDisk(const std::wstring& sPath)
 
   do
   {
+    // sleep for a moment
+    ::Sleep(100);
+
     // Not search the "." and the ".."
     if ((::wcscmp(fdFindData.cFileName, L".") == 0) ||
       (::wcscmp(fdFindData.cFileName, L"..") == 0))
@@ -169,7 +166,7 @@ void MediaSpiderDisk::SearchDisk(const std::wstring& sPath)
     {
       // Is a folder
       sFullPath += L"\\";
-      if (!PassThisItem(sFullPath))
+      if (!IsExcludePath(sFullPath))
       {
         SearchDisk(sFullPath);
       }
@@ -178,9 +175,9 @@ void MediaSpiderDisk::SearchDisk(const std::wstring& sPath)
     {
       // Is a file, judge if it's a media file
       // If it's a media file, then add it into the database
-      if (!PassThisItem(sFullPath))
+      if (!IsExcludePath(sFullPath))
       {
-        if (IsThisMediaFile(sFullPath))
+        if (IsSupportExtension(sFullPath))
         {
           // Add it into the database
           // m_model...
@@ -198,37 +195,14 @@ void MediaSpiderDisk::SearchDisk(const std::wstring& sPath)
           mdData.path = szPath;
           // mdData.thumbnailpath = ;
           // mdData.videotime = ;
-
-          m_model.Add(mdData);
+          MediaCenterController::GetInstance()->AddMedia(mdData);
         }
       }
     }
   } while (::FindNextFile(hFindPos, &fdFindData));
 }
 
-bool MediaSpiderDisk::PassThisItem(const std::wstring& sItemPath)
-{
-  if (find(g_vtExcludeItems.begin(), g_vtExcludeItems.end(), sItemPath) != g_vtExcludeItems.end())
-  {
-    return true;
-  }
-
-  return false;
-}
-
-bool MediaSpiderDisk::IsThisMediaFile(const std::wstring& sFilePath)
-{
-  // Find if the file is a media file
-  std::wstring sExt = ::PathFindExtension(sFilePath.c_str());
-  if (find(g_vtMediaTypes.begin(), g_vtMediaTypes.end(), sExt) != g_vtMediaTypes.end())
-  {
-    return true;
-  }
-
-  return false;
-}
-
-void MediaSpiderDisk::SetCurSearchPath(const std::wstring& sPath)
+void MediaSpiderDisk::SetSearchPath(const std::wstring& sPath)
 {
   m_sLastSearchPath = sPath;
 }

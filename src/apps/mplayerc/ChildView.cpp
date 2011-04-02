@@ -87,11 +87,6 @@ BOOL CChildView::PreCreateWindow(CREATESTRUCT& cs)
 
 BOOL CChildView::PreTranslateMessage(MSG* pMsg)
 {
-  if (m_mediacenter->GetPlaneState())
-    m_mediacenter->ListenMsg(pMsg);
-
-  else
-  {
 	  if(pMsg->message >= WM_MOUSEFIRST && pMsg->message <= WM_MYMOUSELAST)
 	  {
 		  CWnd* pParent = GetParent();
@@ -101,7 +96,7 @@ BOOL CChildView::PreTranslateMessage(MSG* pMsg)
 		  bool fDblClick = false;
 
 		  bool fInteractiveVideo = ((CMainFrame*)AfxGetMainWnd())->IsInteractiveVideo();
-  /*
+/*
 		  if(fInteractiveVideo)
 		  {
 			  if(pMsg->message == WM_LBUTTONDOWN)
@@ -126,7 +121,7 @@ BOOL CChildView::PreTranslateMessage(MSG* pMsg)
 				  m_lastlmdownpoint = pMsg->pt;
 			  }
 		  }
-  */
+*/
 		  if((pMsg->message == WM_LBUTTONDOWN || pMsg->message == WM_LBUTTONUP || pMsg->message == WM_MOUSEMOVE)
 		  && fInteractiveVideo)
 		  {
@@ -143,7 +138,7 @@ BOOL CChildView::PreTranslateMessage(MSG* pMsg)
 		  }
 		  else
 		  {
-			  pParent->PostMessage(pMsg->message, pMsg->wParam, MAKELPARAM(p.x, p.y));
+        pParent->PostMessage(pMsg->message, pMsg->wParam, MAKELPARAM(p.x, p.y));
 			  return TRUE;
 		  }
 	  }
@@ -152,7 +147,6 @@ BOOL CChildView::PreTranslateMessage(MSG* pMsg)
 		  //if(pFrame->m_wndToolTopBar.IsWindowVisible())
 		  //	return TRUE;
 	  }
-  }
 	return CWnd::PreTranslateMessage(pMsg);
 }
 
@@ -314,12 +308,6 @@ void CChildView::OnPaint()
   
 	if(!pFrame->IsSomethingLoaded() || (pFrame->IsSomethingLoaded() && (pFrame->m_fAudioOnly || pFrame->IsSomethingLoading())) )
   {
-    if (m_mediacenter->GetPlaneState())
-    {
-      m_mediacenter->PaintPlane(dc.m_hDC, rcClient);
-      return;
-    }
-
 		AppSettings& s = AfxGetAppSettings();
 
 		CRect rcWnd;
@@ -327,9 +315,17 @@ void CChildView::OnPaint()
 		CRect rcClient;
 		GetClientRect(&rcClient);
 		CMemoryDC hdc(&dc, rcClient);
+
+    // only response of media center messages(WM_PAINT)
+//     if (m_mediacenter->GetPlaneState())
+//     {
+//       m_mediacenter->m_plane.DoPaint(hdc.m_hDC, rcClient);
+//       return;
+//     }
+
 		hdc.FillSolidRect( rcClient, s.GetColorFromTheme(_T("MainBackgroundColor"),0));
     CRect rcLoading(rcClient);
-
+    
 		/*if(m_cover && !m_cover->IsNull()){
 			BITMAP bm;
 			GetObject(*m_cover, sizeof(bm), &bm);
@@ -524,16 +520,21 @@ void CChildView::OnSize(UINT nType, int cx, int cy)
 	((CMainFrame*)GetParentFrame())->MoveVideoWindow();
 	ReCalcBtn();
 
-  RECT rc;
-  GetClientRect(&rc);
-  m_mediacenter->CalcOnSize(rc);
+//   if (m_mediacenter->GetPlaneState())
+//   {
+//   RECT rc;
+//   GetClientRect(&rc);
+//     m_mediacenter->m_plane.SetClientrc(rc);
+//     m_mediacenter->m_plane.AutoBreakline();
+//     Invalidate();
+//   }
 }
 
 
 void CChildView::OnWindowPosChanged(WINDOWPOS* lpwndpos)
 {
 	CWnd::OnWindowPosChanged(lpwndpos);
-
+  
 	((CMainFrame*)GetParentFrame())->MoveVideoWindow();
 }
 
@@ -588,9 +589,7 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	GetSystemFontWithScale(&m_font, 14.0);
     GetSystemFontWithScale(&m_font_lyric, 20.0, FW_BOLD, s.subdefstyle.fontName); //
 	// TODO:  Add your specialized creation code here
-  RECT margin = {20, 5, 5, 5};
-  m_mediacenter->CreatePlane(m_hWnd, 100, 100, margin);
-  m_mediacenter->ShowPlane();
+
 	return 0;
 }
 
@@ -611,32 +610,62 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 		UINT ret = m_btnList.OnHitTest(point,rc,-1);
 		m_nItemToTrack = ret;
 		
-			
+//     if (m_mediacenter->GetPlaneState())
+//     {
+//       RECT uprc;
+//       POINT pt = {point.x, point.y};
+//       ScreenToClient(&pt);
+//       m_mediacenter->m_plane.SelectBlockEffect(pt, uprc);
+//       m_mediacenter->m_plane.DragScrollBar(pt);
+//       Invalidate();
+//     }
 			if( m_btnList.HTRedrawRequired ){
 				Invalidate();
 			}
-		
-	}
-	CWnd::OnMouseMove(nFlags, point);
+  }
+
+  if (::GetKeyState(VK_LBUTTON) & 0x8000)
+  {
+    // The left button is still pressed
+  } 
+  else if (m_bMouseDown)
+  {
+    // The left button is released and the Windows don't send the WM_LBUTTONUP
+    // and WM_MOVE
+    PostMessage(WM_LBUTTONUP, 0, MAKELPARAM(point.x, point.y));
+    PostMessage(WM_MOVE, 0, MAKELPARAM(point.x, point.y));
+  }
+  
+  CWnd::OnMouseMove(nFlags, point);
 }
 void CChildView::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	// TODO: Add your message handler code here and/or call default
-
+  
 	CMainFrame* pFrame = ((CMainFrame*)GetParentFrame());
 	iBottonClicked = -1;
 	m_bMouseDown = TRUE;
 	CRect rc;
 	GetWindowRect(&rc);
-
+  
 	point += rc.TopLeft() ;
-	UINT ret = m_btnList.OnHitTest(point,rc,true);
+	UINT ret = m_btnList.OnHitTest(point,rc,TRUE);
 	if( m_btnList.HTRedrawRequired ){
 		if(ret)
 			SetCapture();
 		Invalidate();
 	}
 	m_nItemToTrack = ret;
+
+//   if (m_mediacenter->GetPlaneState())
+//   {
+//     POINT curr;
+//     ::GetCursorPos(&curr);
+//     ScreenToClient(&curr);
+//     SetCapture();
+//     m_mediacenter->m_plane.SelectScrollBar(curr, m_scrollbarrect);
+//     m_mediacenter->ClickEvent();
+//   }
 
 	CWnd::OnLButtonDown(nFlags, point);
 }
@@ -650,9 +679,9 @@ void CChildView::OnLButtonUp(UINT nFlags, CPoint point)
 
 	CRect rc;
 	GetWindowRect(&rc);
-
+  
 	CPoint xpoint = point + rc.TopLeft() ;
-	UINT ret = m_btnList.OnHitTest(xpoint,rc,false);
+	UINT ret = m_btnList.OnHitTest(xpoint,rc,FALSE);
 	if( m_btnList.HTRedrawRequired ){
 		if(ret){
 			pFrame->PostMessage( WM_COMMAND, ret);
@@ -661,6 +690,12 @@ void CChildView::OnLButtonUp(UINT nFlags, CPoint point)
 	}
 	m_nItemToTrack = ret;
 
+//   if (m_mediacenter->GetPlaneState())
+//   {
+//     m_mediacenter->m_plane.UnDragScrollBar();
+//     ReleaseCapture();
+//     InvalidateRect(&m_scrollbarrect);
+//   }
 	//	__super::OnLButtonUp(nFlags, point);
 	m_bMouseDown = FALSE;
 }
