@@ -21,7 +21,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets=".\wtl_integration.vsprops;.\atlserver_integration.vsprops;$(SolutionDir)src\common.vsprops;$(SolutionDir)src\release.vsprops;$(SolutionDir)Thirdparty\sinet.vsprops;$(SolutionDir)Thirdparty\sqlitepp.vsprops;$(SolutionDir)Thirdparty\sphash.vsprops;$(SolutionDir)Thirdparty\unrar_dll.vsprops"
+			InheritedPropertySheets=".\wtl_integration.vsprops;$(SolutionDir)src\apps\mplayerc\atlserver_integration.vsprops;..\..\common.vsprops;$(SolutionDir)src\release.vsprops;$(SolutionDir)Thirdparty\sinet.vsprops;$(SolutionDir)Thirdparty\sqlitepp.vsprops;$(SolutionDir)Thirdparty\sphash.vsprops;$(SolutionDir)Thirdparty\unrar_dll.vsprops;$(SolutionDir)Thirdparty\boost.vsprops;..\..\..\Thirdparty\tcl.vsprops"
 			UseOfMFC="1"
 			UseOfATL="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -119,7 +119,7 @@
 		<Configuration
 			Name="Debug Unicode|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\common.vsprops;..\..\debug.vsprops;.\wtl_integration.vsprops;.\atlserver_integration.vsprops;..\..\..\Thirdparty\sinet.vsprops;..\..\..\Thirdparty\unrar_dll.vsprops;..\..\..\Thirdparty\sphash.vsprops"
+			InheritedPropertySheets="..\..\common.vsprops;..\..\debug.vsprops;.\wtl_integration.vsprops;$(SolutionDir)src\apps\mplayerc\atlserver_integration.vsprops;$(SolutionDir)Thirdparty\sinet.vsprops;$(SolutionDir)Thirdparty\unrar_dll.vsprops;$(SolutionDir)Thirdparty\sphash.vsprops"
 			UseOfMFC="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
@@ -206,7 +206,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\common.vsprops;..\..\release.vsprops;.\wtl_integration.vsprops;.\atlserver_integration.vsprops;..\..\..\Thirdparty\sinet.vsprops;..\..\..\Thirdparty\unrar_dll.vsprops;..\..\..\Thirdparty\sphash.vsprops"
+			InheritedPropertySheets="..\..\common.vsprops;$(SolutionDir)src\release.vsprops;.\wtl_integration.vsprops;$(SolutionDir)src\apps\mplayerc\atlserver_integration.vsprops;$(SolutionDir)Thirdparty\sinet.vsprops;$(SolutionDir)Thirdparty\unrar_dll.vsprops;$(SolutionDir)Thirdparty\sphash.vsprops"
 			UseOfMFC="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="2"
@@ -294,7 +294,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\common.vsprops;..\..\debug.vsprops;.\wtl_integration.vsprops;.\atlserver_integration.vsprops;..\..\..\Thirdparty\sinet.vsprops;..\..\..\Thirdparty\unrar_dll.vsprops;..\..\..\Thirdparty\sphash.vsprops"
+			InheritedPropertySheets="..\..\common.vsprops;..\..\debug.vsprops;.\wtl_integration.vsprops;$(SolutionDir)src\apps\mplayerc\atlserver_integration.vsprops;$(SolutionDir)Thirdparty\sinet.vsprops;$(SolutionDir)Thirdparty\unrar_dll.vsprops;$(SolutionDir)Thirdparty\sphash.vsprops"
 			UseOfMFC="1"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="2"
@@ -471,6 +471,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\FrameCfgFileManage.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\FrameCfgFileManage.h"
+				>
+			</File>
+			<File
 				RelativePath="GoToDlg.cpp"
 				>
 			</File>
@@ -508,6 +516,14 @@
 			</File>
 			<File
 				RelativePath=".\MainFrm.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MakeMultiplyBmp.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MakeMultiplyBmp.h"
 				>
 			</File>
 			<File
@@ -723,6 +739,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SkinFolderManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SkinFolderManager.h"
+				>
+			</File>
+			<File
 				RelativePath=".\StdAfx.cpp"
 				>
 				<FileConfiguration
@@ -820,6 +844,22 @@
 			</File>
 			<File
 				RelativePath=".\TransparentControlBar.h"
+				>
+			</File>
+			<File
+				RelativePath=".\UnCompressAPI.cc"
+				>
+			</File>
+			<File
+				RelativePath=".\UnCompressAPI.h"
+				>
+			</File>
+			<File
+				RelativePath=".\UnCompressZip.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\UnCompressZip.h"
 				>
 			</File>
 			<File
@@ -932,14 +972,6 @@
 				<File
 					RelativePath=".\SUIButton.cpp"
 					>
-					<FileConfiguration
-						Name="Release Unicode|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
-						/>
-					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\SUIButton.h"
@@ -1036,11 +1068,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\res\newui\bitmap4.bmp"
+				>
+			</File>
+			<File
 				RelativePath=".\res\web\blank.gif"
 				>
 			</File>
 			<File
 				RelativePath=".\res\newui\BORDER_CORNER.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\newui\BOTTOMBACKGROUND.bmp"
 				>
 			</File>
 			<File
@@ -1556,6 +1596,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\res\newui\TOPBACKGROUND.bmp"
+				>
+			</File>
+			<File
 				RelativePath=".\res\icon\ts.ico"
 				>
 			</File>
@@ -1705,162 +1749,6 @@
 			</Filter>
 		</Filter>
 		<Filter
-			Name="UserInterface"
-			>
-			<Filter
-				Name="Dialogs"
-				>
-				<File
-					RelativePath=".\UserInterface\Dialogs\MovieComment_Win.cc"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Dialogs\MovieComment_Win.h"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Dialogs\OptionAdvancedPage_Win.cc"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Dialogs\OptionAdvancedPage_Win.h"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Dialogs\OptionAssociationPage_Win.cc"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Dialogs\OptionAssociationPage_Win.h"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Dialogs\OptionBasicPage_Win.cc"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Dialogs\OptionBasicPage_Win.h"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Dialogs\OptionDlg_Win.cc"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Dialogs\OptionDlg_Win.h"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Dialogs\OptionSubtitlePage_Win.cc"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Dialogs\OptionSubtitlePage_Win.h"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Dialogs\Snapshot_FloatTip.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Dialogs\Snapshot_FloatTip.h"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Dialogs\Snapshot_Viewfinder.cc"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Dialogs\Snapshot_Viewfinder.h"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Dialogs\Snapshot_Win.cc"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Dialogs\Snapshot_Win.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="Support"
-				>
-				<File
-					RelativePath=".\UserInterface\Support\BtnEditCtrl.cc"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Support\BtnEditCtrl.h"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Support\SubtitleStyle.cc"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Support\SubtitleStyle.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="Renderer"
-				>
-				<File
-					RelativePath=".\UserInterface\Renderer\LayeredWindowUtils_Win.h"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Renderer\MediaCenterView.cc"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Renderer\MediaCenterView.h"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Renderer\MediaListView.cc"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Renderer\MediaListView.h"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Renderer\MediaScrollbar.cc"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Renderer\MediaScrollbar.h"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Renderer\OSDView_Win.cc"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Renderer\OSDView_Win.h"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Renderer\PlaylistView_MfcProxy.cc"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Renderer\PlaylistView_MfcProxy.h"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Renderer\PlaylistView_Win.cc"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Renderer\PlaylistView_Win.h"
-					>
-				</File>
-			</Filter>
-		</Filter>
-		<Filter
 			Name="Utils"
 			>
 			<File
@@ -1937,6 +1825,26 @@
 			</File>
 			<File
 				RelativePath=".\Controller\MediaCenterController.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Controller\MediaCheckDB.cc"
+				>
+			</File>
+			<File
+				RelativePath=".\Controller\MediaCheckDB.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Controller\MediaSpiderAbstract.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Controller\MediaSpiderFolderTree.cc"
+				>
+			</File>
+			<File
+				RelativePath=".\Controller\MediaSpiderFolderTree.h"
 				>
 			</File>
 			<File
@@ -2068,6 +1976,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Model\MediaDB.cc"
+				>
+			</File>
+			<File
+				RelativePath=".\Model\MediaDB.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Model\MediaModel.cc"
 				>
 			</File>
@@ -2076,15 +1992,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Model\MediaSpiderAbstract.h"
+				RelativePath=".\Model\MediaSQLite.cc"
 				>
 			</File>
 			<File
-				RelativePath=".\Model\MediaSpiderDisk.cc"
+				RelativePath=".\Model\MediaSQLite.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Model\MediaSpiderDisk.h"
+				RelativePath=".\Model\MediaTreeModel.cc"
+				>
+			</File>
+			<File
+				RelativePath=".\Model\MediaTreeModel.h"
 				>
 			</File>
 			<File
@@ -2460,6 +2380,186 @@
 				</File>
 				<File
 					RelativePath="RealMediaWindowlessSite.h"
+					>
+				</File>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="UserInterface"
+			>
+			<Filter
+				Name="Dialogs"
+				>
+				<File
+					RelativePath=".\UserInterface\Dialogs\MovieComment_Win.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\MovieComment_Win.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\OptionAdvancedPage_Win.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\OptionAdvancedPage_Win.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\OptionAssociationPage_Win.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\OptionAssociationPage_Win.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\OptionBasicPage_Win.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\OptionBasicPage_Win.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\OptionDlg_Win.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\OptionDlg_Win.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\OptionSubtitlePage_Win.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\OptionSubtitlePage_Win.h"
+					>
+				</File>
+				<File
+					RelativePath=".\SkinDownload.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\SkinDownload.h"
+					>
+				</File>
+				<File
+					RelativePath=".\SkinPreviewDlg.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\SkinPreviewDlg.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\Snapshot_FloatTip.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\Snapshot_FloatTip.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\Snapshot_Viewfinder.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\Snapshot_Viewfinder.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\Snapshot_Win.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\Snapshot_Win.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Support"
+				>
+				<File
+					RelativePath=".\UserInterface\Support\BtnEditCtrl.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Support\BtnEditCtrl.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Support\SubtitleStyle.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Support\SubtitleStyle.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Renderer"
+				>
+				<File
+					RelativePath=".\UserInterface\Renderer\BlockList.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Renderer\BlockList.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Renderer\LayeredWindowUtils_Win.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Renderer\MediaCenterScrollBar.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Renderer\MediaCenterScrollBar.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Renderer\OSDView_Win.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Renderer\OSDView_Win.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Renderer\PlaylistView_MfcProxy.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Renderer\PlaylistView_MfcProxy.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Renderer\PlaylistView_Win.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Renderer\PlaylistView_Win.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Renderer\UILayer.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Renderer\UILayer.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Renderer\UILayerBlock.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Renderer\UILayerBlock.h"
 					>
 				</File>
 			</Filter>
