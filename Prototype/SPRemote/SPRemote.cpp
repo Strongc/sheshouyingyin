@@ -40,52 +40,31 @@ void* SPCall(enum mg_event event,
   if (event != MG_NEW_REQUEST)
     return NULL;
 
-  std::string uri;
-  uri.assign(request_info->uri);
-  
+  char* uri = request_info->uri;
+  char* query = request_info->query_string;
+
   /* Remote command format:
-   * http://xxx.xxx.xxx/{SIGN}/{PID}/{CMD}/{PARAM}
+   * http://xxx.xxx.xxx/splayer?id={PID}&cmd={CMD}&p={PARAM}
    * 
-   * {SIGN} is a splayer (means #sp#)
    * {PID} is a splayer process id
    * {CMD} is a one of follow play/stop/next/...
    * {PARAM} is a append value
    */
 
   // {SIGN}
-  if (uri.substr(0, 9) == "/splayer/")
+  if (!strcmp("/splayer", uri))
   {
-    // clean '/'
-    std::basic_string <char>::const_reference tail = uri[uri.length()-1];
-    if (tail == '/')
-      uri[uri.length()-1] = '\0';
+    char val[128];
+    mg_get_var(query, strlen(query), "id", val, 127);
 
-    std::string cmd, pid, cmdstr, queuename;
-
-    // {PID}
-    size_t pos = uri.find_first_of('/', 9);
-    if (pos == std::string::npos)
-      return &SPCall;
-
-    pid = uri.substr(9, pos - 9);
-    queuename = REMOTEMSG_CHANNELNAME;
-    queuename += pid;
-
-    // {CMD}
-    size_t pos2 = uri.find_first_of('/', pos+1);
-    if (pos2 == std::string::npos)
-      pos2 = uri.length();
-    else
-      pos2 = pos2-pos-1;
-
-    cmd = uri.substr(pos+1, pos2);
-
-    // {PARAM}
-    size_t pos3 = uri.find_first_of('/', pos2+pos+1);
-    if (pos3 == std::string::npos)
-      cmdstr = "";
-    else
-      cmdstr = uri.substr(pos3+1, uri.length());
+    std::string queuename = REMOTEMSG_CHANNELNAME;
+    queuename += val;
+    
+    mg_get_var(query, strlen(query), "cmd", val, 127);
+    std::string cmd = val;
+    
+    mg_get_var(query, strlen(query), "p", val, 127);
+    std::string param = val;
 
     if (!cmds[cmd])
       send_http(conn, 500, "error url");
@@ -93,7 +72,7 @@ void* SPCall(enum mg_event event,
     {
       RemoteMsg msg;
       msg.timestamp = time(NULL);
-      msg.cmdstring = cmdstr;
+      msg.cmdstring = param;
       msg.msgid = cmds[cmd];
 
       try
