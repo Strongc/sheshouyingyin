@@ -1,61 +1,13 @@
 #include "StdAfx.h"
 #include "MediaModel.h"
 #include <logging.h>
-
-////////////////////////////////////////////////////////////////////////////////
-// Global helper functions
-static std::wstring GetModuleFolder(HMODULE hModuleHandle = 0)
-{
-  TCHAR szModuleFullPath[MAX_PATH] = {0};
-  ::GetModuleFileName(hModuleHandle, szModuleFullPath, MAX_PATH);
-
-  TCHAR szDrive[10] = {0};
-  TCHAR szDir[MAX_PATH] = {0};
-
-  ::_wsplitpath(szModuleFullPath, szDrive, szDir, 0, 0);
-
-  std::wstring sResult;
-  sResult += szDrive;
-  sResult += szDir;
-
-  return sResult;
-}
-
+#include "MediaDB.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Normal part
 
 MediaModel::MediaModel()
 {
-  // Create the database if it's not exist
-  if (!::PathFileExists((::GetModuleFolder() + L"media_data.db").c_str()))
-  {
-    try
-    {
-      m_db.open(::GetModuleFolder() + L"media_data.db");
-
-      m_db << L"create table media_data ("
-        L"uniqueid integer PRIMARY KEY, path text, filename text,"
-        L"thumbnailpath text, videotime integer)";
-    }
-    catch (sqlitepp::exception* e)
-    {
-      e;
-      Logging(L"MediaModel::MediaModel create database fail");
-    }
-  }
-  else
-  {
-    try
-    {
-      m_db.open(::GetModuleFolder() + L"media_data.db");
-    }
-    catch (sqlitepp::exception* e)
-    {
-      e;
-      Logging(L"MediaModel::MediaModel open database fail");
-    }
-  }
 }
 
 MediaModel::~MediaModel()
@@ -69,44 +21,129 @@ int MediaModel::GetCount()
 {
   int nCount = 0;
 
-  try
-  {
-    sqlitepp::statement st(m_db);
-    st << L"select count(*) from media_data", sqlitepp::into(nCount);
-    st.exec();
-  }
-  catch (sqlitepp::exception* e)
-  {
-    e;
-    Logging(L"MediaModel::GetCount fail");
-  }
+  MediaDB<int>::exec(L"SELECT count(*) FROM media_data", &nCount);
 
   return nCount;
 }
 
-void MediaModel::Add(const MediaData& mdData)
+void MediaModel::Add(MediaPath& mdData)
 {
-  try
+  // insert unique record
+  int uniqueid = 0;
+  std::wstringstream ss;
+
+  ss << L"SELECT uniqueid FROM detect_path WHERE path='"
+     << mdData.path << L"'";
+  MediaDB<int>::exec(ss.str(), &uniqueid);
+
+  if (uniqueid)
   {
-    m_db << L"insert into media_data values(null, '"
-      << mdData.path << L"', '" << mdData.filename << L"', '"
-      << mdData.thumbnailpath << L"', " << mdData.videotime << L")";
+    ss.str(L"");
+    ss << L"UPDATE detect_path set merit = " << mdData.merit
+      << L" WHERE path = '" << mdData.path << L"'";
+    MediaDB<>::exec(ss.str());
+    mdData.uniqueid = uniqueid;
   }
-  catch (sqlitepp::exception* e)
+  else
   {
-    e;
-    Logging(L"MediaModel::Add fail");
+    ss.str(L"");
+    ss << L"INSERT INTO detect_path(path, merit)"
+       << L" VALUES('" << mdData.path << L"', " << mdData.merit << L")";
+
+    MediaDB<>::exec(ss.str());
+    MediaDB<>::last_insert_rowid(mdData.uniqueid);
   }
 }
 
-void MediaModel::Add(const MediaDatas& data)
+void MediaModel::Add(MediaPaths& data)
 {
-  MediaDatas::const_iterator it = data.begin();
+  MediaPaths::iterator it = data.begin();
   while (it != data.end())
   {
     Add(*it);
-
     ++it;
+  }
+}
+
+void MediaModel::Add(MediaData& mdData)
+{
+  // add backslash
+  if (mdData.path[mdData.path.size() - 1] != L'\\')
+    mdData.path += L"\\";
+
+  // insert unique record
+  int nRecordCount = 0;
+  std::wstringstream ss;
+
+  ss << L"SELECT count(*) FROM media_data WHERE path='"
+    << mdData.path << L"' and filename='" << mdData.filename << L"'";
+  MediaDB<int>::exec(ss.str(), &nRecordCount);
+
+  if (nRecordCount == 0)
+  {
+    ss.str(L"");
+    ss << L"INSERT INTO media_data(path, filename, thumbnailpath, videotime)"
+       << L" VALUES('" << mdData.path << L"', '" << mdData.filename << L"', '"
+       << mdData.thumbnailpath << L"', " << mdData.videotime << L")";
+
+    MediaDB<>::exec(ss.str());
+    MediaDB<>::last_insert_rowid(mdData.uniqueid);
+  }
+}
+
+void MediaModel::Add(MediaDatas& data)
+{
+  MediaDatas::iterator it = data.begin();
+  while (it != data.end())
+  {
+    Add(*it);
+    ++it;
+  }
+}
+
+void MediaModel::FindAll(MediaPaths& data)
+{
+  std::vector<long long> vtUniqueID;
+  std::vector<std::wstring > vtPath;
+  std::vector<int> vtMerit;
+
+  typedef MediaDB<long long, std::wstring, int> tpdMediaDBDB;
+  tpdMediaDBDB::exec(L"SELECT uniqueid, path, merit FROM detect_path",
+                      &vtUniqueID,  &vtPath,  &vtMerit);
+
+  for (size_t i = 0; i < vtUniqueID.size(); ++i)
+  {
+    MediaPath mp;
+    mp.uniqueid = vtUniqueID[i];
+    mp.path = vtPath[i];
+    mp.merit = vtMerit[i];
+
+    data.push_back(mp);
+  }
+}
+
+void MediaModel::FindAll(MediaDatas& data)
+{
+  std::vector<long long> vtUniqueID;
+  std::vector<std::wstring > vtPath;
+  std::vector<std::wstring > vtFilename;
+  std::vector<std::wstring > vtThumbnailPath;
+  std::vector<int> vtVideoTime;
+
+  typedef MediaDB<long long, std::wstring, std::wstring, std::wstring, int> tpdMediaDBDB;
+  tpdMediaDBDB::exec(L"SELECT uniqueid, path, filename, thumbnailpath, videotime FROM media_data",
+                       &vtUniqueID,  &vtPath,  &vtFilename,  &vtThumbnailPath,  &vtVideoTime);
+
+  for (size_t i = 0; i < vtUniqueID.size(); ++i)
+  {
+    MediaData md;
+    md.uniqueid = vtUniqueID[i];
+    md.path = vtPath[i];
+    md.filename = vtFilename[i];
+    md.thumbnailpath = vtThumbnailPath[i];
+    md.videotime = vtVideoTime[i];
+
+    data.push_back(md);
   }
 }
 
@@ -117,25 +154,28 @@ void MediaModel::FindOne(MediaData& data, const MediaFindCondition& condition)
   {
     try
     {
-      MediaData mdTemp = {0};
+      long long nUniqueID = 0;
+      std::wstring sPath;
+      std::wstring sFilename;
+      std::wstring sThumbnailPath;
+      int nVideoTime = 0;
 
-      sqlitepp::statement st(m_db);
-      st << L"select uniqueid, path, filename, thumbnailpath, videotime "
-        << L"from media_data where uniqueid = " << condition.uniqueid
-        , sqlitepp::into(mdTemp.uniqueid)
-        , sqlitepp::into(mdTemp.path)
-        , sqlitepp::into(mdTemp.filename)
-        , sqlitepp::into(mdTemp.thumbnailpath)
-        , sqlitepp::into(mdTemp.videotime);
+      std::wstringstream ss;
+      ss << L" WHERE uniqueid=" << condition.uniqueid;
 
-      st.exec();
+      typedef MediaDB<long long, std::wstring, std::wstring, std::wstring, int> tpdMediaDBDB;
+      tpdMediaDBDB::exec(L"SELECT uniqueid, path, filename, thumbnailpath, videotime FROM media_data" + ss.str()
+                        , &nUniqueID, &sPath, &sFilename, &sThumbnailPath, &nVideoTime);
 
-      data = mdTemp;
+      data.uniqueid = nUniqueID;
+      data.path = sPath;
+      data.filename = sFilename;
+      data.thumbnailpath = sThumbnailPath;
+      data.videotime = nVideoTime;
     }
-    catch (sqlitepp::exception* e)
+    catch (std::runtime_error const& err)
     {
-      e;
-      Logging(L"MediaModel::FindOne fail");
+      Logging(err.what());
     }
 
     return;
@@ -146,25 +186,28 @@ void MediaModel::FindOne(MediaData& data, const MediaFindCondition& condition)
   {
     try
     {
-      MediaData mdTemp = {0};
+      long long nUniqueID = 0;
+      std::wstring sPath;
+      std::wstring sFilename;
+      std::wstring sThumbnailPath;
+      int nVideoTime = 0;
 
-      sqlitepp::statement st(m_db);
-      st << L"select uniqueid, path, filename, thumbnailpath, videotime "
-        << L"from media_data where filename = '" << condition.filename << L"'"
-        , sqlitepp::into(mdTemp.uniqueid)
-        , sqlitepp::into(mdTemp.path)
-        , sqlitepp::into(mdTemp.filename)
-        , sqlitepp::into(mdTemp.thumbnailpath)
-        , sqlitepp::into(mdTemp.videotime);
+      std::wstringstream ss;
+      ss << L" WHERE filename='" << condition.filename << L"'";
 
-      st.exec();
+      typedef MediaDB<long long, std::wstring, std::wstring, std::wstring, int> tpdMediaDBDB;
+      tpdMediaDBDB::exec(L"SELECT uniqueid, path, filename, thumbnailpath, videotime FROM media_data" + ss.str()
+                        , &nUniqueID, &sPath, &sFilename, &sThumbnailPath, &nVideoTime);
 
-      data = mdTemp;
+      data.uniqueid = nUniqueID;
+      data.path = sPath;
+      data.filename = sFilename;
+      data.thumbnailpath = sThumbnailPath;
+      data.videotime = nVideoTime;
     }
-    catch (sqlitepp::exception* e)
+    catch (std::runtime_error const& err)
     {
-      e;
-      Logging(L"MediaModel::FindOne fail");
+      Logging(err.what());
     }
 
     return;
@@ -175,35 +218,33 @@ void MediaModel::FindOne(MediaData& data, const MediaFindCondition& condition)
 void MediaModel::Find(MediaDatas& data, const MediaFindCondition& condition,
           int limit_start, int limit_end)
 {
-//   for (int i=0;i<limit_end;i++)
-//   {
-//     wchar_t filename[80], imgpath[80];
-//     wsprintf(filename, L"filename_%d", i);
-//     wsprintf(imgpath, L"thumbnailpath_%d", i);
-//     MediaData rs;
-//     rs.filename = filename;
-//     rs.thumbnailpath = imgpath;
-//     data.push_back(rs);
-//   }
-//   return;
   // Use the unique id
   if (condition.uniqueid > 0)
   {
-    MediaData mdTemp = {0};
+    std::vector<long long> vtUniqueID;
+    std::vector<std::wstring > vtPath;
+    std::vector<std::wstring > vtFilename;
+    std::vector<std::wstring > vtThumbnailPath;
+    std::vector<int> vtVideoTime;
 
-    sqlitepp::statement st(m_db);
-    st << L"select uniqueid, path, filename, thumbnailpath, videotime from "
-      << L"media_data where uniqueid = " << condition.uniqueid
-      << L" limit " << limit_start << L"," << limit_end
-      , sqlitepp::into(mdTemp.uniqueid)
-      , sqlitepp::into(mdTemp.path)
-      , sqlitepp::into(mdTemp.filename)
-      , sqlitepp::into(mdTemp.thumbnailpath)
-      , sqlitepp::into(mdTemp.videotime);
+    std::wstringstream ss;
+    ss << L" WHERE uniqueid=" << condition.uniqueid
+       << L" limit " << limit_start << L"," << limit_end;
 
-    while (st.exec())
+    typedef MediaDB<long long, std::wstring, std::wstring, std::wstring, int> tpdMediaDBDB;
+    tpdMediaDBDB::exec(L"SELECT uniqueid, path, filename, thumbnailpath, videotime FROM media_data" + ss.str()
+                      , &vtUniqueID, &vtPath, &vtFilename, &vtThumbnailPath, &vtVideoTime);
+
+    for (size_t i = 0; i < vtUniqueID.size(); ++i)
     {
-      data.push_back(mdTemp);
+      MediaData md;
+      md.uniqueid = vtUniqueID[i];
+      md.path = vtPath[i];
+      md.filename = vtFilename[i];
+      md.thumbnailpath = vtThumbnailPath[i];
+      md.videotime = vtVideoTime[i];
+
+      data.push_back(md);
     }
 
     return;
@@ -212,21 +253,30 @@ void MediaModel::Find(MediaDatas& data, const MediaFindCondition& condition,
   // Use the filename
   if (!condition.filename.empty())
   {
-    MediaData mdTemp = {0};
+    std::vector<long long> vtUniqueID;
+    std::vector<std::wstring > vtPath;
+    std::vector<std::wstring> vtFilename;
+    std::vector<std::wstring > vtThumbnailPath;
+    std::vector<int> vtVideoTime;
 
-    sqlitepp::statement st(m_db);
-    st << L"select uniqueid, path, filename, thumbnailpath, videotime from "
-      << L"media_data where filename = '" << condition.filename << L"'"
-      << L" limit " << limit_start << L"," << limit_end
-      , sqlitepp::into(mdTemp.uniqueid)
-      , sqlitepp::into(mdTemp.path)
-      , sqlitepp::into(mdTemp.filename)
-      , sqlitepp::into(mdTemp.thumbnailpath)
-      , sqlitepp::into(mdTemp.videotime);
+    std::wstringstream ss;
+    ss << L" WHERE filename='" << condition.filename << L"'"
+      << L" limit " << limit_start << L"," << limit_end;
 
-    while (st.exec())
+    typedef MediaDB<long long, std::wstring, std::wstring, std::wstring, int> tpdMediaDBDB;
+    tpdMediaDBDB::exec(L"SELECT uniqueid, path, filename, thumbnailpath, videotime FROM media_data" + ss.str()
+                      , &vtUniqueID, &vtPath, &vtFilename, &vtThumbnailPath, &vtVideoTime);
+
+    for (size_t i = 0; i < vtUniqueID.size(); ++i)
     {
-      data.push_back(mdTemp);
+      MediaData md;
+      md.uniqueid = vtUniqueID[i];
+      md.path = vtPath[i];
+      md.filename = vtFilename[i];
+      md.thumbnailpath = vtThumbnailPath[i];
+      md.videotime = vtVideoTime[i];
+
+      data.push_back(md);
     }
 
     return;
@@ -238,7 +288,9 @@ void MediaModel::Delete(const MediaFindCondition& condition)
   // Use the unique id
   if (condition.uniqueid > 0)
   {
-    m_db << L"delete from media_data where uniqueid = " << condition.uniqueid;
+    std::wstringstream ss;
+    ss << L"delete from media_data where uniqueid = " << condition.uniqueid;
+    MediaDB<>::exec(ss.str());
 
     return;
   }
@@ -246,8 +298,9 @@ void MediaModel::Delete(const MediaFindCondition& condition)
   // Use the filename
   if (!condition.filename.empty())
   {
-    m_db << L"delete from media_data where filename = '" << condition.filename
-      << L"'";
+    std::wstringstream ss;
+    ss << L"delete from media_data where filename = '" << condition.filename << L"'";
+    MediaDB<>::exec(ss.str());
 
     return;
   }
@@ -255,5 +308,7 @@ void MediaModel::Delete(const MediaFindCondition& condition)
 
 void MediaModel::DeleteAll()
 {
-  m_db << L"delete from media_data";
+  std::wstringstream ss;
+  ss << L"delete from media_data";
+  MediaDB<>::exec(ss.str());
 }

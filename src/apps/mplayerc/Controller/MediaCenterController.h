@@ -3,43 +3,40 @@
 #include "LazyInstance.h"
 #include "../Model/MediaComm.h"
 #include "../Model/MediaModel.h"
-#include "../Model/MediaSpiderDisk.h"
-#include "../UserInterface/Renderer/MediaCenterView.h"
+#include "../Model/MediaTreeModel.h"
+//#include "../UserInterface/Renderer/ListBlocks.h"
+#include "MediaCheckDB.h"
+#include "MediaSpiderFolderTree.h"
+#include <map>
 
 class MediaCenterController:
   public LazyInstanceImpl<MediaCenterController>
 {
 public:
-    MediaCenterController();
-    ~MediaCenterController();
+  MediaCenterController();
+  ~MediaCenterController();
 
-    void AddMedia(const MediaData& data);
-    void Playback(const MediaData& data);
+public:
+  // Gui control, should not for other use
 
-    void GetMediaData(MediaDatas& data, int limit_start, int limit_end);
+   void SetFrame(HWND hwnd);
 
-    void SpiderStart();
-    void SpiderStop();
+   void Playback(std::wstring file);
 
-    void NewDataNotice(MediaDatas& newdata);
-
-    void SetFrame(HWND hwnd);
-    // Gui
-    HWND GetPlaneWnd();
-    void ShowPlane();
-    void HidePlane();
-
-    BOOL GetPlaneState();
-    void CreatePlane(HWND hwnd, int width, int height, RECT& margin);
-    void ListenMsg(MSG* msg);
-    void PaintPlane(HDC& dc, RECT rect);
-    void CalcOnSize(const RECT& rc);
+public:
+  // Data control
+  void SpiderStart();
+  void SpiderStop();
 
 private:
-    MediaCenterView m_plane;
-    MediaSpiderDisk m_spider;
-    MediaModel m_model;
-    HWND m_parentwnd;
-    BOOL m_planestate;
-    BOOL m_createsuccess;
+  // GUI
+  HWND m_hwnd;
+  BOOL m_planestate;
+  MediaDatas m_mediadata;
+
+  // Data
+  MediaModel            m_model;
+  MediaTreeModel        m_treeModel;
+  MediaCheckDB          m_checkDB;
+  MediaSpiderFolderTree m_spider;
 };

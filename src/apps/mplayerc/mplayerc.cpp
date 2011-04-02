@@ -1512,7 +1512,8 @@ int (__stdcall * Real_MessageBoxW)(HWND hWnd, LPCWSTR lpText, LPCWSTR lpCaption,
                                      = ::MessageBoxW;
 int WINAPI Mine_MessageBoxA(HWND hWnd,  LPCSTR lpText,  LPCSTR lpCaption,  UINT uType)
 {
-  if (NULL == strstr(lpCaption, "Internet Explorer"))
+  if (NULL == strstr(lpCaption, "Internet Explorer") 
+      && NULL == strstr(lpCaption, "pdater")) // warning about Updater.exe
     return Real_MessageBoxA(hWnd, lpText, lpCaption, uType);
   return IDOK;
 }
@@ -1704,10 +1705,12 @@ SVP_LogMsg5(L"Settings::InitInstanceThreaded 16");
 				if(!m_cnetupdater)
 					m_cnetupdater = new cupdatenetlib();
 
-				if(m_cnetupdater->downloadList()){
-					m_cnetupdater->downloadFiles();
-					m_cnetupdater->tryRealUpdate(TRUE);
-				}
+        // why execute the updater.exe before do this?
+        // updater.exe has include it and cupdatenetlib has been destory.
+// 				if(m_cnetupdater->downloadList()){
+// 					m_cnetupdater->downloadFiles();
+// 					m_cnetupdater->tryRealUpdate(TRUE);
+// 				}
 				if(!pFrame->m_bCheckingUpdater){
 					pFrame->m_bCheckingUpdater = true;
           UpdateController::GetInstance()->CheckUpdateEXEUpdate();
@@ -2406,7 +2409,9 @@ CMPlayerCApp::Settings::Settings()
 	, htpcmode(0)
 	, bNoMoreDXVAForThisFile(0)
 	, bDisableSoftCAVC(false)
-    , bUsePowerDVD()
+  , bUsePowerDVD()
+  , skinid(0)
+  , skinname(L"")
 {
 
 }
@@ -3334,10 +3339,10 @@ void CMPlayerCApp::Settings::ChangeChannelMapByCustomSetting()
 	
 	return;	
 }
-CString CMPlayerCApp::Settings::GetSVPSubStorePath(){
+CString CMPlayerCApp::Settings::GetSVPSubStorePath(BOOL spdefault){
 	CString StoreDir = SVPSubStoreDir;
 	CSVPToolBox svpTool;
-	if(StoreDir.IsEmpty() || !svpTool.ifDirExist(StoreDir) || !svpTool.ifDirWritable(StoreDir)){
+	if(StoreDir.IsEmpty() || !svpTool.ifDirExist(StoreDir) || !svpTool.ifDirWritable(StoreDir) || spdefault){
 		svpTool.GetAppDataPath(StoreDir);
 		CPath tmPath(StoreDir);
 		tmPath.RemoveBackslash();
@@ -3573,6 +3578,9 @@ void CMPlayerCApp::Settings::UpdateData(bool fSave)
 		//pApp->WriteProfileInt(ResStr(IDS_R_SETTINGS), ResStr(IDS_RS_DISABLESMARTDRAG),  disableSmartDrag );
 		
 		pApp->WriteProfileString(ResStr(IDS_R_SETTINGS), ResStr(IDS_RS_SHADERLIST), strShaderList);
+
+    pApp->WriteProfileInt(ResStr(IDS_R_SETTINGS), ResStr(IDS_RS_SKIN_ID), skinid);
+    pApp->WriteProfileString(ResStr(IDS_R_SETTINGS), ResStr(IDS_RS_SKIN_NAME), skinname.c_str());
 
 		{
 			for(int i = 0; ; i++)
@@ -4392,6 +4400,9 @@ void CMPlayerCApp::Settings::UpdateData(bool fSave)
 		//	bAeroGlass = false;
 
 		bSaveSVPSubWithVideo  = pApp->GetProfileInt(ResStr(IDS_R_SETTINGS), ResStr(IDS_RS_SAVESVPSUBWITHVIDEO), 0);
+
+    skinid = pApp->GetProfileInt(ResStr(IDS_R_SETTINGS), ResStr(IDS_RS_SKIN_ID), 0);
+    skinname = pApp->GetProfileString(ResStr(IDS_R_SETTINGS), ResStr(IDS_RS_SKIN_NAME), 0);
 
 		CString MyPictures;
 

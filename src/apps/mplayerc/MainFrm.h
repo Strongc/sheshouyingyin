@@ -30,6 +30,7 @@
 #include "Controller/SPRemoteController.h"
 #include "GraphCore.h"
 
+#include "SkinFolderManager.h"
 
 
 class CMainFrame : public CFrameWnd, public CDropTarget , public CGraphCore
@@ -89,7 +90,6 @@ public:
   int m_AngleX, m_AngleY, m_AngleZ;
 
   // Subtitles
-  bool LoadSubtitle(CString fn, int sub_delay_ms = 0, BOOL bIsForPlayList = false);
   void UpdateSubtitle(bool fApplyDefStyle = true);
   void UpdateSubtitle2(bool fApplyDefStyle = true);
   void SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyle = true, bool bShowOSD = true);
@@ -337,6 +337,18 @@ public:
   CStringArray m_AudioDevice;
   HMONITOR m_HLastMonitor;
 
+  //skin
+  SkinFolderManager m_skinmanage;
+  BOOL m_bmenuinitialize;
+  std::map<UINT, std::wstring> m_skin_map;
+  CMenu* m_skinorg;
+  HBITMAP m_framecornerhbm;
+  HBITMAP m_captionhbm;
+  HBITMAP m_captiontexthbm;
+  HBITMAP m_btoolbarbg;
+  HBITMAP m_ttoolbarbg;
+  int     m_preskinid;
+  std::wstring m_preskinname;
 private:
   CString m_szTitle;
   CString getCurPlayingSubfile(int * iSubDelayMS = NULL,int subid = 0 );
@@ -780,6 +792,12 @@ public:
 
   afx_msg void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
   afx_msg void OnAudioSettingUpdated();
+  afx_msg void OnSkinSelection(UINT nID); 
+  afx_msg void OnUpdateSkinSelection(CCmdUI* pCmdUI);
+
+  afx_msg void OnSkinMoreSelection();
+  BOOL LoadRes(int id, std::wstring folder);
+  void SearchSkinFolder();
   afx_msg void OnOpenShooterMedia();
 private:
   int          m_movieShared;
