@@ -5,9 +5,10 @@
 #include <stdio.h>
 
 
-#include "phashImpl.h"
-#include "pHash.h"
-#include "audiophash.h"
+// #include "phashImpl.h"
+// #include "pHash.h"
+// #include "audiophash.h"
+#include "phashapi.h"
 //#pragma comment(lib,"libpHash.lib")
 
 
@@ -20,8 +21,8 @@ int _tmain(int argc, _TCHAR* argv[])
   int a=SampleAddInt(1,3);
   printf("1+3=%d\n",a);
 
-  const char *dir_name ="C:\\projects\\testpHash\\Debug\\a\\a.wav";  //path for the audio which needs testing
-  const char *dir_name2 ="C:\\projects\\testpHash\\Debug\\b\\b.wav";
+  const char *dir_name ="C:\\projects\\a\\a.wav";  //path for the audio which needs testing
+  const char *dir_name2 ="C:\\projects\\b\\b.wav";
   const float threshold = 0.30;    //BER threshold
   const int block_size = 256;      //number of frames to compare at a time
   const int sr = 8000;             //sample rate to convert the stream
@@ -97,6 +98,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 
   printf("end of the test.......\n");
+
 	system("pause");
   return 0;
 }

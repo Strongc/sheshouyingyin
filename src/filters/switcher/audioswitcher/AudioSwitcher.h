@@ -20,7 +20,7 @@
 
 #include "StreamSwitcher.h"
 #include "..\..\..\svplib\SVPEqualizer.h"
-
+#include "phashbase.h"
 
 #define MAX_OUTPUT_CHANNELS 18
 #define MAX_INPUT_CHANNELS 18
@@ -44,7 +44,10 @@ interface __declspec(uuid("CEDB2890-53AE-4231-91A3-B0AAFCD1DBDE")) IAudioSwitche
 			,float pSpeakerToChannelMapOffset[MAX_INPUT_CHANNELS][MAX_NORMALIZE_CHANNELS], int iSimpleSwitch, int iSS, bool map_centerch2lr = true) = 0;
 	STDMETHOD(SetEQControl) ( int lEQBandControlPreset, float pEQBandControl[MAX_EQ_BAND]) = 0;
 
-	STDMETHOD (SetRate)(double dRate) = 0;
+	STDMETHOD(SetRate) (double dRate) = 0;
+  //pHash data filler control
+  STDMETHOD(FillData4pHash) (BYTE* pDataout, long BufferLen) = 0;
+  STDMETHOD(SetpHashControl) (struct phashblock *pbPtr) = 0;
 };
 
 class AudioStreamResampler;
@@ -94,6 +97,11 @@ class __declspec(uuid("18C16B08-6497-420e-AD14-22D21C2CEAB7")) CAudioSwitcherFil
 	int m_l_number_of_channels;
 
 	CSVPEqualizer m_EQualizer;
+
+  struct phashblock* m_pHashPtr;
+  BOOL m_pHashFlag;
+  REFERENCE_TIME m_rtStartpHash;
+  REFERENCE_TIME m_rtEndpHash;
 
 public:
 	CAudioSwitcherFilter(LPUNKNOWN lpunk, HRESULT* phr);
@@ -145,4 +153,11 @@ public:
 	// IAMStreamSelect
 	STDMETHODIMP Enable(long lIndex, DWORD dwFlags);
 
+  // pHash data filler control
+  STDMETHODIMP FillData4pHash(BYTE* pDataout, long BufferLen);
+  STDMETHODIMP SetpHashControl(struct phashblock* pbPtr);
+
+  void AlignDataBlock(BYTE* datain, REFERENCE_TIME& start, REFERENCE_TIME& rttime,
+                      int channels, int bitsPerSample, int samplePerSec,
+                      BYTE* dataout, int& len);
 };
