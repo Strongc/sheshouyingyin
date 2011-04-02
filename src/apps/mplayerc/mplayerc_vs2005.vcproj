@@ -2503,31 +2503,23 @@
 				Name="Renderer"
 				>
 				<File
+					RelativePath=".\UserInterface\Renderer\BlockList.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Renderer\BlockList.h"
+					>
+				</File>
+				<File
 					RelativePath=".\UserInterface\Renderer\LayeredWindowUtils_Win.h"
 					>
 				</File>
 				<File
-					RelativePath=".\UserInterface\Renderer\MediaCenterView.cc"
+					RelativePath=".\UserInterface\Renderer\MediaCenterScrollBar.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\UserInterface\Renderer\MediaCenterView.h"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Renderer\MediaListView.cc"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Renderer\MediaListView.h"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Renderer\MediaScrollbar.cc"
-					>
-				</File>
-				<File
-					RelativePath=".\UserInterface\Renderer\MediaScrollbar.h"
+					RelativePath=".\UserInterface\Renderer\MediaCenterScrollBar.h"
 					>
 				</File>
 				<File
@@ -2552,6 +2544,22 @@
 				</File>
 				<File
 					RelativePath=".\UserInterface\Renderer\PlaylistView_Win.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Renderer\UILayer.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Renderer\UILayer.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Renderer\UILayerBlock.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Renderer\UILayerBlock.h"
 					>
 				</File>
 			</Filter>
