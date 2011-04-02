@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "GraphCore.h"
 
+// TODO try to remove
+#include "..\..\svplib\SVPToolBox.h"
 
 CGraphCore::CGraphCore(void):
   m_fCustomGraph(false),
@@ -14,6 +16,89 @@ CGraphCore::~CGraphCore(void)
 {
 }
 
+bool CGraphCore::LoadSubtitle(CString fn, int sub_delay_ms, BOOL bIsForPlayList)
+{
+  CString szBuf;
+  szBuf.Format(_T("Loading subtile %s delay %d %s"), fn , sub_delay_ms , ( bIsForPlayList ? _T("for playlist") : _T("") ) );
+  SVP_LogMsg(szBuf);
+
+  CComPtr<ISubStream> pSubStream;
+  CComPtr<ISubStream> pSubStream2;
+
+  // TMP: maybe this will catch something for those who get a runtime error dialog when opening subtitles from cds
+  try
+  {
+    if(!pSubStream)
+    {
+      CAutoPtr<CVobSubFile> p(new CVobSubFile(&m_csSubLock));
+      if(CString(CPath(fn).GetExtension()).MakeLower() == _T(".idx") && p && p->Open(fn) && p->GetStreamCount() > 0)
+        pSubStream = p.Detach();
+
+      CAutoPtr<CVobSubFile> p2(new CVobSubFile(&m_csSubLock2));
+      if(CString(CPath(fn).GetExtension()).MakeLower() == _T(".idx") && p2 && p2->Open(fn) && p2->GetStreamCount() > 0)
+        pSubStream2 = p2.Detach();
+    }
+
+    if(!pSubStream)
+    {
+      CAutoPtr<CRenderedTextSubtitle> p(new CRenderedTextSubtitle(&m_csSubLock));
+      //detect fn charst
+      CSVPToolBox svt;
+      int cset = svt.DetectFileCharset(fn);
+
+      if(p && p->Open(fn, cset) && p->GetStreamCount() > 0)
+        pSubStream = p.Detach();
+
+      CAutoPtr<CRenderedTextSubtitle> p2(new CRenderedTextSubtitle(&m_csSubLock2));
+      if(p2 && p2->Open(fn, cset) && p2->GetStreamCount() > 0)
+        pSubStream2 = p2.Detach();
+    }
+
+    if(!pSubStream)
+    {
+      CAutoPtr<ssf::CRenderer> p(new ssf::CRenderer(&m_csSubLock));
+      if(p && p->Open(fn) && p->GetStreamCount() > 0)
+        pSubStream = p.Detach();
+
+      CAutoPtr<ssf::CRenderer> p2(new ssf::CRenderer(&m_csSubLock2));
+      if(p2 && p2->Open(fn) && p2->GetStreamCount() > 0)
+        pSubStream2 = p2.Detach();
+    }
+  }
+  catch(CException* e)
+  {
+    e->Delete();
+  }
+
+
+  CSVPToolBox svTool;
+  if(!sub_delay_ms){
+    //如果没有预设字幕延迟，视图读取 字幕.delay 获得delay参数
+    sub_delay_ms = _wtoi ( svTool.fileGetContent( fn+_T(".delay")) );
+  }else{
+    //如果有字幕延迟， 而且不是playlist subtitles， 保存到.delay文件
+    if(!bIsForPlayList){
+      szBuf.Format(_T("%d"), sub_delay_ms);
+      svTool.filePutContent(  fn+_T(".delay"), szBuf );
+    }
+  }
+
+  if(pSubStream)
+  {
+    pSubStream->notSaveDelay = bIsForPlayList;
+    pSubStream->sub_delay_ms = sub_delay_ms;
+    m_pSubStreams.AddTail(pSubStream);
+  }
+
+  if(pSubStream2)
+  {
+    pSubStream2->notSaveDelay = bIsForPlayList;
+    pSubStream2->sub_delay_ms = sub_delay_ms;
+    m_pSubStreams2.AddTail(pSubStream2);
+  }
+
+  return(!!pSubStream);
+}
 
 void CGraphCore::CleanGraph()
 {

@@ -70,8 +70,12 @@ public:
 
   // should be private
   void CleanGraph();
+
   BOOL SetVMR9ColorControl(float Brightness, float Contrast, float Hue,
                            float Saturation, BOOL silent = false);
+
+  // Subtitles
+  bool LoadSubtitle(CString fn, int sub_delay_ms = 0, BOOL bIsForPlayList = false);
 
   bool m_fCustomGraph;
   bool m_fRealMediaGraph, m_fShockwaveGraph, m_fQuicktimeGraph;

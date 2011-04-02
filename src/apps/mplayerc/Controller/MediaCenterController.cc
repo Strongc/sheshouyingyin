@@ -1,117 +1,69 @@
 #include "StdAfx.h"
 #include "MediaCenterController.h"
+#include <boost/filesystem.hpp>
 
-MediaCenterController::MediaCenterController() : 
-    m_parentwnd(NULL),
-    m_planestate(FALSE),
-    m_createsuccess(FALSE)
+////////////////////////////////////////////////////////////////////////////////
+// normal part
+MediaCenterController::MediaCenterController()
+: m_planestate(FALSE)
 {
+  MediaPaths mps;
+  MediaPaths::iterator it;
+  m_model.FindAll(mps);
+  for (it = mps.begin(); it != mps.end(); ++it)
+    m_treeModel.addFolder(*it);
 
+  //m_model.FindAll(m_mediadata);
 }
 
 MediaCenterController::~MediaCenterController()
 {
-
 }
 
-void MediaCenterController::AddMedia(const MediaData& data)
+void MediaCenterController::Playback(std::wstring file)
 {
+  if (!m_spider.IsSupportExtension(file))
+    return;
 
-}
+  MediaPath mp;
+  mp.path = file;
+  m_treeModel.addFolder(mp);
+  m_treeModel.increaseMerit(mp.path);
 
-void MediaCenterController::Playback(const MediaData& data)
-{
+  std::wstring name(::PathFindFileName(file.c_str()));
+  MediaFindCondition mc = {0, name};
+  MediaData mdc;
+  m_model.FindOne(mdc, mc);
+  if (mdc.uniqueid == 0)
+  {
+    MediaData md;
+    md.path = file;
+    md.filename = name;
 
-}
-
-void MediaCenterController::GetMediaData(MediaDatas& data, int limit_start, int limit_end)
-{
-
-}
-
-void MediaCenterController::SpiderStart()
-{
-
-}
-
-void MediaCenterController::SpiderStop()
-{
-
-}
-
-HWND MediaCenterController::GetPlaneWnd()
-{
-  return m_plane.m_hWnd;
-}
-
-void MediaCenterController::NewDataNotice(MediaDatas& newdata)
-{
-
-}
-
-BOOL MediaCenterController::GetPlaneState()
-{
-  return m_planestate;
-}
-
-void MediaCenterController::ShowPlane()
-{
-  if (m_createsuccess)
-    m_planestate = TRUE;
-  else
-    m_planestate = FALSE;
-}
-
-void MediaCenterController::HidePlane()
-{
-  m_planestate = FALSE;
+    m_treeModel.addFile(md);
+  }
 }
 
 void MediaCenterController::SetFrame(HWND hwnd)
 {
-  m_parentwnd = hwnd;
+  m_hwnd = hwnd;
 }
 
-void MediaCenterController::PaintPlane(HDC& dc, RECT rect)
+
+////////////////////////////////////////////////////////////////////////////////
+// data control
+void MediaCenterController::SpiderStart()
 {
-  WTL::CMemoryDC mdc(dc, rect);
-  m_plane.CalcWnd();
-  m_plane.MediaListView::DrawListView(mdc, m_plane.GetOffsetVal());
-  m_plane.MediaScrollbar::DrawScrollbar(mdc);
+  m_spider._Stop();
+  m_checkDB._Stop();
+
+  m_spider._Start();
+  m_checkDB._Start();  // check the media.db, clean invalid records
 }
 
-void MediaCenterController::CalcOnSize(const RECT& rc)
+void MediaCenterController::SpiderStop()
 {
-  if (m_planestate == FALSE)
-    return;
-
-  int width, hight;
-  m_plane.MediaListView::SetClientRect(rc);
-  m_plane.MediaListView::GetPlantWH(width, hight);
-  m_plane.MediaScrollbar::SetListPlane(width, hight);
-  m_plane.MediaScrollbar::SetClientRect(rc);
-}
-
-void MediaCenterController::CreatePlane(HWND hwnd, int width, int height, RECT& margin)
-{  
-  SetFrame(hwnd);
-  if (!m_parentwnd)
-    return;
-
-  m_createsuccess = m_plane.ShowMediaCenter(m_parentwnd, width, height, margin);
-  m_plane.AddListView(hwnd);
-  m_plane.AddScrollbar(hwnd);
-}
-
-void MediaCenterController::ListenMsg(MSG* msg)
-{ 
-  if (m_planestate == FALSE)
-    return;
-
-  if (!m_parentwnd)
-    return;
-
-  LRESULT wtlbHandled;
-  m_plane.MediaListView::ProcessWindowMessage(m_parentwnd, msg->message, msg->wParam, msg->lParam, wtlbHandled, 0);
-  m_plane.MediaScrollbar::ProcessWindowMessage(m_parentwnd, msg->message, msg->wParam, msg->lParam, wtlbHandled, 0);
+  m_spider._Stop();
+  m_checkDB._Stop();
+  m_treeModel.saveToDB();
 }

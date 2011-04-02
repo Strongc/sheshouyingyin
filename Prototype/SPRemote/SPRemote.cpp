@@ -130,7 +130,7 @@ int _tmain(int argc, _TCHAR* argv[])
   
   if (cmd == NULL)
   {
-    return 0;
+    //return 0;
     GetRemoteCmdMap(cmds);
     char* tmp = new char[wcslen(path)+1];
     size_t n;
