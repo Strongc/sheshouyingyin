@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="pHash" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin\Debug\libpHash" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj\Debug\" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-Wall" />
+					<Add option="-g" />
+					<Add option="-DBUILD_DLL" />
+				</Compiler>
+				<Linker>
+					<Add library="user32" />
+				</Linker>
+			</Target>
+			<Target title="Release">
+				<Option output="bin\Release\libpHash" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj\Release\" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-Wall" />
+					<Add option="-DBUILD_DLL" />
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="user32" />
+				</Linker>
+			</Target>
+		</Build>
+		<Linker>
+			<Add library="pHash_dep_lib\libsample-0.lib" />
+			<Add library="pHash_dep_lib\libsndfile-1.lib" />
+		</Linker>
+		<Unit filename="README.txt" />
+		<Unit filename="audiophash.cpp" />
+		<Unit filename="audiophash.h" />
+		<Unit filename="main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="pHash-config.h" />
+		<Unit filename="pHash.cbp" />
+		<Unit filename="pHash.cpp" />
+		<Unit filename="pHash.h" />
+		<Unit filename="ph_fft.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="ph_fft.h" />
+		<Unit filename="phashImpl.h" />
+		<Unit filename="samplerate.h" />
+		<Unit filename="sndfile.h" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

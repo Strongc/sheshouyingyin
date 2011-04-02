@@ -116,6 +116,7 @@ CAudioSwitcherFilter::CAudioSwitcherFilter(LPUNKNOWN lpunk, HRESULT* phr)
 	, m_tPlayedtime(0)
 	, m_dRate(1.0)
 	, m_fUpSampleTo(0)
+  , m_pHashFlag(TRUE)
 	, m_iSS(0)
 {
 	//memset(m_pSpeakerToChannelMap, 0, sizeof(m_pSpeakerToChannelMap));
@@ -321,16 +322,109 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
 	
 	int iWePCMType = WETYPE_UNKNOWN;
 
-	if(fPCM && wfe->wBitsPerSample == 8) iWePCMType = WETYPE_PCM8;
-	else if(fPCM && wfe->wBitsPerSample == 16) iWePCMType = WETYPE_PCM16;
-	else if(fPCM && wfe->wBitsPerSample == 24) iWePCMType = WETYPE_PCM24;
-	else if(fPCM && wfe->wBitsPerSample == 32) iWePCMType = WETYPE_PCM32;
-	else if(fFloat && wfe->wBitsPerSample == 32) iWePCMType = WETYPE_FPCM32;
-	else if(fFloat && wfe->wBitsPerSample == 64) iWePCMType = WETYPE_FPCM64;
+  if(fPCM && wfe->wBitsPerSample == 8) 
+  {
+    iWePCMType = WETYPE_PCM8;
+    m_pHashPtr->type = PCM8;
+  }
+	else if(fPCM && wfe->wBitsPerSample == 16) 
+  {
+    iWePCMType = WETYPE_PCM16;
+    m_pHashPtr->type = PCM16;
+  }
+  else if(fPCM && wfe->wBitsPerSample == 24) 
+  {
+    iWePCMType = WETYPE_PCM24;
+    m_pHashPtr->type = PCM24;
+  }
+	else if(fPCM && wfe->wBitsPerSample == 32) 
+  {
+    iWePCMType = WETYPE_PCM32;
+    m_pHashPtr->type = PCM32;
+  }
+	else if(fFloat && wfe->wBitsPerSample == 32) 
+  {
+    iWePCMType = WETYPE_FPCM32;
+    m_pHashPtr->type = FPCM32;
+  }
+	else if(fFloat && wfe->wBitsPerSample == 64)
+  {
+    iWePCMType = WETYPE_FPCM64;
+    m_pHashPtr->type = FPCM64;
+  }
 
 	int lTotalInputChannels = wfe->nChannels;
 	int lTotalOutputChannels =  wfeout->nChannels;
-	
+  
+
+  // MAIN Strategy: if time is Y mins ,the following X secs is what we want, pass them to another function
+  //          Then get downsampled and mixed, pass to phash cal function
+  //          Then send the result to get compared and return a confidence value(0~1) which shows the similarity of two samples
+
+  REFERENCE_TIME rtDurHash = (10000000i64) * g_phash_collectcfg[CFG_PHASHDATASECS];
+  
+  // In this part, we use a array g_phash_collectcfg[] to do configuration. 
+  // The first element of the array is the times of phash
+  // The second element of the array is lasting time in sec unit
+  // The following elements are the start time
+  // You can find cfg array in phashbase.h
+  int timepos = (m_pHashPtr->phashcnt%g_phash_collectcfg[CFG_PHASHTIMES]) + 1;
+  m_rtStartpHash = (10000000i64)*g_phash_collectcfg[CFG_PHASHSTARTTIME+timepos];    // collection start time
+  m_rtEndpHash = m_rtStartpHash + rtDurHash;                                        // collection end time
+
+  if (m_pHashPtr->prevcnt != m_pHashPtr->phashcnt)
+  {
+    m_pHashPtr->prevcnt = m_pHashPtr->phashcnt;
+  }
+
+  m_pHashPtr->format = *wfe;
+  if(SUCCEEDED(pIn->GetTime(&rtStart, &rtStop)))
+  {
+    // TODO: if user did seek, give up phash this time.
+    if(pIn->IsDiscontinuity() == S_OK)
+    {
+      Logging(L"pIn->IsDiscontinuity");
+    }
+    
+    if (rtStart < m_rtStartpHash && (rtDur + rtStart) > m_rtStartpHash 
+        && (rtDur + rtStart) < m_rtEndpHash)                                        // the first part of data
+    {
+      int firstlen = 0;
+      BYTE* dataout = pDataIn;
+      AlignDataBlock(pDataIn, rtStart, m_rtStartpHash,
+                    m_pHashPtr->format.nChannels, m_pHashPtr->format.wBitsPerSample,
+                    m_pHashPtr->format.nSamplesPerSec, dataout, firstlen);
+      FillData4pHash(dataout, (pIn->GetActualDataLength()-firstlen));
+      REFERENCE_TIME Dur = 10000000i64*(pIn->GetActualDataLength()-firstlen)/wfe->nSamplesPerSec/wfe->nChannels/(wfe->wBitsPerSample>>3);
+    }
+    else if (rtStart == m_rtStartpHash)
+    {
+      FillData4pHash(pDataIn, pIn->GetActualDataLength());
+    }
+    else if (rtStart == m_rtEndpHash)
+    {
+      PostMessage(AfxGetApp()->m_pMainWnd->m_hWnd, WM_COMMAND, ID_PHASH_COLLECTEND, NULL);
+    }
+    else if ((rtDur + rtStart) > m_rtEndpHash && rtStart < m_rtEndpHash 
+              && rtStart > m_rtStartpHash )                                        // the last part of data
+    { 
+      int lastlen = 0;
+      BYTE* dataout;
+      dataout = pDataIn;
+      AlignDataBlock(pDataIn, rtStart, m_rtEndpHash, m_pHashPtr->format.nChannels, 
+                     m_pHashPtr->format.wBitsPerSample, m_pHashPtr->format.nSamplesPerSec, dataout, lastlen);
+      FillData4pHash(pDataIn, lastlen);
+      
+      REFERENCE_TIME Dur = 10000000i64*(lastlen)/wfe->nSamplesPerSec/wfe->nChannels/(wfe->wBitsPerSample>>3);
+      // send a message and finish phash
+      PostMessage(AfxGetApp()->m_pMainWnd->m_hWnd, WM_COMMAND, ID_PHASH_COLLECTEND, NULL);
+    }
+    else if (rtStart > m_rtStartpHash && (rtDur + rtStart) < m_rtEndpHash )       // the middle part of data
+    {
+      FillData4pHash(pDataIn, pIn->GetActualDataLength());
+    }
+  }
+
 	SVP_LogMsg5(L"Chan %d %d %d %d %d %d %d %d %d",lTotalInputChannels ,lTotalOutputChannels , wfe->nSamplesPerSec , wfeout->nSamplesPerSec, wfe->wBitsPerSample, wfeout->wBitsPerSample
 		,wfe->nBlockAlign , wfeout->nBlockAlign, pIn->GetActualDataLength());
 	if(m_lastInputChannelCount2 != lTotalInputChannels || m_lastOutputChannelCount2 != lTotalOutputChannels )
@@ -821,9 +915,9 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
 	
 			if(m_fEQControlOn || sample_mul > 1 || bChangeRate || m_fUpSampleTo ){
 				//SVP_LogMsg5(L"maul %f %f %f %f" ,m_boost , log10(m_boost) , sample_mul, sample_mul * (1+log10(m_boost)) );
-SVP_LogMsg5(L"Buffer Size %d, ActualLength %d", pOut->GetSize(), samples);
+      SVP_LogMsg5(L"Buffer Size %d, ActualLength %d", pOut->GetSize(), samples);
 				
-				
+				//Logging(L"=========================================================iWePCMType");
 				switch(iWePCMType){
 								case WETYPE_PCM8:
 									samples = min (  pOut->GetSize() ,samples);
@@ -849,11 +943,13 @@ SVP_LogMsg5(L"Buffer Size %d, ActualLength %d", pOut->GetSize(), samples);
 									samples = min (  pOut->GetSize()/4 ,samples);
 									for(int i = 0; i < samples; i++)
 										((float*)pDataOut)[i] = clamp<float>( buff[i] , -1, +1 );
+                //  Logging(L"WETYPE_FPCM32");
 									break;
 								case WETYPE_FPCM64:
 									samples = min (  pOut->GetSize()/8 ,samples);
 									for(int i = 0; i < samples; i++)
 										((double*)pDataOut)[i] = clamp<double>( buff[i] , -1, +1 );
+                 // Logging(L"WETYPE_FPCM64");
 									break;
 				}
 
@@ -863,12 +959,12 @@ SVP_LogMsg5(L"Buffer Size %d, ActualLength %d", pOut->GetSize(), samples);
 		}
 	}
 
-	
 	SVP_LogMsg5(L"Buffer Size %d, ActualLength %d", pOut->GetSize(), lenout*bps*wfeout->nChannels);
 	SVP_LogMsg5(L"Out %d %d %d %d %d %d %d" , ((short*)pDataOut)[1], ((short*)pDataOut)[11], ((short*)pDataOut)[21], ((short*)pDataOut)[61], ((short*)pDataOut)[91], ((short*)pDataOut)[111], ((short*)pDataOut)[121]);
-
+  //Logging(L"Out %d %d %d %d %d %d %d" , ((short*)pDataOut)[1], ((short*)pDataOut)[11], ((short*)pDataOut)[21], ((short*)pDataOut)[61], ((short*)pDataOut)[91], ((short*)pDataOut)[111], ((short*)pDataOut)[121]);
 	pOut->SetActualDataLength(lenout*bps*wfeout->nChannels);
-	
+
+
 	return S_OK;
 }
 
@@ -1283,4 +1379,33 @@ STDMETHODIMP CAudioSwitcherFilter::SetEQControl ( int lEQBandControlPreset, floa
 
 	return S_OK;
 
+}
+
+// phash data filler
+STDMETHODIMP CAudioSwitcherFilter::FillData4pHash(BYTE* pDataIn, long BufferLen)
+{
+   for (int i = 0; i < BufferLen; i++ )
+      m_pHashPtr->phashdata.push_back(((unsigned char *)pDataIn)[i]); 
+  return S_OK;
+}
+
+STDMETHODIMP CAudioSwitcherFilter::SetpHashControl(struct phashblock* pbPtr)
+{
+  m_pHashPtr = pbPtr;
+  return S_OK;
+}
+
+// Get the exact time pointer of the block and the len after start point 
+void CAudioSwitcherFilter::AlignDataBlock(BYTE* datain, REFERENCE_TIME& start, REFERENCE_TIME& rttime, 
+                                          int channels, int bitsPerSample, int samplePerSec,
+                                          BYTE* dataout, int& len)
+{
+  REFERENCE_TIME dur = rttime - start;
+  if (dur < 0)
+    dur = start - rttime;
+  len = channels * (bitsPerSample>>3) * samplePerSec;
+  double len1 = dur/(double)UNITS;
+  double len2 = (double)len * len1;
+  len = (int)len2;
+  dataout = datain + len;
 }

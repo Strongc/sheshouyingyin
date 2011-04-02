@@ -80,6 +80,7 @@
 #include "SkinPreviewDlg.h"
 #include "ResLoader.h"
 
+
 // begin,
 // the following headers are included because HotkeyController mechanism broke the original inclusion
 #include "PPageFormats.h"
@@ -175,6 +176,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
   ON_MESSAGE(WM_USER+32, OnSuggestVolume)
   ON_MESSAGE(WM_USER+33, OnFailedInDXVA )
   
+
   ON_MESSAGE(WM_IME_SETCONTEXT, OnImeSetContext)
 
   ON_MESSAGE_VOID(WM_DISPLAYCHANGE, OnDisplayChange)
@@ -537,6 +539,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
   ON_WM_KEYUP()
   ON_COMMAND(ID_MOVIESHARE, OnMovieShare)
   ON_COMMAND(ID_MOVIESHARE_OPEN, OnOpenShooterMedia)
+  ON_COMMAND(ID_PHASH_COLLECTEND, OnFilledUp4pHash)
 
   ON_COMMAND_RANGE(ID_SKIN_FIRST, ID_SKIN_TENTH, OnSkinSelection)
   ON_UPDATE_COMMAND_UI_RANGE(ID_SKIN_FIRST, ID_SKIN_TENTH, OnUpdateSkinSelection)
@@ -608,6 +611,9 @@ m_movieShared(false),
 m_bmenuinitialize(FALSE)
 {
   m_wndFloatToolBar = new CPlayerFloatToolBar();
+
+  m_phashblock.phashcnt = 0;
+  m_phashblock.prevcnt = -1;
 }
 
 CMainFrame::~CMainFrame()
@@ -3874,6 +3880,7 @@ void CMainFrame::OnInitMenu(CMenu* pMenu)
   {
     CString str;
     pMenu->GetMenuString(i, str, MF_BYPOSITION);
+
 
     CMenu* pSubMenu = NULL;
 
@@ -8441,8 +8448,8 @@ void CMainFrame::OnPlayAudio(UINT nID)
 
     if(AfxGetMyApp()->sqlite_local_record)
       AfxGetMyApp()->sqlite_local_record->exec_insert_update_sql_u(szSQLInsert.GetBuffer(), szSQLUpdate.GetBuffer());
-
   }
+ 
 }
 
 void CMainFrame::OnUpdatePlayAudio(CCmdUI* pCmdUI)
@@ -11956,8 +11963,15 @@ bool CMainFrame::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
       if(m_fOpeningAborted) throw aborted;
 
       std::wstring szFileHash = HashController::GetInstance()->GetSPHash(m_fnCurPlayingFile);
-
       CString FPath = szFileHash.c_str();
+      
+      // Set phash when open a file
+      if( CComQIPtr<IAudioSwitcherFilter> pASF = FindFilter(__uuidof(CAudioSwitcherFilter), pGB))
+      {
+        pASF->SetpHashControl(&m_phashblock);
+        Logging(L"pASF->SetpHashControl\n");
+      }
+
 
       if(m_pCAP && (!m_fAudioOnly || m_fRealMediaGraph))
       {
@@ -12945,6 +12959,7 @@ void CMainFrame::SetupAudioSwitcherSubMenu()
             || clsid == GUIDFromCString(_T("{48025243-2D39-11CE-875D-00608CB78066}"))) // ISCR
             continue;
 
+
           CComQIPtr<IAMStreamSelect> pSS2 = pBF;
           if(pSS2)
           {
@@ -12953,6 +12968,7 @@ void CMainFrame::SetupAudioSwitcherSubMenu()
             WCHAR* wname = NULL;
             CComPtr<IUnknown> pObj, pUnk;
             pSS2->Count(&nStreams);
+
             for(DWORD i = 0; i < nStreams; i++, pObj = NULL, pUnk = NULL)
             {
               m_ssarray.Add(pSS2);
@@ -12972,6 +12988,7 @@ void CMainFrame::SetupAudioSwitcherSubMenu()
             }
             if(nStreams == 0) pSS2.Release();
           }
+
         }
         EndEnumFilters
 
@@ -15115,6 +15132,7 @@ void CMainFrame::CloseMedia()
   if(m_pGraphThread )
   {
 
+
     CAMEvent e;
     m_pGraphThread->PostThreadMessage(CGraphThread::TM_CLOSE, 0, (LPARAM)&e);
     // either opening or closing has to be blocked to prevent reentering them, closing is the better choice
@@ -15995,6 +16013,7 @@ LRESULT CMainFrame::OnNcPaint(  WPARAM wParam, LPARAM lParam )
 {
   AppSettings& s = AfxGetAppSettings();
 
+
   CString szWindowText ;
   if(m_bDxvaInUse){
     CString szEVR;
@@ -16200,6 +16219,8 @@ LRESULT CMainFrame::OnNcPaint(  WPARAM wParam, LPARAM lParam )
       int tx = rc.Width() - 2;
       int ty = rc.Height() - 2;
 
+			int pos_of_hor_splite = s.GetColorFromTheme(_T("WinFrameCornerHorSplit"), 5);
+			int pos_of_ver_splite = s.GetColorFromTheme(_T("WinFrameCornerVerSplit"), 7);
       hdc.StretchBlt(0,0,pos_of_hor_splite,pos_of_ver_splite, &dcBmp, 0,0,
         pos_of_hor_splite,pos_of_ver_splite, SRCCOPY); // TopLeft
       hdc.StretchBlt(tx-pos_of_hor_splite,0,pos_of_hor_splite,pos_of_ver_splite, &dcBmp, 
@@ -17614,4 +17635,19 @@ void CMainFrame::SearchSkinFolder()
   m_skinmanage.SetSkinPath(skinpath);
   m_skinmanage.SeachFile(skinpath.GetBuffer(MAX_PATH));
   skinpath.ReleaseBuffer();
+}
+
+void CMainFrame::OnFilledUp4pHash()
+{
+  // Start dealing with the data from audioswitcher filter
+  pHashController* hashctrl = pHashController::GetInstance();
+  hashctrl->SetSwitchStatus(pHashController::CALCHASH);
+  if (hashctrl->GetSwitchStatus())
+  {
+    if (hashctrl->SetpHashData(&m_phashblock) == S_OK)
+    {
+      hashctrl->_Stop();
+      hashctrl->_Start();
+    } 
+  }
 }

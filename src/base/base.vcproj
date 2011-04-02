@@ -176,6 +176,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\phashbase.h"
+			>
+		</File>
+		<File
 			RelativePath=".\ResLoader.cc"
 			>
 		</File>

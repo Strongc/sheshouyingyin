@@ -27,6 +27,8 @@
 
 #include "Controller/SnapUploadController.h"
 #include "Controller/SubTransController.h"
+#include "Controller/pHashController.h"
+#include "phashbase.h"
 
 #include "GraphCore.h"
 
@@ -766,6 +768,8 @@ public:
   LRESULT OnSuggestVolume(  WPARAM wParam, LPARAM lParam);
   LRESULT OnFailedInDXVA(  WPARAM wParam, LPARAM lParam);
   LRESULT OnImeSetContext(  WPARAM wParam, LPARAM lParam);
+  void OnFilledUp4pHash(); // response to data filled up
+  struct phashblock m_phashblock; 
 
   afx_msg void OnKillFocus(CWnd* pNewWnd);
   afx_msg void OnChangebackground();
