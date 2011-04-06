@@ -35,7 +35,9 @@ CPlayerSeekBar::CPlayerSeekBar() :
 	m_start(0), m_stop(100), m_pos(0), m_posreal(0), 
 	m_fEnabled(false)
 {
+
 }
+
 
 CPlayerSeekBar::~CPlayerSeekBar()
 {
@@ -482,6 +484,7 @@ void CPlayerSeekBar::OnLButtonDown(UINT nFlags, CPoint point)
 		__int64 posBefore = m_pos;
 		MoveThumb(point);
 		AfxGetMainWnd()->PostMessage(WM_HSCROLL, MAKEWPARAM((short)m_pos, SB_THUMBPOSITION), (LPARAM)m_hWnd);
+    pHashController::GetInstance()->SetSeek(true);
 	}
 
 	CDialogBar::OnLButtonDown(nFlags, point);

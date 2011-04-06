@@ -1,14 +1,15 @@
 #include "stdafx.h"
-#include "pHashController.h"
 #include <Strings.h>
 #include <io.h> 
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <string>
+#include <fstream>
 #include "samplerate.h"
 #include "sndfile.h"
-#include "phashbase.h"
-#include <fstream>
+#include "pHashController.h"
+#include "zmqhelper.h"
+#include "../apps/mplayerc/Model/pHashModel.h"
 
 #define FREE_PHASHMEM() \
   m_pbPtr->phashdata.clear();\
@@ -21,7 +22,8 @@ pHashController::pHashController(void) :
   m_phashswitcher(0),
   m_bufferlen(0),
   m_phashlen(0),
-  m_hashcount(0)
+  m_hashcount(0),
+  m_seekflag(false)
 {
   m_hashes = (uint32_t**)malloc(8*sizeof(uint32_t*));
   m_lens = (int*)malloc(8*sizeof(int));
@@ -54,6 +56,16 @@ HRESULT pHashController::SetpHashData(struct phashblock* pbPtr)
   return S_OK;
 }
 
+BOOL pHashController::IsSeek()
+{
+  return m_seekflag;
+}
+
+void pHashController::SetSeek(int seekflag)
+{
+  m_seekflag = seekflag;
+}
+
 void pHashController::_Thread()
 {
   Logging( L"pHashController::_thread enter %x", m_phashswitcher);
@@ -62,9 +74,10 @@ void pHashController::_Thread()
   case CALCHASH:
     //_thread_MonopHash();
     _thread_DigestpHashData();
-    _thread_GetAudiopHash();
+//     _thread_GetAudiopHash();
+//     _thread_UploadpHash();
+    _thread_GetpHashAndSend();
     break;
-
   case NOCALCHASH:
   default:
     break;
@@ -202,6 +215,47 @@ void pHashController::_thread_GetAudiopHash()
       free(m_lens);
       free(m_hashes);
   }
+  m_pbPtr->prevcnt = m_pbPtr->phashcnt;
+  m_pbPtr->phashcnt++;
+  if (m_pbPtr->phashcnt > count)
+    m_pbPtr->phashcnt = 0;
+}
+void pHashController::_thread_GetpHashAndSend()
+{
+  int count = g_phash_collectcfg[CFG_PHASHTIMES] - 1;
+  Logging("phashcnt:%d", m_pbPtr->phashcnt);
+  if (m_pbPtr->phashcnt <= count)
+  { 
+    int i = m_pbPtr->phashcnt;
+    m_phashframe.cmd = 1;
+    m_phashframe.amount = g_phash_collectcfg[CFG_PHASHTIMES];
+    m_phashframe.id = i;
+
+    if (IsSeek() == true)
+    {
+      m_phashframe.earlyendflag = 1;
+      m_phashframe.nbframes = 0;
+      m_phashframe.phash = NULL;
+      m_phashswitcher = NOCALCHASH; // turn off phash
+    }
+    else
+    {
+      m_phashframe.earlyendflag = 0;
+      m_hashes[i] = ph_audiohash(m_buffer, m_bufferlen, m_sr, m_phashlen);
+      m_lens[i] = m_phashlen;
+      Logging(L"m_pbPtr->phashcnt: %d, length: %d, hashes[0]: %X, m_phashlen: %d", i, m_lens[i], m_hashes[i][0], m_phashlen);
+      m_phashframe.nbframes = m_lens[i];
+      m_phashframe.phash = m_hashes[i];
+    }
+    
+    free(m_buffer);
+    m_buffer = NULL;
+    m_bufferlen = 0;
+    
+    //sending to server
+    SendOnepHashFrame(m_phashframe);
+  }
+
   m_pbPtr->prevcnt = m_pbPtr->phashcnt;
   m_pbPtr->phashcnt++;
   if (m_pbPtr->phashcnt > count)
@@ -415,8 +469,84 @@ void pHashController::SixchannelsToStereo(float* output, float* input, int n)
 }
 
 // Upload pHash
-void pHashController::_thread_UppHashDownSub()
+void pHashController::_thread_UploadpHash()
 {
+  // connection
+  void* context = zmq_init(1);
+  void* client = socket_connect(context, ZMQ_REQ, "tcp://192.168.10.46:5000");
+  
+  // sending all phashes
+  m_phashframe.cmd = 1;
+  m_phashframe.amount = g_phash_collectcfg[CFG_PHASHTIMES];
+  for (int times = 0; times < g_phash_collectcfg[CFG_PHASHTIMES]; times++)
+  {
+    m_phashframe.id = times;
+    m_phashframe.nbframes = m_lens[times];
+    m_phashframe.phash = new uint32_t[m_lens[times]];
+    memcpy_s(m_phashframe.phash, m_lens[times], m_hashes[times], m_lens[times]);
+    sendmore_msg_vsm(client, &m_phashframe.cmd, sizeof(uint8_t));
+    sendmore_msg_vsm(client, &m_phashframe.amount, sizeof(uint8_t));
+    sendmore_msg_vsm(client, &m_phashframe.id, sizeof(uint8_t));
+    sendmore_msg_vsm(client, &m_phashframe.nbframes, sizeof(uint32_t));
+    sendmore_msg_data(client, m_phashframe.phash, m_phashframe.nbframes*sizeof(uint32_t), free_fn, NULL);
+    Logging("send:cmd:%d, amount:%d, id:%d, nbframes:%d, phash[0]:%X", 
+      m_phashframe.cmd, m_phashframe.amount, m_phashframe.id , m_phashframe.nbframes, m_phashframe.phash[0]);
 
+  }
+  send_empty_msg(client);
+  
+  Sleep(1);
+  
+  // get result
+  uint8* data = NULL;
+  uint8_t result;
+  int64_t more;
+  size_t msg_size, more_size = sizeof(int64_t);
+  recieve_msg(client, &msg_size, &more, &more_size, (void**)&data);
+  if (msg_size == sizeof(uint8_t))
+  {
+    memcpy(&result, data, sizeof(uint8_t));
+    Logging("Get result:%d", result);
+  }
+  zmq_close(client);
+  zmq_term(context);
+}
 
+int pHashController::SendOnepHashFrame(phashbox_t phashframe)
+{
+  // connection
+  void* context = zmq_init(1);
+  void* client = socket_connect(context, ZMQ_REQ, "tcp://192.168.10.46:5000");
+
+  // sending all phashes
+  sendmore_msg_vsm(client, &phashframe.cmd, sizeof(uint8_t));
+  sendmore_msg_vsm(client, &phashframe.earlyendflag, sizeof(uint8_t));
+  sendmore_msg_vsm(client, &phashframe.amount, sizeof(uint8_t));
+  sendmore_msg_vsm(client, &phashframe.id, sizeof(uint8_t));
+  sendmore_msg_vsm(client, &phashframe.nbframes, sizeof(uint32_t));
+  send_msg_data(client, phashframe.phash, phashframe.nbframes*sizeof(uint32_t), NULL, NULL);
+  if (phashframe.earlyendflag == 0)
+  {
+    Logging("send:cmd:%d, earlyendflag:%d, amount:%d, id:%d, nbframes:%d, phash[0]:%X", 
+      phashframe.cmd, phashframe.earlyendflag, phashframe.amount, phashframe.id , phashframe.nbframes, phashframe.phash[0]);
+  }
+
+  Sleep(1);
+
+  // get result
+  uint8* data = NULL;
+  uint8_t result;
+  int64_t more;
+  size_t msg_size, more_size = sizeof(int64_t);
+  recieve_msg(client, &msg_size, &more, &more_size, (void**)&data);
+  if (msg_size == sizeof(uint8_t))
+  {
+    memcpy(&result, data, sizeof(uint8_t));
+    Logging("Get result:%d", result);
+  }
+
+  zmq_close(client);
+  zmq_term(context);
+  
+  return result;
 }

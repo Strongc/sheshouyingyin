@@ -28,7 +28,7 @@
 #include "Controller/SnapUploadController.h"
 #include "Controller/SubTransController.h"
 #include "Controller/pHashController.h"
-#include "phashbase.h"
+#include "Model/pHashModel.h"
 
 #include "GraphCore.h"
 

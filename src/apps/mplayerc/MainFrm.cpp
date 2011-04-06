@@ -11970,6 +11970,12 @@ bool CMainFrame::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
       {
         pASF->SetpHashControl(&m_phashblock);
         Logging(L"pASF->SetpHashControl\n");
+        
+        pHashController* hashctrl = pHashController::GetInstance();
+        hashctrl->SetSwitchStatus(pHashController::CALCHASH);
+        hashctrl->SetSeek(false);
+        m_phashblock.phashcnt = 0;
+        m_phashblock.prevcnt = -1;
       }
 
 
@@ -17640,8 +17646,7 @@ void CMainFrame::SearchSkinFolder()
 void CMainFrame::OnFilledUp4pHash()
 {
   // Start dealing with the data from audioswitcher filter
-  pHashController* hashctrl = pHashController::GetInstance();
-  hashctrl->SetSwitchStatus(pHashController::CALCHASH);
+  pHashController* hashctrl = pHashController::GetInstance();  
   if (hashctrl->GetSwitchStatus())
   {
     if (hashctrl->SetpHashData(&m_phashblock) == S_OK)

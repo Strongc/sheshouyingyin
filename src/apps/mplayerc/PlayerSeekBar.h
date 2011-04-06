@@ -24,6 +24,7 @@
 #include "SUIButton.h"
 // CPlayerSeekBar
 #include "SeekBarTip.h"
+#include "Controller/pHashController.h" 
 
 class CPlayerSeekBar : public CDialogBar
 {
@@ -86,4 +87,5 @@ public:
 	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
+  
 };

@@ -2016,6 +2016,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Model\pHashModel.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Model\PlaylistItem.cc"
 				>
 			</File>
