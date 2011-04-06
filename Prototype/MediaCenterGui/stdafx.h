@@ -21,7 +21,7 @@
 extern CAppModule _Module;
 
 #include <atlwin.h>
-#include "../../src/apps/mplayerc/UserInterface/Renderer/ListBlocks.h"
+/*#include "../../src/apps/mplayerc/UserInterface/Renderer/UILayerBlock.h"*/
 #include "BlockList.h"
 
 #if defined _M_IX86

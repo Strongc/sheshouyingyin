@@ -56,6 +56,9 @@ public:
 	CSUIBtnList m_btnList;
 	CSUIBtnList m_btnBBList;
 
+  int m_offsetspeed;
+  int m_preoffsetspeed;
+
 	void ReCalcBtn();
 	DECLARE_DYNAMIC(CChildView)
 
@@ -91,5 +94,8 @@ public:
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	afx_msg LRESULT OnNcHitTest(CPoint point);
 	afx_msg void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
-    afx_msg void OnTimer(UINT_PTR nIDEvent);
+  afx_msg void OnTimer(UINT_PTR nIDEvent);
+
+  void ShowMediaCenter(BOOL bl);
+
 };

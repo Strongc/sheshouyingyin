@@ -4,7 +4,7 @@
 #include <list>
 #include <vector>
 #include "MediaCenterScrollBar.h"
-
+#include "../../src/apps/mplayerc/UserInterface/Renderer/UILayerBlock.h"
 /* 
  * Class BlockUnit implements block UI and UnitData
  */
@@ -36,7 +36,8 @@ public:
   void AddBlock(BlockUnit* unit);  
   void DeleteBlock(std::list<BlockUnit*>::iterator it);
   BOOL AddScrollBar();
-  void DoPaint(WTL::CDC& dc);
+  void DoPaint(WTL::CDC& hdc);
+  void DoPaint(HDC hdc, RECT rcclient);
   BOOL OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetspeed, HWND hwnd);
   int OnHittest(POINT pt, BOOL blbtndown);
   
@@ -93,7 +94,7 @@ public:
   void HandleLButtonDown(POINT pt, RECT rcclient);
   void HandleLButtonUp(POINT pt, RECT rcclient);
   void HandleMouseMove(POINT pt, RECT rcclient);
-
+  
   void SetFrameHwnd(HWND hwnd);
   void SetScrollSpeed(int* speed);
   void SetOffsetBool(BOOL* bl);

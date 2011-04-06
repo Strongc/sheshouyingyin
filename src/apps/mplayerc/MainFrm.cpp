@@ -542,6 +542,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
   ON_UPDATE_COMMAND_UI_RANGE(ID_SKIN_FIRST, ID_SKIN_TENTH, OnUpdateSkinSelection)
 
   ON_COMMAND(ID_SKIN_MORESELECTION, OnSkinMoreSelection)
+
+  ON_COMMAND(ID_MEDIACENTER, OnShowMediaCenter)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -605,7 +607,8 @@ m_is_resume_from_last_exit_point(false),
 m_lyricDownloadThread(NULL),
 m_secret_switch(NULL),
 m_movieShared(false),
-m_bmenuinitialize(FALSE)
+m_bmenuinitialize(FALSE),
+m_bmediacentershow(FALSE)
 {
   m_wndFloatToolBar = new CPlayerFloatToolBar();
 }
@@ -1167,8 +1170,7 @@ void CMainFrame::OnMouseMove(UINT nFlags, CPoint point)
   m_wndSeekBar.CloseToolTips();
   if( m_iMediaLoadState == MLS_CLOSED )
     m_wndView.OnMouseMove(nFlags,point);
-
-
+  
   CRect CVideoRect = m_wndView.GetVideoRect();
   if(m_iPlaybackMode == PM_DVD)
   {
@@ -17614,4 +17616,10 @@ void CMainFrame::SearchSkinFolder()
   m_skinmanage.SetSkinPath(skinpath);
   m_skinmanage.SeachFile(skinpath.GetBuffer(MAX_PATH));
   skinpath.ReleaseBuffer();
+}
+
+void CMainFrame::OnShowMediaCenter()
+{
+  m_bmediacentershow  = !m_bmediacentershow;
+  m_wndView.ShowMediaCenter(m_bmediacentershow);
 }
