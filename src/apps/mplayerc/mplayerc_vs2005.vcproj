@@ -839,6 +839,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\TimeBmpManage.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TimeBmpManage.h"
+				>
+			</File>
+			<File
 				RelativePath=".\TransparentControlBar.cpp"
 				>
 			</File>
@@ -1069,6 +1077,10 @@
 			</File>
 			<File
 				RelativePath=".\res\newui\bitmap4.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\newui\bitmap5.bmp"
 				>
 			</File>
 			<File
@@ -1441,6 +1453,54 @@
 			</File>
 			<File
 				RelativePath=".\res\ecio.icons\playlist.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\res\newui\playtime_0.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\newui\playtime_1.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\newui\playtime_2.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\newui\playtime_3.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\newui\playtime_4.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\newui\playtime_5.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\newui\playtime_6.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\newui\playtime_7.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\newui\playtime_8.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\newui\playtime_9.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\newui\playtime_colon.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\newui\playtime_minus.bmp"
 				>
 			</File>
 			<File

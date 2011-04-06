@@ -34,6 +34,9 @@ private:
 	__int64 m_start, m_stop, m_pos, m_posreal;
 	bool m_fEnabled;
 	HCURSOR cursorHand;
+
+  BITMAP m_curbm;
+  BITMAP m_rmnbm;
 	
 	void MoveThumb(CPoint point);
 	void SetPosInternal(__int64 pos);

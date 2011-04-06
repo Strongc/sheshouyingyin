@@ -27,6 +27,8 @@
 #include "PlayerSeekBar.h"
 #include "MainFrm.h"
 #include "..\..\svplib\svplib.h"
+#include "TimeBmpManage.h"
+#include <ResLoader.h>
 // CPlayerSeekBar
 
 IMPLEMENT_DYNAMIC(CPlayerSeekBar, CDialogBar)
@@ -133,6 +135,8 @@ CRect CPlayerSeekBar::GetChannelRect()
 	CRect r;
 	GetClientRect(&r);
 	r.DeflateRect(5, 3, 5, 2); //
+  r.left = r.left + (m_curbm.bmWidth == 0 ? 0:m_curbm.bmWidth + 4);
+  r.right = r.right - (m_curbm.bmWidth == 0 ? 0:m_rmnbm.bmWidth + 4); 
 	r.bottom = r.top + 10;
 	return(r);
 }
@@ -184,7 +188,7 @@ BEGIN_MESSAGE_MAP(CPlayerSeekBar, CDialogBar)
 	ON_WM_SIZE()
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
-	ON_WM_MOUSEMOVE()
+	//ON_WM_MOUSEMOVE()
 	ON_WM_ERASEBKGND()
 	//}}AFX_MSG_MAP
 //	ON_NOTIFY_EX(TTN_NEEDTEXT, 0, OnTtnNeedText)
@@ -267,6 +271,34 @@ void CPlayerSeekBar::OnPaint()
 	bool fEnabled = m_fEnabled && m_start < m_stop;
 
 	AppSettings& s = AfxGetAppSettings();
+  CMainFrame* pFrame = ((CMainFrame*)AfxGetMainWnd());
+
+  CDC dccur;
+  CDC dcrmn;
+  CBitmap cbmpcur, cbmprmn;
+  HBITMAP oldbmpcur, oldbmprmn;
+  TimeBmpManage tbmn;
+  if (pFrame && pFrame->IsSomethingLoaded())
+  {
+    CRect rc;
+    GetClientRect(&rc);
+    dccur.CreateCompatibleDC(&dc);
+    dcrmn.CreateCompatibleDC(&dc);
+    cbmpcur.CreateCompatibleBitmap(&dc, rc.Width(), rc.Height());
+    cbmprmn.CreateCompatibleBitmap(&dc, rc.Width(), rc.Height());
+    oldbmpcur = (HBITMAP)dccur.SelectObject(cbmpcur);
+    oldbmprmn = (HBITMAP)dcrmn.SelectObject(cbmprmn);
+    TimeBmpManage tbmn;
+    tbmn.SetPlaytime(m_posreal, m_stop);
+    m_curbm = tbmn.CreateTimeBmp(dccur, FALSE);
+    tbmn.SetPlaytime(m_stop - m_posreal, m_stop);
+    m_rmnbm = tbmn.CreateTimeBmp(dcrmn, TRUE);
+  }
+  else
+  {
+    m_curbm.bmWidth = 0;
+    m_rmnbm.bmWidth = 0;
+  }
 
 	COLORREF 
 //		white = s.GetColorFromTheme(_T("SeekBarPlayed"), NEWUI_COLOR_SEEKBAR_PLAYED),
@@ -323,7 +355,7 @@ void CPlayerSeekBar::OnPaint()
 	{
 		CRect r = GetChannelRect();
 
-		int cur = r.left + (int)((m_start < m_stop /*&& fEnabled*/) ? (__int64)r.Width() * (m_pos - m_start) / (m_stop - m_start) : 0);
+    int cur = r.left  + (int)((m_start < m_stop /*&& fEnabled*/) ? (__int64)r.Width() * (m_pos - m_start) / (m_stop - m_start) : 0);
 		
 #define CORBARS 10
 		COLORREF havntplayed = s.GetColorFromTheme(_T("SeekBarUnPlayed"), 0x00434343);
@@ -435,6 +467,24 @@ void CPlayerSeekBar::OnPaint()
 		dc.FillRect(&r, &bBkg);
 	}
 
+
+  {
+
+    if (pFrame && pFrame->IsSomethingLoaded())
+    {
+      CRect r;
+      GetClientRect(&r);
+      BLENDFUNCTION bf = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
+      dc.AlphaBlend(4, 4, m_curbm.bmWidth, m_curbm.bmHeight, &dccur, 0, 0, m_curbm.bmWidth, m_curbm.bmHeight, bf);
+      dc.AlphaBlend(r.right - m_rmnbm.bmWidth - 4, 4, m_rmnbm.bmWidth, m_rmnbm.bmHeight, &dcrmn, 0, 0, m_rmnbm.bmWidth, m_rmnbm.bmHeight, bf);
+      dccur.SelectObject(oldbmpcur);
+      dccur.SelectObject(oldbmprmn);
+      cbmpcur.DeleteObject();
+      cbmpcur.DeleteObject();
+      dccur.DeleteDC();
+      dcrmn.DeleteDC();
+    }
+  }
 
 	// Do not call CDialogBar::OnPaint() for painting messages
 }

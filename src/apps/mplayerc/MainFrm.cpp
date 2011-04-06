@@ -7469,7 +7469,7 @@ void CMainFrame::OnPlayStop()
       SetAlwaysOnTop(AfxGetAppSettings().iOnTop);
     }
   }
-
+  m_wndSeekBar.Invalidate();
 
 }
 
