@@ -176,10 +176,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\phashbase.h"
-			>
-		</File>
-		<File
 			RelativePath=".\ResLoader.cc"
 			>
 		</File>
@@ -197,6 +193,10 @@
 		</File>
 		<File
 			RelativePath=".\threadhelper.h"
+			>
+		</File>
+		<File
+			RelativePath=".\zmqhelper.h"
 			>
 		</File>
 	</Files>

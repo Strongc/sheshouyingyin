@@ -19,7 +19,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="2"
-			InheritedPropertySheets="..\..\..\common.vsprops;..\..\..\debug.vsprops"
+			InheritedPropertySheets="..\..\..\common.vsprops;..\..\..\debug.vsprops;..\..\..\..\Thirdparty\sinet.vsprops"
 			UseOfMFC="1"
 			CharacterSet="2"
 			>
@@ -88,7 +88,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="2"
-			InheritedPropertySheets="..\..\..\common.vsprops;..\..\..\release.vsprops"
+			InheritedPropertySheets="..\..\..\common.vsprops;$(SolutionDir)src\release.vsprops;..\..\..\..\Thirdparty\sinet.vsprops"
 			UseOfMFC="1"
 			CharacterSet="2"
 			>
@@ -160,7 +160,7 @@
 		<Configuration
 			Name="Debug Unicode|Win32"
 			ConfigurationType="2"
-			InheritedPropertySheets="..\..\..\common.vsprops;..\..\..\debug.vsprops"
+			InheritedPropertySheets="..\..\..\common.vsprops;..\..\..\debug.vsprops;..\..\..\..\Thirdparty\sinet.vsprops"
 			UseOfMFC="1"
 			CharacterSet="1"
 			>
@@ -229,7 +229,7 @@
 		<Configuration
 			Name="Release Unicode|Win32"
 			ConfigurationType="2"
-			InheritedPropertySheets="..\..\..\common.vsprops;..\..\..\release.vsprops"
+			InheritedPropertySheets="..\..\..\common.vsprops;$(SolutionDir)src\release.vsprops;..\..\..\..\Thirdparty\sinet.vsprops"
 			UseOfMFC="1"
 			CharacterSet="1"
 			>
@@ -298,7 +298,7 @@
 		<Configuration
 			Name="Debug lib|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\..\common.vsprops;..\..\..\debug.vsprops"
+			InheritedPropertySheets="..\..\..\common.vsprops;..\..\..\debug.vsprops;..\..\..\..\Thirdparty\sinet.vsprops"
 			UseOfMFC="1"
 			CharacterSet="2"
 			>
@@ -353,7 +353,7 @@
 		<Configuration
 			Name="Debug Unicode lib|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\..\common.vsprops;..\..\..\debug.vsprops"
+			InheritedPropertySheets="..\..\..\common.vsprops;..\..\..\debug.vsprops;..\..\..\..\Thirdparty\sinet.vsprops"
 			UseOfMFC="1"
 			CharacterSet="1"
 			>
@@ -409,7 +409,7 @@
 		<Configuration
 			Name="Release lib|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\..\common.vsprops;..\..\..\release.vsprops"
+			InheritedPropertySheets="..\..\..\common.vsprops;$(SolutionDir)src\release.vsprops;..\..\..\..\Thirdparty\sinet.vsprops"
 			UseOfMFC="1"
 			CharacterSet="2"
 			>
@@ -464,7 +464,7 @@
 		<Configuration
 			Name="Release Unicode lib|Win32"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\..\common.vsprops;..\..\..\release.vsprops"
+			InheritedPropertySheets="..\..\..\common.vsprops;$(SolutionDir)src\release.vsprops;..\..\..\..\Thirdparty\sinet.vsprops"
 			UseOfMFC="1"
 			CharacterSet="1"
 			>

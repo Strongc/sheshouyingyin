@@ -1,14 +1,6 @@
 #ifndef PHASHCONTROLLER_H
 #define PHASHCONTROLLER_H
 
-#include <threadhelper.h>
-#include "NetworkControlerImpl.h"
-#include "LazyInstance.h"
-#include "phashapi.h"
-#include "pHashController.h"
-#include <fstream>
-
-
 //////////////////////////////////////////////////////////////////////////
 //
 //  pHashController is a global instance controller that calculates
@@ -28,13 +20,22 @@
 //          But 6 channels vs 2 channels (different channel amount) situation is still a problem.
 //          
 
+#include <threadhelper.h>
+#include <fstream>
+#include <Windows.h>
+#include "LazyInstance.h"
+#include "phashapi.h"
+#include "pHashController.h"
+//#include "NetworkControlerImpl.h" 
+
 #define NORMALIZE_DB_MIN -145
 #define NORMALIZE_DB_MAX 60
 
 
 class pHashController:
   public LazyInstanceImpl<pHashController>,
-  public ThreadHelperImpl<pHashController>
+  public ThreadHelperImpl<pHashController>//,
+//  public NetworkControlerImpl
 {
 public:
   pHashController(void);
@@ -49,11 +50,12 @@ public:
   int GetSwitchStatus();
   void SetSwitchStatus(int status);
   HRESULT SetpHashData(struct phashblock* pbPtr);
- 
-  void _Thread(); 
-  
+  BOOL IsSeek();
+  void SetSeek(int seekflag);
+ void _Thread(); 
+
 private:
-  
+
   uint32_t** m_hashes;                                     // Storage pHashes
   int *m_lens;
   struct phashblock* m_pbPtr;
@@ -63,7 +65,8 @@ private:
   int m_sr;                                               // sample rate to convert the stream
   int m_phashswitcher;
   int m_hashcount;
-  
+  int m_seekflag;
+
   // Sample to float and normalized
   BOOL SampleToFloat(const unsigned char* const indata, float* outdata, int samples, int type);
   
@@ -75,8 +78,20 @@ private:
   void SixchannelsToStereo(float *output, float *input, int n);
 
   // TODO: Upload phash 
-  void _thread_UppHashDownSub();
+  typedef struct phashbox{
+    uint8_t cmd;           // 1 for query, 2 for submission
+    uint8_t earlyendflag;  // if end earlier , set the flag to 1; 
+    uint8_t amount;        // amount of phash times
+    uint8_t id;            // order of phash
+    uint32_t nbframes;     // length of phash 
+    uint32_t* phash;
+  } phashbox_t;
+  phashbox_t m_phashframe;
 
+  void _thread_UploadpHash();
+  void _thread_GetpHashAndSend();
+  int SendOnepHashFrame(phashbox_t phashframe);
+  
 };
 
 

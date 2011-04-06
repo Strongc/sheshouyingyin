@@ -428,6 +428,7 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "yamlcpp", "Thirdparty\yaml-cpp\yamlcpp.vcproj", "{3104AB4E-CD31-4F47-95E9-0E8D9374E15D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libzmq", "Thirdparty\zeromq\libzmq.vcproj", "{641C5F36-32EE-4323-B740-992B651CF9D6}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MediaTree_Test", "Test\MediaTree_Test\MediaTree_Test.vcproj", "{6A694499-2455-4888-915B-5F6F8F2E43BF}"
 EndProject
 Global
@@ -1116,6 +1117,10 @@ Global
 		{641C5F36-32EE-4323-B740-992B651CF9D6}.Release|Win32.Build.0 = Release|Win32
 		{641C5F36-32EE-4323-B740-992B651CF9D6}.WithOpenPGM|Win32.ActiveCfg = WithOpenPGM|Win32
 		{641C5F36-32EE-4323-B740-992B651CF9D6}.WithOpenPGM|Win32.Build.0 = WithOpenPGM|Win32
+		{6A694499-2455-4888-915B-5F6F8F2E43BF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6A694499-2455-4888-915B-5F6F8F2E43BF}.Release Unicode|Win32.ActiveCfg = Release|Win32
+		{6A694499-2455-4888-915B-5F6F8F2E43BF}.Release|Win32.ActiveCfg = Release|Win32
+		{6A694499-2455-4888-915B-5F6F8F2E43BF}.WithOpenPGM|Win32.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

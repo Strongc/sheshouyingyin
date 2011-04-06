@@ -159,7 +159,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy ..\zeromq\release\libzmq.lib $(SolutionDir)lib\libzmq.lib&#x0D;&#x0A;copy ..\zeromq\release\libzmq.dll $(SolutionDir)..\libzmq.dll"
+				CommandLine="copy ..\zeromq\release\libzmq.lib $(SolutionDir)lib\libzmq.lib&#x0D;&#x0A;copy ..\zeromq\release\libzmq.dll $(SolutionDir)..\libzmq.dll&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration

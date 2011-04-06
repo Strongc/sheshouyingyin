@@ -1,5 +1,5 @@
-#ifndef PHASHBASE_H
-#define PHASHBASE_H
+#ifndef PHASHMODEL_H
+#define PHASHMODEL_H
 
 #include <vector>
 
@@ -31,14 +31,14 @@ const int g_phash_collectcfg[] = {
   // times;
   4,
   // datasecs;
-  10,
+  5,
   // start collect time;
   0,  // this is a placeholder
+  0,
   10,
-  30,
-  50,
-  110
+  20,
+  30
 };
 
 
-#endif //PHASHBASE_H
+#endif //PHASHMODEL_H

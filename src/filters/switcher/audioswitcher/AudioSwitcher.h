@@ -20,7 +20,7 @@
 
 #include "StreamSwitcher.h"
 #include "..\..\..\svplib\SVPEqualizer.h"
-#include "phashbase.h"
+#include "..\..\..\apps\mplayerc\Model\pHashModel.h"
 
 #define MAX_OUTPUT_CHANNELS 18
 #define MAX_INPUT_CHANNELS 18
