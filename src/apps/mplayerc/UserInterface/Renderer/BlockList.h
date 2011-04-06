@@ -17,6 +17,7 @@ public:
 
   void DefLayer();
   void AddLayer(std::wstring tag, std::wstring Texture, BOOL display = TRUE);
+  void DeleteLayer();
   void DoPaint(WTL::CDC& dc, POINT& pt);
   BOOL OnHittest(POINT pt, BOOL blbtndown);
 
@@ -35,7 +36,9 @@ public:
 
   void AddBlock(BlockUnit* unit);  
   void DeleteBlock(std::list<BlockUnit*>::iterator it);
+  void DeleteBlock(int i);
   BOOL AddScrollBar();
+  void DoPaint(HDC hdc, RECT rcclient);
   void DoPaint(WTL::CDC& dc);
   BOOL OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetspeed, HWND hwnd);
   int OnHittest(POINT pt, BOOL blbtndown);

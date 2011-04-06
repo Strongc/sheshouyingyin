@@ -248,14 +248,6 @@
 				RelativePath="..\..\src\apps\mplayerc\UserInterface\Renderer\UILayer.h"
 				>
 			</File>
-			<File
-				RelativePath="..\..\src\apps\mplayerc\UserInterface\Renderer\UILayerBlock.cc"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\apps\mplayerc\UserInterface\Renderer\UILayerBlock.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"

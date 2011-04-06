@@ -64,6 +64,11 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   dc.TextOut(pt.x, pt.y+140, str);
 }
 
+void BlockUnit::DeleteLayer()
+{
+  m_layer->DeleteAllLayer();
+}
+
 int BlockUnit::OnHittest(POINT pt, BOOL blbtndown)
 {
   return m_layer->OnHittest(pt, blbtndown);
@@ -93,11 +98,17 @@ BlockList::~BlockList()
 {
 
 }
-
-void BlockList::DoPaint(WTL::CDC& dc)
+void BlockList::DoPaint(HDC hdc, RECT rcclient)
+{
+  WTL::CMemoryDC memdc(hdc, rcclient);
+  DoPaint(memdc);
+}
+void BlockList::DoPaint(WTL::CDC& hdc)
 {
   if (m_x.empty() || m_y.empty())
     return;
+  WTL::CDC dc;
+  dc.Attach(hdc);
 
   int rows = 0;
   float y = .0f;
@@ -362,6 +373,7 @@ RECT BlockList::GetScrollBarHittest()
 
 void BlockList::DeleteBlock(std::list<BlockUnit*>::iterator it)
 {
+  it->DeleteLayer();
   if (it == m_start)
   {
     if (m_start == m_list.begin())
@@ -377,6 +389,14 @@ void BlockList::DeleteBlock(std::list<BlockUnit*>::iterator it)
   }
   else
     m_list.erase(it);
+}
+
+void BlockList::DeleteBlock(int index)
+{
+  std::list<BlockUnit*>::iterator it = m_start;
+  while(index--)
+    ++it;
+  DeleteBlock(it);
 }
 
 //BlockListView
@@ -447,3 +467,4 @@ void BlockListView::HandleMouseMove(POINT pt, RECT rcclient)
   if (blayer == BEHITTEST)
     ::InvalidateRect(m_hwnd, &rcclient, FALSE);
 }
+

@@ -124,7 +124,7 @@ public:
     HBRUSH hbrush = ::CreateSolidBrush(RGB(231, 231, 231));
     memdc.FillRect(&client, hbrush);
     
-    m_blocklist.DoPaint(memdc);
+    m_blocklist.DoPaint(memdc.m_hDC, client);
 
     return 0;
   }

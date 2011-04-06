@@ -67,3 +67,37 @@ void MediaCenterController::SpiderStop()
   m_checkDB._Stop();
   m_treeModel.saveToDB();
 }
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+//  GUI control
+
+BOOL MediaCenterController::GetPlaneState()
+{
+  return m_planestate;
+}
+
+void MediaCenterController::SetPlaneState(BOOL bl)
+{
+  m_planestate = bl;
+}
+
+BlockListView& MediaCenterController::GetBlockListView()
+{
+  return m_blocklist;
+}
+
+void MediaCenterController::AddBlock(RECT rc)
+{
+  BlockUnit* one = new BlockUnit;
+  m_blocklist.AddBlock(one);
+  m_blocklist.Update(rc.right - rc.left, rc.bottom - rc.top);
+  ::InvalidateRect(m_hwnd, 0, FALSE);
+}
+
+void MediaCenterController::DelBlock(int index)
+{
+  m_blocklist.DeleteBlock(index);
+  ::InvalidateRect(m_hwnd, 0, FALSE);
+}

@@ -40,6 +40,9 @@ static char THIS_FILE[] = __FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // CChildView
 
+#define TIMER_OFFSET 11
+#define  TIMER_SLOWOFFSET 12
+
 CChildView::CChildView() :
 m_vrect(0,0,0,0)
 ,m_cover(NULL)
@@ -317,11 +320,11 @@ void CChildView::OnPaint()
 		CMemoryDC hdc(&dc, rcClient);
 
     // only response of media center messages(WM_PAINT)
-//     if (m_mediacenter->GetPlaneState())
-//     {
-//       m_mediacenter->m_plane.DoPaint(hdc.m_hDC, rcClient);
-//       return;
-//     }
+    if (m_mediacenter->GetPlaneState())
+    {
+      (m_mediacenter->GetBlockListView()).DoPaint(hdc.m_hDC, rcClient);
+      return;
+    }
 
 		hdc.FillSolidRect( rcClient, s.GetColorFromTheme(_T("MainBackgroundColor"),0));
     CRect rcLoading(rcClient);
@@ -520,14 +523,13 @@ void CChildView::OnSize(UINT nType, int cx, int cy)
 	((CMainFrame*)GetParentFrame())->MoveVideoWindow();
 	ReCalcBtn();
 
-//   if (m_mediacenter->GetPlaneState())
-//   {
-//   RECT rc;
-//   GetClientRect(&rc);
-//     m_mediacenter->m_plane.SetClientrc(rc);
-//     m_mediacenter->m_plane.AutoBreakline();
-//     Invalidate();
-//   }
+  if (m_mediacenter->GetPlaneState())
+  {
+  RECT rc;
+  GetClientRect(&rc);
+  m_mediacenter->GetBlockListView().Update(rc.right - rc.left, rc.bottom - rc.top);
+  Invalidate();
+  }
 }
 
 
@@ -541,8 +543,7 @@ void CChildView::OnWindowPosChanged(WINDOWPOS* lpwndpos)
 BOOL CChildView::OnPlayPlayPauseStop(UINT nID)
 {
 	if(nID == ID_PLAY_STOP) SetVideoRect();
-	
-	return FALSE;
+  return FALSE;
 }
 
 BOOL CChildView::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
@@ -589,13 +590,25 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	GetSystemFontWithScale(&m_font, 14.0);
     GetSystemFontWithScale(&m_font_lyric, 20.0, FW_BOLD, s.subdefstyle.fontName); //
 	// TODO:  Add your specialized creation code here
-
-	return 0;
+    m_mediacenter->GetBlockListView().SetFrameHwnd(m_hWnd);
+    m_mediacenter->GetBlockListView().SetScrollSpeed(&m_offsetspeed);
+    
+  return 0;
 }
 
 void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 {
 	// TODO: Add your message handler code here and/or call default
+
+  if (m_mediacenter->GetPlaneState())
+  {
+    RECT rc;
+    GetClientRect(&rc);
+    m_mediacenter->GetBlockListView().HandleMouseMove(point, rc);
+    Invalidate();
+    return;
+  }
+
 	CSize diff = m_lastMouseMove - point;
 	BOOL bMouseMoved =  diff.cx || diff.cy ;
 	m_lastMouseMove = point;
@@ -605,20 +618,12 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 	GetWindowRect(&rc);
 	point += rc.TopLeft() ;
 
-	if(bMouseMoved){
+  if(bMouseMoved){
 
-		UINT ret = m_btnList.OnHitTest(point,rc,-1);
+    UINT ret = m_btnList.OnHitTest(point,rc,-1);
 		m_nItemToTrack = ret;
 		
-//     if (m_mediacenter->GetPlaneState())
-//     {
-//       RECT uprc;
-//       POINT pt = {point.x, point.y};
-//       ScreenToClient(&pt);
-//       m_mediacenter->m_plane.SelectBlockEffect(pt, uprc);
-//       m_mediacenter->m_plane.DragScrollBar(pt);
-//       Invalidate();
-//     }
+   
 			if( m_btnList.HTRedrawRequired ){
 				Invalidate();
 			}
@@ -642,32 +647,30 @@ void CChildView::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	// TODO: Add your message handler code here and/or call default
   
-	CMainFrame* pFrame = ((CMainFrame*)GetParentFrame());
-	iBottonClicked = -1;
-	m_bMouseDown = TRUE;
-	CRect rc;
-	GetWindowRect(&rc);
-  
-	point += rc.TopLeft() ;
-	UINT ret = m_btnList.OnHitTest(point,rc,TRUE);
-	if( m_btnList.HTRedrawRequired ){
-		if(ret)
-			SetCapture();
-		Invalidate();
-	}
-	m_nItemToTrack = ret;
+//   CMainFrame* pFrame = ((CMainFrame*)GetParentFrame());
+// 	iBottonClicked = -1;
+// 	m_bMouseDown = TRUE;
+// 	CRect rc;
+// 	GetWindowRect(&rc);
 
-//   if (m_mediacenter->GetPlaneState())
-//   {
-//     POINT curr;
-//     ::GetCursorPos(&curr);
-//     ScreenToClient(&curr);
-//     SetCapture();
-//     m_mediacenter->m_plane.SelectScrollBar(curr, m_scrollbarrect);
-//     m_mediacenter->ClickEvent();
-//   }
+  if (m_mediacenter->GetPlaneState())
+  {
+    RECT rc;
+    GetClientRect(&rc);
+    m_mediacenter->GetBlockListView().HandleLButtonDown(point, rc);
+    return;
+  }
 
-	CWnd::OnLButtonDown(nFlags, point);
+//   point += rc.TopLeft() ;
+// 	UINT ret = m_btnList.OnHitTest(point,rc,TRUE);
+// 	if( m_btnList.HTRedrawRequired ){
+// 		if(ret)
+// 			SetCapture();
+// 		Invalidate();
+// 	}
+// 	m_nItemToTrack = ret;
+
+  CWnd::OnLButtonDown(nFlags, point);
 }
 
 void CChildView::OnLButtonUp(UINT nFlags, CPoint point)
@@ -679,6 +682,15 @@ void CChildView::OnLButtonUp(UINT nFlags, CPoint point)
 
 	CRect rc;
 	GetWindowRect(&rc);
+
+  if (m_mediacenter->GetPlaneState())
+  {
+    RECT rc;
+    GetClientRect(&rc);
+    m_mediacenter->GetBlockListView().HandleLButtonUp(point, rc);
+    InvalidateRect(&m_scrollbarrect);
+    return;
+  }
   
 	CPoint xpoint = point + rc.TopLeft() ;
 	UINT ret = m_btnList.OnHitTest(xpoint,rc,FALSE);
@@ -690,12 +702,7 @@ void CChildView::OnLButtonUp(UINT nFlags, CPoint point)
 	}
 	m_nItemToTrack = ret;
 
-//   if (m_mediacenter->GetPlaneState())
-//   {
-//     m_mediacenter->m_plane.UnDragScrollBar();
-//     ReleaseCapture();
-//     InvalidateRect(&m_scrollbarrect);
-//   }
+
 	//	__super::OnLButtonUp(nFlags, point);
 	m_bMouseDown = FALSE;
 }
@@ -703,7 +710,7 @@ void CChildView::OnLButtonUp(UINT nFlags, CPoint point)
 LRESULT CChildView::OnNcHitTest(CPoint point)
 {
 	// TODO: Add your message handler code here and/or call default
-
+  
 	return CWnd::OnNcHitTest(point);
 }
 
@@ -727,5 +734,31 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
         m_strAudioInfo.Empty(); 
 
     }
+
+    if (nIDEvent == TIMER_OFFSET)
+    {
+      m_preoffsetspeed = m_offsetspeed;
+      m_mediacenter->GetBlockListView().SetOffset(m_offsetspeed);
+    }
+
+    if (nIDEvent == TIMER_SLOWOFFSET)
+    {
+      m_mediacenter->GetBlockListView().SetOffset(m_offsetspeed);
+      if (m_preoffsetspeed == m_offsetspeed)
+        KillTimer(TIMER_SLOWOFFSET);
+    }
+
+    RECT rc;
+    GetClientRect(&rc);
+    m_mediacenter->GetBlockListView().Update(rc.right - rc.left, rc.bottom - rc.top);
+    InvalidateRect(&rc);
     CWnd::OnTimer(nIDEvent);
+}
+
+void CChildView::ShowMediaCenter(BOOL bl)
+{
+  m_mediacenter->SetPlaneState(bl);
+  RECT rc;
+  GetClientRect(&rc);
+  m_mediacenter->AddBlock(rc);
 }

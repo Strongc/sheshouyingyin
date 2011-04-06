@@ -796,6 +796,10 @@ public:
   afx_msg void OnUpdateSkinSelection(CCmdUI* pCmdUI);
 
   afx_msg void OnSkinMoreSelection();
+
+  afx_msg void OnShowMediaCenter();
+  BOOL m_bmediacentershow; 
+
   BOOL LoadRes(int id, std::wstring folder);
   void SearchSkinFolder();
   afx_msg void OnOpenShooterMedia();
