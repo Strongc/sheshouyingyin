@@ -36,7 +36,6 @@
 #include "..\..\..\svplib\svplib.h"
 #include <afxtempl.h>
 #include "..\..\..\apps\mplayerc\mplayerc.h"
-#include "..\..\..\apps\mplayerc\Controller\pHashController.h"
 //#define TRACE SVP_LogMsg5
 #undef  SVP_LogMsg5
 #define SVP_LogMsg5 __noop
@@ -118,6 +117,7 @@ CAudioSwitcherFilter::CAudioSwitcherFilter(LPUNKNOWN lpunk, HRESULT* phr)
 	, m_fUpSampleTo(0)
   , m_pHashFlag(TRUE)
 	, m_iSS(0)
+  , m_isSeek(false)
 {
 	//memset(m_pSpeakerToChannelMap, 0, sizeof(m_pSpeakerToChannelMap));
 	memset(m_pChannelNormalize2, 0, sizeof(m_pChannelNormalize2));
@@ -381,13 +381,13 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
   if(SUCCEEDED(pIn->GetTime(&rtStart, &rtStop)))
   {
     // if user did seek, give up phash this time and later ones.
-    if (pHashController::GetInstance()->IsSeek() == true && m_pHashFlag == true)
+    if (IsSeek() == true && m_pHashFlag == true)
     {
       m_pHashFlag = false;
       PostMessage(AfxGetApp()->m_pMainWnd->m_hWnd, WM_COMMAND, ID_PHASH_COLLECTEND, NULL);
     }
     
-    if (pHashController::GetInstance()->IsSeek() == false)
+    if (IsSeek() == false)
     {
 
       if (rtStart < m_rtStartpHash && (rtDur + rtStart) > m_rtStartpHash 
@@ -1411,4 +1411,15 @@ void CAudioSwitcherFilter::AlignDataBlock(BYTE* datain, REFERENCE_TIME& start, R
   double len2 = (double)len * len1;
   len = (int)len2;
   dataout = datain + len;
+}
+
+STDMETHODIMP CAudioSwitcherFilter::SetSeek(BOOL isSeek)
+{
+  m_isSeek = isSeek;
+  return S_OK;
+}
+
+STDMETHODIMP CAudioSwitcherFilter::IsSeek()
+{
+  return m_isSeek;
 }

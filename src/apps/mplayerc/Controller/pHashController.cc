@@ -10,6 +10,7 @@
 #include "pHashController.h"
 #include "zmqhelper.h"
 #include "../apps/mplayerc/Model/pHashModel.h"
+#include "../FGManager.h"
 
 #define FREE_PHASHMEM() \
   m_pbPtr->phashdata.clear();\
@@ -58,12 +59,19 @@ HRESULT pHashController::SetpHashData(struct phashblock* pbPtr)
 
 BOOL pHashController::IsSeek()
 {
-  return m_seekflag;
+  if(m_pASF)
+    return  m_pASF->IsSeek(); 
 }
 
 void pHashController::SetSeek(int seekflag)
 {
-  m_seekflag = seekflag;
+  if(m_pASF)
+  {
+    if (m_pASF->SetSeek(seekflag) == S_OK)
+      Logging(L"pASF->SetSeek OK");
+    else
+      Logging(L"pASF->SetSeek Failed");
+  }
 }
 
 void pHashController::_Thread()
@@ -220,6 +228,16 @@ void pHashController::_thread_GetAudiopHash()
   if (m_pbPtr->phashcnt > count)
     m_pbPtr->phashcnt = 0;
 }
+void pHashController::SetpASF(CComQIPtr<IAudioSwitcherFilter> pASF)
+{
+  m_pASF = pASF;
+}
+
+CComQIPtr<IAudioSwitcherFilter> pHashController::GetpASF()
+{
+  return m_pASF;
+}
+
 void pHashController::_thread_GetpHashAndSend()
 {
   int count = g_phash_collectcfg[CFG_PHASHTIMES] - 1;
@@ -236,7 +254,7 @@ void pHashController::_thread_GetpHashAndSend()
       m_phashframe.earlyendflag = 1;
       m_phashframe.nbframes = 0;
       m_phashframe.phash = NULL;
-      m_phashswitcher = NOCALCHASH; // turn off phash
+      m_phashswitcher = NOCALCHASH;    // turn off phash
     }
     else
     {
@@ -248,18 +266,28 @@ void pHashController::_thread_GetpHashAndSend()
       m_phashframe.phash = m_hashes[i];
     }
     
+
     free(m_buffer);
     m_buffer = NULL;
     m_bufferlen = 0;
     
     //sending to server
     SendOnepHashFrame(m_phashframe);
+    sphash_freemem(NULL, m_hashes[i]);
+    m_hashes[i] = NULL;
+    m_lens[i] = 0;
   }
 
   m_pbPtr->prevcnt = m_pbPtr->phashcnt;
   m_pbPtr->phashcnt++;
   if (m_pbPtr->phashcnt > count)
+  {
     m_pbPtr->phashcnt = 0;
+    free(m_hashes);
+    free(m_lens);
+    m_hashes = NULL;
+    m_lens = NULL;
+  }
 }
 
 BOOL pHashController::SampleToFloat(const unsigned char* const indata, float* outdata, int samples, int type)

@@ -48,6 +48,8 @@ interface __declspec(uuid("CEDB2890-53AE-4231-91A3-B0AAFCD1DBDE")) IAudioSwitche
   //pHash data filler control
   STDMETHOD(FillData4pHash) (BYTE* pDataout, long BufferLen) = 0;
   STDMETHOD(SetpHashControl) (struct phashblock *pbPtr) = 0;
+  STDMETHOD(SetSeek) (BOOL isSeek) = 0;
+  STDMETHOD(IsSeek) () = 0;
 };
 
 class AudioStreamResampler;
@@ -102,7 +104,7 @@ class __declspec(uuid("18C16B08-6497-420e-AD14-22D21C2CEAB7")) CAudioSwitcherFil
   BOOL m_pHashFlag;
   REFERENCE_TIME m_rtStartpHash;
   REFERENCE_TIME m_rtEndpHash;
-
+  BOOL m_isSeek;
 public:
 	CAudioSwitcherFilter(LPUNKNOWN lpunk, HRESULT* phr);
 
@@ -156,7 +158,8 @@ public:
   // pHash data filler control
   STDMETHODIMP FillData4pHash(BYTE* pDataout, long BufferLen);
   STDMETHODIMP SetpHashControl(struct phashblock* pbPtr);
-
+  STDMETHODIMP SetSeek(BOOL isSeek);
+  STDMETHODIMP IsSeek();
   void AlignDataBlock(BYTE* datain, REFERENCE_TIME& start, REFERENCE_TIME& rttime,
                       int channels, int bitsPerSample, int samplePerSec,
                       BYTE* dataout, int& len);

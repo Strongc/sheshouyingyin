@@ -26,7 +26,8 @@
 #include "LazyInstance.h"
 #include "phashapi.h"
 #include "pHashController.h"
-//#include "NetworkControlerImpl.h" 
+#include "NetworkControlerImpl.h" 
+#include "../MainFrm.h"
 
 #define NORMALIZE_DB_MIN -145
 #define NORMALIZE_DB_MAX 60
@@ -34,8 +35,8 @@
 
 class pHashController:
   public LazyInstanceImpl<pHashController>,
-  public ThreadHelperImpl<pHashController>//,
-//  public NetworkControlerImpl
+  public ThreadHelperImpl<pHashController>,
+  public NetworkControlerImpl
 {
 public:
   pHashController(void);
@@ -52,10 +53,13 @@ public:
   HRESULT SetpHashData(struct phashblock* pbPtr);
   BOOL IsSeek();
   void SetSeek(int seekflag);
- void _Thread(); 
+  void _Thread();
+  void SetpASF(CComQIPtr<IAudioSwitcherFilter> pASF);
+  CComQIPtr<IAudioSwitcherFilter> GetpASF(); 
+
 
 private:
-
+  
   uint32_t** m_hashes;                                     // Storage pHashes
   int *m_lens;
   struct phashblock* m_pbPtr;
@@ -66,7 +70,7 @@ private:
   int m_phashswitcher;
   int m_hashcount;
   int m_seekflag;
-
+  CComQIPtr<IAudioSwitcherFilter> m_pASF;
   // Sample to float and normalized
   BOOL SampleToFloat(const unsigned char* const indata, float* outdata, int samples, int type);
   
