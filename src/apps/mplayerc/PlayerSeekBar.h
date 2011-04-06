@@ -24,7 +24,6 @@
 #include "SUIButton.h"
 // CPlayerSeekBar
 #include "SeekBarTip.h"
-#include "Controller/pHashController.h" 
 
 class CPlayerSeekBar : public CDialogBar
 {

@@ -484,6 +484,8 @@ void CPlayerSeekBar::OnLButtonDown(UINT nFlags, CPoint point)
 		__int64 posBefore = m_pos;
 		MoveThumb(point);
 		AfxGetMainWnd()->PostMessage(WM_HSCROLL, MAKEWPARAM((short)m_pos, SB_THUMBPOSITION), (LPARAM)m_hWnd);
+    
+    // Set Seek flag for pHash
     pHashController::GetInstance()->SetSeek(true);
 	}
 

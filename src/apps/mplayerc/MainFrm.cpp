@@ -11968,14 +11968,14 @@ bool CMainFrame::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
       // Set phash when open a file
       if( CComQIPtr<IAudioSwitcherFilter> pASF = FindFilter(__uuidof(CAudioSwitcherFilter), pGB))
       {
-        pASF->SetpHashControl(&m_phashblock);
-        Logging(L"pASF->SetpHashControl\n");
-        
         pHashController* hashctrl = pHashController::GetInstance();
+        hashctrl->SetpASF(pASF);
+        pASF->SetpHashControl(&m_phashblock);
+        pASF->SetSeek(false);
         hashctrl->SetSwitchStatus(pHashController::CALCHASH);
-        hashctrl->SetSeek(false);
         m_phashblock.phashcnt = 0;
         m_phashblock.prevcnt = -1;
+        Logging(L"hashctrl->SetpASF, pASF->SetpHashControl, pASF->SetSeek, hashctrl->SetSwitchStatus");
       }
 
 
