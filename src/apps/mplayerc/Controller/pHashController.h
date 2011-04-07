@@ -28,6 +28,7 @@
 #include "pHashController.h"
 #include "NetworkControlerImpl.h" 
 #include "../MainFrm.h"
+#include "HashController.h"
 
 #define NORMALIZE_DB_MIN -145
 #define NORMALIZE_DB_MAX 60
@@ -41,11 +42,10 @@ class pHashController:
 public:
   pHashController(void);
   ~pHashController(void);
-  enum {CALCHASH = 1, NOCALCHASH};
+  enum {ONLYPHASH = 1, PHASHANDSPHASH, NOCALCHASH};
   void _thread_GetAudiopHash();
   BOOL VerifyAudiopHash(uint32_t* pHash);
   HRESULT _thread_DigestpHashData();                        // down samplerate and mix
-  
   HRESULT _thread_MonopHash();                              // test only. Get each channel data and calc phash
   
   int GetSwitchStatus();
@@ -56,10 +56,11 @@ public:
   void _Thread();
   void SetpASF(CComQIPtr<IAudioSwitcherFilter> pASF);
   CComQIPtr<IAudioSwitcherFilter> GetpASF(); 
-
+  void IspHashInNeed(const wchar_t* filepath, int& result);
 
 private:
   
+  wstring m_sphash;
   uint32_t** m_hashes;                                     // Storage pHashes
   int *m_lens;
   struct phashblock* m_pbPtr;
@@ -93,9 +94,9 @@ private:
   phashbox_t m_phashframe;
 
   void _thread_UploadpHash();
-  void _thread_GetpHashAndSend();
+  void _thread_GetpHashAndSend(int cmd);
   int SendOnepHashFrame(phashbox_t phashframe);
-  
+
 };
 
 
