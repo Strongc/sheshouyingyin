@@ -79,15 +79,18 @@ void pHashController::_Thread()
   Logging( L"pHashController::_thread enter %x", m_phashswitcher);
   switch (m_phashswitcher)
   {
-  case CALCHASH:
+  case ONLYPHASH:
     //_thread_MonopHash();
     _thread_DigestpHashData();
 //     _thread_GetAudiopHash();
 //     _thread_UploadpHash();
-    _thread_GetpHashAndSend();
+    _thread_GetpHashAndSend(ONLYPHASH);
     break;
+  case PHASHANDSPHASH:
+    _thread_DigestpHashData();
+    _thread_GetpHashAndSend(PHASHANDSPHASH);
   case NOCALCHASH:
-  default:
+  default: 
     break;
   }
   Logging( L"pHashController::_thread exit %x", m_phashswitcher);
@@ -238,14 +241,14 @@ CComQIPtr<IAudioSwitcherFilter> pHashController::GetpASF()
   return m_pASF;
 }
 
-void pHashController::_thread_GetpHashAndSend()
+void pHashController::_thread_GetpHashAndSend(int cmd)
 {
   int count = g_phash_collectcfg[CFG_PHASHTIMES] - 1;
   Logging("phashcnt:%d", m_pbPtr->phashcnt);
   if (m_pbPtr->phashcnt <= count)
   { 
     int i = m_pbPtr->phashcnt;
-    m_phashframe.cmd = 1;
+    m_phashframe.cmd = cmd;
     m_phashframe.amount = g_phash_collectcfg[CFG_PHASHTIMES];
     m_phashframe.id = i;
 
@@ -265,7 +268,6 @@ void pHashController::_thread_GetpHashAndSend()
       m_phashframe.nbframes = m_lens[i];
       m_phashframe.phash = m_hashes[i];
     }
-    
 
     free(m_buffer);
     m_buffer = NULL;
@@ -289,7 +291,49 @@ void pHashController::_thread_GetpHashAndSend()
     m_lens = NULL;
   }
 }
+void pHashController::IspHashInNeed(const wchar_t* filepath, int& result)
+{
+  std::wstring m_sphash = HashController::GetInstance()->GetSPHash(filepath);
 
+  sinet::refptr<sinet::pool>    net_pool = sinet::pool::create_instance();
+  sinet::refptr<sinet::task>    net_task = sinet::task::create_instance();
+  sinet::refptr<sinet::request> net_rqst = sinet::request::create_instance();
+  sinet::refptr<sinet::config>  net_cfg  = sinet::config::create_instance();
+  
+  net_task->use_config(net_cfg);
+  wchar_t tmpurl[512];
+  _snwprintf_s(tmpurl, 512, 512, L"http://webpj:8080/misc/phash.php?req=%d&sphs=%s\n", 0, m_sphash.c_str());
+  net_rqst->set_request_url(tmpurl);
+  net_rqst->set_request_method(REQ_GET);
+  net_task->append_request(net_rqst);
+  net_pool->execute(net_task);
+    
+  while (net_pool->is_running_or_queued(net_task))
+  {
+    if ( _Exit_state(500))
+      return;
+  }
+  
+  //error code dealing
+  if (net_rqst->get_response_errcode()!= 0)
+  {
+    Logging(L"ERROR: sending failed");
+    result = -1;
+    return;
+  }
+
+  // response data
+  std::vector<unsigned char> st_buffer = net_rqst->get_response_buffer();
+  st_buffer.push_back(0);
+  std::string reply =  (char*)&st_buffer[0];
+  std::string ret = reply.substr(0, reply.find_first_of("\n"));
+  
+  if ( ret == "1")
+    result = 1;
+  else if (ret == "0")
+    result = 0;
+
+}
 BOOL pHashController::SampleToFloat(const unsigned char* const indata, float* outdata, int samples, int type)
 {
   int samplecnt = 0;
@@ -517,9 +561,6 @@ void pHashController::_thread_UploadpHash()
     sendmore_msg_vsm(client, &m_phashframe.id, sizeof(uint8_t));
     sendmore_msg_vsm(client, &m_phashframe.nbframes, sizeof(uint32_t));
     sendmore_msg_data(client, m_phashframe.phash, m_phashframe.nbframes*sizeof(uint32_t), free_fn, NULL);
-    Logging("send:cmd:%d, amount:%d, id:%d, nbframes:%d, phash[0]:%X", 
-      m_phashframe.cmd, m_phashframe.amount, m_phashframe.id , m_phashframe.nbframes, m_phashframe.phash[0]);
-
   }
   send_empty_msg(client);
   
@@ -546,8 +587,10 @@ int pHashController::SendOnepHashFrame(phashbox_t phashframe)
   void* context = zmq_init(1);
   void* client = socket_connect(context, ZMQ_REQ, "tcp://192.168.10.46:5000");
 
-  // sending all phashes
+  // sending all phashes  
   sendmore_msg_vsm(client, &phashframe.cmd, sizeof(uint8_t));
+  if (phashframe.cmd == PHASHANDSPHASH)
+    sendmore_msg_data(client, &m_sphash[0], m_sphash.length(), NULL, NULL);
   sendmore_msg_vsm(client, &phashframe.earlyendflag, sizeof(uint8_t));
   sendmore_msg_vsm(client, &phashframe.amount, sizeof(uint8_t));
   sendmore_msg_vsm(client, &phashframe.id, sizeof(uint8_t));
@@ -578,3 +621,4 @@ int pHashController::SendOnepHashFrame(phashbox_t phashframe)
   
   return result;
 }
+

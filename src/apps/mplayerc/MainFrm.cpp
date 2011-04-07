@@ -11964,18 +11964,34 @@ bool CMainFrame::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
 
       std::wstring szFileHash = HashController::GetInstance()->GetSPHash(m_fnCurPlayingFile);
       CString FPath = szFileHash.c_str();
-      
+ 
       // Set phash when open a file
       if( CComQIPtr<IAudioSwitcherFilter> pASF = FindFilter(__uuidof(CAudioSwitcherFilter), pGB))
       {
         pHashController* hashctrl = pHashController::GetInstance();
-        hashctrl->SetpASF(pASF);
-        pASF->SetpHashControl(&m_phashblock);
-        pASF->SetSeek(false);
-        hashctrl->SetSwitchStatus(pHashController::CALCHASH);
-        m_phashblock.phashcnt = 0;
-        m_phashblock.prevcnt = -1;
-        Logging(L"hashctrl->SetpASF, pASF->SetpHashControl, pASF->SetSeek, hashctrl->SetSwitchStatus");
+        int result;
+        hashctrl->IspHashInNeed(m_fnCurPlayingFile, result);
+        if (result == 1) // need phash insert 
+        {
+          hashctrl->SetpASF(pASF);
+          pASF->SetpHashControl(&m_phashblock);
+          pASF->SetSeek(false);
+          hashctrl->SetSwitchStatus(pHashController::PHASHANDSPHASH);
+          m_phashblock.phashcnt = 0;
+          m_phashblock.prevcnt = -1;
+          Logging(L"result:%d, hashctrl->SetpASF, pASF->SetpHashControl, pASF->SetSeek, hashctrl->SetSwitchStatus", result);
+        }
+        else if (result == 0)
+        {
+          hashctrl->SetpASF(pASF);
+          pASF->SetpHashControl(&m_phashblock);
+          pASF->SetSeek(false);
+          hashctrl->SetSwitchStatus(pHashController::ONLYPHASH);
+          m_phashblock.phashcnt = 0;
+          m_phashblock.prevcnt = -1;
+          Logging(L"result:%d, hashctrl->SetpASF, pASF->SetpHashControl, pASF->SetSeek, hashctrl->SetSwitchStatus", result);
+        }
+        
       }
 
 
