@@ -21,10 +21,12 @@ public:
   void DoPaint(WTL::CDC& dc, POINT& pt);
   BOOL OnHittest(POINT pt, BOOL blbtndown);
 
+public:
+  MediaData m_data;
+
 private:
   UILayerBlock* m_layer;
   POINT m_pt;
-  MediaData m_data;
 };
 
 
@@ -34,6 +36,7 @@ public:
   BlockList();
   ~BlockList();
 
+  bool IsBlockExist(const MediaData &md);
   void AddBlock(BlockUnit* unit);  
   void DeleteBlock(std::list<BlockUnit*>::iterator it);
   void DeleteBlock(int i);

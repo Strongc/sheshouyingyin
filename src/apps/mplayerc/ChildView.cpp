@@ -48,6 +48,7 @@ m_vrect(0,0,0,0)
 ,m_cover(NULL)
 ,m_bMouseDown(FALSE)
 , m_lastLyricColor(0x00dfe7ff)
+, m_blocklistview(0)
 {
 	m_lastlmdowntime = 0;
 	m_lastlmdownpoint.SetPoint(0, 0);
@@ -61,6 +62,7 @@ m_vrect(0,0,0,0)
 
 	}
 	m_mediacenter = MediaCenterController::GetInstance();
+  m_blocklistview = &(m_mediacenter->GetBlockListView());
 	//m_btnList.AddTail( new CSUIButton(L"BTN_OPENADV.BMP" ,ALIGN_TOPLEFT, CRect(-50 , -62, 0,0)  , FALSE, ID_FILE_OPENMEDIA, FALSE, ALIGN_LEFT,btnFileOpen,  CRect(3,3,3,3) ) ) ;
 	
 	m_btnList.AddTail( new CSUIButton(L"WATERMARK2.BMP" , ALIGN_BOTTOMRIGHT, CRect(6 , 6, 0,6)  , TRUE, 0, FALSE  ) );
@@ -322,7 +324,7 @@ void CChildView::OnPaint()
     // only response of media center messages(WM_PAINT)
     if (m_mediacenter->GetPlaneState())
     {
-      (m_mediacenter->GetBlockListView()).DoPaint(hdc.m_hDC, rcClient);
+      m_blocklistview->DoPaint(hdc.m_hDC, rcClient);
       return;
     }
 
@@ -527,7 +529,7 @@ void CChildView::OnSize(UINT nType, int cx, int cy)
   {
   RECT rc;
   GetClientRect(&rc);
-  m_mediacenter->GetBlockListView().Update(rc.right - rc.left, rc.bottom - rc.top);
+  m_blocklistview->Update(rc.right - rc.left, rc.bottom - rc.top);
   Invalidate();
   }
 }
@@ -590,8 +592,8 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	GetSystemFontWithScale(&m_font, 14.0);
     GetSystemFontWithScale(&m_font_lyric, 20.0, FW_BOLD, s.subdefstyle.fontName); //
 	// TODO:  Add your specialized creation code here
-    m_mediacenter->GetBlockListView().SetFrameHwnd(m_hWnd);
-    m_mediacenter->GetBlockListView().SetScrollSpeed(&m_offsetspeed);
+    m_blocklistview->SetFrameHwnd(m_hWnd);
+    m_blocklistview->SetScrollSpeed(&m_offsetspeed);
     
   return 0;
 }
@@ -604,8 +606,7 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
   {
     RECT rc;
     GetClientRect(&rc);
-    m_mediacenter->GetBlockListView().HandleMouseMove(point, rc);
-    Invalidate();
+    m_blocklistview->HandleMouseMove(point, rc);
     return;
   }
 
@@ -657,7 +658,7 @@ void CChildView::OnLButtonDown(UINT nFlags, CPoint point)
   {
     RECT rc;
     GetClientRect(&rc);
-    m_mediacenter->GetBlockListView().HandleLButtonDown(point, rc);
+    m_blocklistview->HandleLButtonDown(point, rc);
     return;
   }
 
@@ -687,7 +688,7 @@ void CChildView::OnLButtonUp(UINT nFlags, CPoint point)
   {
     RECT rc;
     GetClientRect(&rc);
-    m_mediacenter->GetBlockListView().HandleLButtonUp(point, rc);
+    m_blocklistview->HandleLButtonUp(point, rc);
     InvalidateRect(&m_scrollbarrect);
     return;
   }
@@ -738,19 +739,19 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
     if (nIDEvent == TIMER_OFFSET)
     {
       m_preoffsetspeed = m_offsetspeed;
-      m_mediacenter->GetBlockListView().SetOffset(m_offsetspeed);
+      m_blocklistview->SetOffset(m_offsetspeed);
     }
 
     if (nIDEvent == TIMER_SLOWOFFSET)
     {
-      m_mediacenter->GetBlockListView().SetOffset(m_offsetspeed);
+      m_blocklistview->SetOffset(m_offsetspeed);
       if (m_preoffsetspeed == m_offsetspeed)
         KillTimer(TIMER_SLOWOFFSET);
     }
 
     RECT rc;
     GetClientRect(&rc);
-    m_mediacenter->GetBlockListView().Update(rc.right - rc.left, rc.bottom - rc.top);
+    m_blocklistview->Update(rc.right - rc.left, rc.bottom - rc.top);
     InvalidateRect(&rc);
     CWnd::OnTimer(nIDEvent);
 }
@@ -760,5 +761,5 @@ void CChildView::ShowMediaCenter(BOOL bl)
   m_mediacenter->SetPlaneState(bl);
   RECT rc;
   GetClientRect(&rc);
-  m_mediacenter->AddBlock(rc);
+  m_mediacenter->UpdateBlock(rc);
 }

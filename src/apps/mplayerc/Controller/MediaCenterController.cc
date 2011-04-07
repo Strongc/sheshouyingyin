@@ -68,7 +68,38 @@ void MediaCenterController::SpiderStop()
   m_treeModel.saveToDB();
 }
 
+void MediaCenterController::AddNewFoundData(const MediaData &md)
+{
+  m_csSpiderNewDatas.lock();
 
+  m_vtSpiderNewDatas.push_back(md);
+
+  m_csSpiderNewDatas.unlock();
+}
+
+void MediaCenterController::AddBlock()
+{
+  m_csSpiderNewDatas.lock();
+
+  // add new found data to gui and then remove them
+  std::vector<MediaData>::iterator it = m_vtSpiderNewDatas.begin();
+  while (it != m_vtSpiderNewDatas.end())
+  {
+    // add block units
+    if (!m_blocklist.IsBlockExist(*it))
+    {
+      BlockUnit* one = new BlockUnit;
+      one->m_data = *it;
+      m_blocklist.AddBlock(one);
+    }
+
+    ++it;
+  }
+
+  m_vtSpiderNewDatas.clear();
+
+  m_csSpiderNewDatas.unlock();
+}
 
 //////////////////////////////////////////////////////////////////////////////
 //  GUI control
@@ -88,10 +119,9 @@ BlockListView& MediaCenterController::GetBlockListView()
   return m_blocklist;
 }
 
-void MediaCenterController::AddBlock(RECT rc)
+void MediaCenterController::UpdateBlock(RECT rc)
 {
-  BlockUnit* one = new BlockUnit;
-  m_blocklist.AddBlock(one);
+  // update the view
   m_blocklist.Update(rc.right - rc.left, rc.bottom - rc.top);
   ::InvalidateRect(m_hwnd, 0, FALSE);
 }

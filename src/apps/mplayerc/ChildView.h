@@ -29,6 +29,7 @@ class CChildView : public CWnd
 {
 	CRect m_vrect;
   MediaCenterController* m_mediacenter;
+  BlockListView* m_blocklistview;
 	DWORD m_lastlmdowntime;
 	CPoint m_lastlmdownpoint;
 
