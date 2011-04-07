@@ -3965,7 +3965,7 @@ void CMainFrame::OnInitMenuPopup(CMenu * pPopupMenu, UINT nIndex, BOOL bSysMenu)
 
   MENUITEMINFO mii;
   mii.cbSize = sizeof(mii);
-  CMenu* menupre = new CMenu;
+
   for(UINT i = 0, j = pPopupMenu->GetMenuItemCount(); i < j; i++)
   {
     CString str;
@@ -4155,43 +4155,39 @@ void CMainFrame::OnInitMenuPopup(CMenu * pPopupMenu, UINT nIndex, BOOL bSysMenu)
     }
     else if (str == ResStr(IDS_MENU_ITEM_SKIN))
     {
-       AppSettings& s = AfxGetAppSettings();
-       if (s.bAeroGlass)
-         return;
-       if (!m_bmenuinitialize)
-       {
-        m_skinorg = new CMenu;
-        m_skinorg->CreateMenu();
-        MenuMerge(m_skinorg, pPopupMenu->GetSubMenu(i));
-        //m_skinorg = pPopupMenu->GetSubMenu(i);
-       }
+      AppSettings& s = AfxGetAppSettings();
+      if (s.bAeroGlass)
+       return;
 
-      CMenu menuappend;
-      menuappend.CreateMenu();
-      menuappend.AppendMenu(MF_ENABLED | MF_STRING, ID_SKIN_FIRST, ResStr(IDS_MENU_ITEM_SKIN_DEFAULT));
+      m_skinorg = pPopupMenu->GetSubMenu(i);
+      if (!m_bmenuinitialize)
+       m_skincount = m_skinorg->GetMenuItemCount();
+
+      UINT mcount = m_skinorg->GetMenuItemCount();
+      for (int j = m_skincount; j < mcount;  ++j)
+       m_skinorg->RemoveMenu(m_skincount, MF_BYPOSITION);
+
+      m_skinorg->AppendMenu(MF_ENABLED | MF_STRING, ID_SKIN_FIRST, ResStr(IDS_MENU_ITEM_SKIN_DEFAULT));
+
       id = ID_SKIN_SECOND;
       if (!SkinFolderManager::ReturnSkinMap().empty())
       {
         std::map<std::wstring, std::wstring> skinmap = SkinFolderManager::ReturnSkinMap();
-        
+
         for (std::map<std::wstring, std::wstring>::iterator ite = skinmap.begin();
-          ite != skinmap.end(); ++ite)
+        ite != skinmap.end(); ++ite)
         {
           m_skin_map[id] = ite->first;
-          menuappend.AppendMenu(MF_ENABLED | MF_STRING, id++, ite->first.c_str());
+
+          m_skinorg->AppendMenu(MF_ENABLED | MF_STRING, id++, ite->first.c_str());
         }
       }
-      menuappend.AppendMenu(MF_SEPARATOR | MF_ENABLED);
-      menuappend.AppendMenu(MF_ENABLED | MF_STRING, ID_SKIN_MORESELECTION, ResStr(IDS_RS_SKIN_MORESELECTION));
-      
-      if (m_bmenuinitialize)
-        menupre->DestroyMenu();
-      menupre->CreateMenu();  
-      MenuMerge(menupre, m_skinorg);
-      MenuMerge(menupre, &menuappend);
-      pSubMenu = menupre;
+
+      m_skinorg->AppendMenu(MF_SEPARATOR | MF_ENABLED);
+      m_skinorg->AppendMenu(MF_ENABLED | MF_STRING, ID_SKIN_MORESELECTION, ResStr(IDS_RS_SKIN_MORESELECTION));
+
+      pSubMenu = m_skinorg;
       m_bmenuinitialize = TRUE;
-      menuappend.DestroyMenu();
     }
 
     if(pSubMenu)

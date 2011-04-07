@@ -342,6 +342,7 @@ public:
   BOOL m_bmenuinitialize;
   std::map<UINT, std::wstring> m_skin_map;
   CMenu* m_skinorg;
+  UINT m_skincount;
   HBITMAP m_framecornerhbm;
   HBITMAP m_captionhbm;
   HBITMAP m_captiontexthbm;
