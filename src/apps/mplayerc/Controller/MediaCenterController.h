@@ -19,7 +19,7 @@ public:
 public:
   // Gui control, should not for other use
 
-   void AddBlock(RECT rc);
+   void UpdateBlock(RECT rc);
    void DelBlock(int i);
 
    void SetFrame(HWND hwnd);
@@ -37,6 +37,9 @@ public:
   void SpiderStart();
   void SpiderStop();
 
+  void AddNewFoundData(const MediaData &md);
+  void AddBlock();
+
 private:
   // GUI
   HWND m_hwnd;
@@ -49,4 +52,7 @@ private:
   MediaTreeModel        m_treeModel;
   MediaCheckDB          m_checkDB;
   MediaSpiderFolderTree m_spider;
+
+  std::vector<MediaData> m_vtSpiderNewDatas;  // remove when it added
+  CriticalSection        m_csSpiderNewDatas;  // protect above vector member
 };

@@ -5,6 +5,9 @@
 #include <boost/filesystem.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
+#include "../Resource.h"
+#include "../mplayerc.h"
+#include "MediaCenterController.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Normal part
@@ -79,20 +82,9 @@ void MediaSpiderFolderTree::_Thread()
     MediaTreeFolders treeFolders = m_treeModel.mediaTreeFolders();
     treeFolders.sort(bind(&MediaTreeFolder::nMerit, _1) > bind(&MediaTreeFolder::nMerit, _2));
 
-    //// for test
-    //MediaTreeFolders::const_iterator itTest = treeFolders.begin();
-    //while (itTest != treeFolders.end())
-    //{
-    //  std::wstringstream ss;
-    //  ss << L"folder = " << itTest->sFolderPath << L", tFolderCreateTime = " << itTest->tFolderCreateTime;
-    //  cDebug(ss.str());
-
-    //  ++itTest;
-    //}
-    //cDebug(L"");
-
     // search the media files
     MediaTreeFolders::const_iterator it = treeFolders.begin();
+    time_t tCur = ::time(0);
     while (it != treeFolders.end())
     {
       // see if need to be stop
@@ -102,7 +94,7 @@ void MediaSpiderFolderTree::_Thread()
       // search the path for media files
       if (it->tNextSpiderInterval == 0)
         Search(it->sFolderPath);
-      else if (((::time(0) - it->tFolderCreateTime) % it->tNextSpiderInterval) == 0)
+      else if (((tCur - it->tFolderCreateTime) % it->tNextSpiderInterval) == 0)
         Search(it->sFolderPath);
 
       ++it;
@@ -140,8 +132,19 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
       MediaData md;
       md.path = sFolder;
       md.filename = itCur->path().filename().wstring();
-      
       m_treeModel.addFile(md);
+
+      // add it to the media center for appending
+      MediaCenterController::GetInstance()->AddNewFoundData(md);
+
+      // notify this change to main frame window
+      CMPlayerCApp *pApp = AfxGetMyApp();
+      if (pApp)
+      {
+        CWnd *pWnd = pApp->GetMainWnd();
+        if (pWnd)
+          pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
+      }
     }
 
     ++itCur;

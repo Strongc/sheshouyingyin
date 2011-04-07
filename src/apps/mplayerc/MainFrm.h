@@ -803,6 +803,8 @@ public:
   BOOL LoadRes(int id, std::wstring folder);
   void SearchSkinFolder();
   afx_msg void OnOpenShooterMedia();
+
+  afx_msg void OnSpiderNewFileFound();
 private:
   int          m_movieShared;
 };

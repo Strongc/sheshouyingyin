@@ -365,6 +365,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
   ON_COMMAND_RANGE(ID_PLAYBACK_LOOP_NORMAL,ID_PLAYBACK_LOOP_RANDOM, OnPlayMenuLoopSetting )
   ON_UPDATE_COMMAND_UI_RANGE(ID_PLAYBACK_LOOP_NORMAL, ID_PLAYBACK_LOOP_RANDOM, OnUpdatePlayMenuLoopSetting )
 
+  ON_COMMAND(ID_SPIDER_NEWFILE_FOUND, OnSpiderNewFileFound)
+
   //Sub Delay Button
   ON_COMMAND_RANGE(ID_SUBDELAYDEC,ID_SUBDELAYINC, OnPlaySubDelay )
   ON_UPDATE_COMMAND_UI_RANGE(ID_SUBDELAYDEC, ID_SUBDELAYINC, OnUpdatePlaySubDelay )
@@ -762,7 +764,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
   }
 
   MediaCenterController::GetInstance()->SetFrame(m_wndView.m_hWnd);
-  // MediaCenterController::GetInstance()->SpiderStart();
+  MediaCenterController::GetInstance()->SpiderStart();
 
   WNDCLASSEX layeredClass;
   layeredClass.cbSize        = sizeof(WNDCLASSEX);
@@ -1727,7 +1729,7 @@ void CMainFrame::OnResetSetting(){
 }
 void CMainFrame::OnDestroy()
 {
-  // MediaCenterController::GetInstance()->SpiderStop();
+   MediaCenterController::GetInstance()->SpiderStop();
 
   //AfxMessageBox(_T("2"));
   ShowTrayIcon(false);
@@ -17480,6 +17482,12 @@ void CMainFrame::OnMovieShare()
 void CMainFrame::OnOpenShooterMedia()
 {
   UserShareController::GetInstance()->OpenShooterMedia();
+}
+
+void CMainFrame::OnSpiderNewFileFound()
+{
+  // let the media center to add new file to the media gui
+  MediaCenterController::GetInstance()->AddBlock();
 }
 
 void CMainFrame::OnSkinSelection(UINT nID)

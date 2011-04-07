@@ -136,6 +136,21 @@ void BlockList::DoPaint(WTL::CDC& dc)
   } 
 }
 
+bool BlockList::IsBlockExist(const MediaData &md)
+{
+  std::list<BlockUnit*>::iterator it = m_list.begin();
+  while (it != m_list.end())
+  {
+    if (((*it)->m_data.path == md.path) && 
+        ((*it)->m_data.filename == md.filename))
+      return true;
+
+    ++it;
+  }
+  
+  return false;
+}
+
 void BlockList::AddBlock(BlockUnit* unit)
 {
   unit->DefLayer();
