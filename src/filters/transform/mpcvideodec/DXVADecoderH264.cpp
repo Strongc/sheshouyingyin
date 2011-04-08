@@ -146,9 +146,13 @@ void CDXVADecoderH264::CopyBitstream(BYTE* pDXVABuffer, BYTE* pBuffer, UINT& nSi
 			case NALU_TYPE_IDR:
 				// For AVC1, put startcode 0x000001
 				pDXVABuffer[0]=pDXVABuffer[1]=0;pDXVABuffer[2]=1;
-				
+        if(Nalu.GetDataLength() < 0) 
+          break;
+
 				// Copy NALU
-				memcpy (pDXVABuffer+3, Nalu.GetDataBuffer(), Nalu.GetDataLength());
+        __try {
+				  memcpy (pDXVABuffer+3, Nalu.GetDataBuffer(), Nalu.GetDataLength());
+        }__except(EXCEPTION_EXECUTE_HANDLER) { break; }
 				
 				// Update slice control buffer
 				nDxvaNalLength									= Nalu.GetDataLength()+3;
