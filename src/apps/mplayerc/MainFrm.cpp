@@ -14998,7 +14998,7 @@ void CMainFrame::OpenCurPlaylistItem(REFERENCE_TIME rtStart)
   }
   CAutoPtr<OpenMediaData> p(m_wndPlaylistBar.GetCurOMD(rtStart));
 
-  // MediaCenterController::GetInstance()->Playback(pli.m_fns.GetHead().GetString());
+  MediaCenterController::GetInstance()->Playback(pli.m_fns.GetHead().GetString());
   if(p) OpenMedia(p);
 
 }
