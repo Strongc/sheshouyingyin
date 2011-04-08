@@ -58,10 +58,15 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
 
   m_layer->DoPaint(dc);
 
-  wchar_t str[80];
-  wsprintf(str, L"%d", m_layer);
   dc.SetBkMode(TRANSPARENT);
-  dc.TextOut(pt.x, pt.y+140, str);
+
+  RECT rc;
+  layer->GetTextureRect(rc);
+  rc.left = pt.x;
+  rc.top = pt.y+140;
+  rc.bottom = rc.top+20;
+
+  dc.DrawText(m_data.filename.c_str(), m_data.filename.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
 }
 
 void BlockUnit::DeleteLayer()
@@ -102,6 +107,8 @@ BlockList::~BlockList()
 void BlockList::DoPaint(HDC hdc, RECT rcclient)
 {
   WTL::CMemoryDC dc(hdc, rcclient);
+  HBRUSH hbrush = ::CreateSolidBrush(RGB(231, 231, 231));
+  dc.FillRect(&rcclient, hbrush);
   DoPaint(dc);
 }
 
@@ -209,7 +216,7 @@ void BlockList::AlignRowBlocks()
 {
   float y;
   if (m_y.empty())
-    y = 0;
+    y = 30;
   else
     y = m_y.front();
   m_y.clear();

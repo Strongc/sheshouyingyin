@@ -25,6 +25,19 @@ struct MediaPath
 typedef std::vector<MediaData> MediaDatas;
 typedef std::vector<MediaPath> MediaPaths;
 
+// When search the media, use this to judge if the media should be searched
+typedef struct
+{
+  long long uniqueid;
+  std::wstring filename;
+} MediaFindCondition;
+
+typedef struct
+{
+  long long uniqueid;
+  std::wstring path;
+  int merit;
+} MediaPathCondition;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Media folder tree related structures
