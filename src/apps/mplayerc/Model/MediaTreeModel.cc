@@ -3,7 +3,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
-#include <regex>
+#include <boost/regex.hpp>
 
 ////////////////////////////////////////////////////////////////////////////////
 // normal part
@@ -196,7 +196,7 @@ void MediaTreeModel::assignMerit(const MediaPath &mp)
 std::wstring MediaTreeModel::makePathPreferred(const std::wstring &sPath)
 {
   using namespace boost::filesystem;
-  using namespace std::tr1;
+  using namespace boost;
   using std::wstring;
 
   // ***************************************************************************

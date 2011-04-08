@@ -3,10 +3,6 @@
 #include "..\..\..\base\logging.h"
 #include "..\Model\MediaDB.h"
 #include <boost/filesystem.hpp>
-#include <regex>
-
-using namespace boost::filesystem;
-using namespace std::tr1;
 
 ////////////////////////////////////////////////////////////////////////////////
 // normal part
