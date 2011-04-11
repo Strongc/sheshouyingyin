@@ -607,27 +607,28 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
     RECT rc;
     GetClientRect(&rc);
     m_blocklistview->HandleMouseMove(point, rc);
-    return;
   }
+  else
+  {
+    CSize diff = m_lastMouseMove - point;
+	  BOOL bMouseMoved =  diff.cx || diff.cy ;
+	  m_lastMouseMove = point;
 
-	CSize diff = m_lastMouseMove - point;
-	BOOL bMouseMoved =  diff.cx || diff.cy ;
-	m_lastMouseMove = point;
+	  CRect rc;
+	  CMainFrame* pFrame = ((CMainFrame*)GetParentFrame());
+	  GetWindowRect(&rc);
+	  point += rc.TopLeft() ;
 
-	CRect rc;
-	CMainFrame* pFrame = ((CMainFrame*)GetParentFrame());
-	GetWindowRect(&rc);
-	point += rc.TopLeft() ;
+    if(bMouseMoved){
 
-  if(bMouseMoved){
-
-    UINT ret = m_btnList.OnHitTest(point,rc,-1);
-		m_nItemToTrack = ret;
+      UINT ret = m_btnList.OnHitTest(point,rc,-1);
+		  m_nItemToTrack = ret;
 		
    
-			if( m_btnList.HTRedrawRequired ){
-				Invalidate();
-			}
+			  if( m_btnList.HTRedrawRequired ){
+				  Invalidate();
+			  }
+    }
   }
 
   if (::GetKeyState(VK_LBUTTON) & 0x8000)
@@ -648,11 +649,11 @@ void CChildView::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	// TODO: Add your message handler code here and/or call default
   
-//   CMainFrame* pFrame = ((CMainFrame*)GetParentFrame());
-// 	iBottonClicked = -1;
-// 	m_bMouseDown = TRUE;
-// 	CRect rc;
-// 	GetWindowRect(&rc);
+  CMainFrame* pFrame = ((CMainFrame*)GetParentFrame());
+	iBottonClicked = -1;
+	m_bMouseDown = TRUE;
+	CRect rc;
+	GetWindowRect(&rc);
 
   if (m_mediacenter->GetPlaneState())
   {
@@ -662,14 +663,14 @@ void CChildView::OnLButtonDown(UINT nFlags, CPoint point)
     return;
   }
 
-//   point += rc.TopLeft() ;
-// 	UINT ret = m_btnList.OnHitTest(point,rc,TRUE);
-// 	if( m_btnList.HTRedrawRequired ){
-// 		if(ret)
-// 			SetCapture();
-// 		Invalidate();
-// 	}
-// 	m_nItemToTrack = ret;
+  point += rc.TopLeft() ;
+	UINT ret = m_btnList.OnHitTest(point,rc,TRUE);
+	if( m_btnList.HTRedrawRequired ){
+		if(ret)
+			SetCapture();
+		Invalidate();
+	}
+	m_nItemToTrack = ret;
 
   CWnd::OnLButtonDown(nFlags, point);
 }

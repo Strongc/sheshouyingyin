@@ -84,7 +84,8 @@ int BlockUnit::OnHittest(POINT pt, BOOL blbtndown)
 
 #define DOWNOFFSETNO 1
 #define UPOFFSETNO 2
-#define OFFSETSUCCESS 3
+#define DOWNOFFSETSUCCESS 3
+#define UPOFFSETSUCCESS 4
 
 BlockList::BlockList()
 {
@@ -280,7 +281,7 @@ int BlockList::IsListEnd(std::list<BlockUnit*>::iterator it)
     if (it == m_list.end())
       return DOWNOFFSETNO;
   }
-  return OFFSETSUCCESS;
+  return DOWNOFFSETSUCCESS;
 }
 
 int BlockList::IsListBegin(std::list<BlockUnit*>::iterator it)
@@ -290,7 +291,7 @@ int BlockList::IsListBegin(std::list<BlockUnit*>::iterator it)
   int column = m_maxcolumn;
   while (column-- && it != m_list.begin())
     --it;
-  return OFFSETSUCCESS;
+  return UPOFFSETSUCCESS;
 }
 
 int BlockList::SetStartOffset(float offset)
@@ -299,7 +300,13 @@ int BlockList::SetStartOffset(float offset)
   int listState = 0;
   int height = (int)m_blockh + (int)m_top;
   int column = m_maxcolumn;
-  int minoffset = (int)m_winh % height == 0? 0:height - (int)m_winh % height;
+  int distance;
+  if (m_start == m_list.begin())
+    distance = m_top;
+  else
+    distance = 0;
+  
+  int minoffset = (int)(m_winh - distance) % height == 0? 0:height - (int)(m_winh - distance) % height; 
   m_offsettotal += offset;
   
   if (offset > 0)
@@ -309,11 +316,11 @@ int BlockList::SetStartOffset(float offset)
     if (listState == DOWNOFFSETNO)
       m_offsettotal = min(m_offsettotal, minoffset);
     
-    if (listState == OFFSETSUCCESS && m_offsettotal >= height)
+    if (listState == DOWNOFFSETSUCCESS && m_offsettotal >= height + distance)
     { 
       while (column--)
         ++start;
-      m_offsettotal -= height;
+      m_offsettotal -= (height + distance);
     }
   }
   if (offset < 0)
@@ -323,16 +330,20 @@ int BlockList::SetStartOffset(float offset)
     if (listState == UPOFFSETNO)
       m_offsettotal = max(m_offsettotal, 0);
 
-    if (listState == OFFSETSUCCESS && m_offsettotal <= 0)
+    if (listState == UPOFFSETSUCCESS && m_offsettotal < 0)
     {
        while (column--)
          --start;
        m_offsettotal += height; 
+       if (start == m_list.begin())
+         distance = m_top;
+       else
+         distance = 0;
+       m_offsettotal += distance;
     }
   }
 
   m_start = start;
-
   return listState;
 }
 
@@ -340,7 +351,12 @@ void BlockList::SetYOffset(float offset, int result)
 {
   float y = m_y.front();
   int height = (int)m_blockh + (int)m_top;
-  int ymin =  ((int)m_winh % height == 0? 0 : (int)m_winh % height - height);
+  int distance;
+  if (m_start == m_list.begin())
+    distance = m_top;
+  else
+    distance = 0;
+  int ymin =  ((int)(m_winh - distance) % height == 0? 0 : (int)(m_winh - distance) % height - height);
   y = y - offset;
 
   switch (result)
@@ -349,13 +365,15 @@ void BlockList::SetYOffset(float offset, int result)
     y = max(y, ymin);
     break;
   case UPOFFSETNO:
-    y = min(y, 0);
+    y = min(y, distance);
     break;
-  case OFFSETSUCCESS:
-    if (y > 0)
-      y -= height;
+  case DOWNOFFSETSUCCESS:
     if (y <= -height)
       y += height;
+    break;
+  case UPOFFSETSUCCESS:
+    if (y > 0)
+      y -= height;
     break;
   }
 
