@@ -380,6 +380,10 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown)
       DeleteBlock(it);
       return state;
     case BEPLAY:
+      {
+        if (!m_sigPlayback.empty())
+          m_sigPlayback((*it)->m_data); // emit a signal
+      }
       return state;
     case BEHITTEST:
       return state;
