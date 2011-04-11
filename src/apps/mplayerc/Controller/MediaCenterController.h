@@ -32,6 +32,10 @@ public:
 
    BlockListView& GetBlockListView();
 
+// slots
+protected:
+  void HandlePlayback(const MediaData &md);
+
 public:
   // Data control
   void SpiderStart();
