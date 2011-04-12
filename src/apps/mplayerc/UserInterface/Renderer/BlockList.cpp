@@ -97,6 +97,9 @@ BlockList::BlockList()
   m_scrollbarwidth = 20;
   m_top = 30;
   m_start = m_list.begin();
+  m_end = m_list.begin();
+  m_x.clear();
+  m_y.clear();
   m_offsettotal = 0;
   m_scrollbar = 0;
   AddScrollBar();
@@ -448,6 +451,15 @@ void BlockList::DeleteBlock(int index)
   DeleteBlock(it);
 }
 
+BOOL BlockList::ContiniuPaint()
+{
+  int count = 0;
+  std::list<BlockUnit*>::iterator it = m_start;
+  for (; it != m_end; ++it)
+    ++count;
+  return count <= m_y.size() * m_x.size()? TRUE:FALSE;
+}
+
 //BlockListView
 
 BlockListView::BlockListView():
@@ -496,7 +508,10 @@ void BlockListView::HandleLButtonUp(POINT pt, RECT rcclient)
   int blayer = OnHittest(pt, FALSE);
 
   if (m_lbtndown)
+  {
     ::ReleaseCapture();
+    m_lbtndown = FALSE;
+  }
   
   if (!bscroll)
   {
@@ -513,6 +528,8 @@ void BlockListView::HandleMouseMove(POINT pt, RECT rcclient)
   int blayer = OnHittest(pt, -1);
   if (bscroll)
     ::InvalidateRect(m_hwnd, &rcclient, FALSE);
+  if (!bscroll && m_lbtndown)
+    PostMessage(m_hwnd, WM_LBUTTONUP, 0, 0);
   if (blayer == BEHITTEST)
   {
     SetTimer(m_hwnd, TIMER_TIPS, 500, NULL);
