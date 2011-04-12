@@ -60,10 +60,11 @@ public:
   void AlignScrollBar();
   void UpdateScrollBar(POINT pt);
   RECT GetScrollBarHittest();
-
+  
 // signals
 public:
   boost::signal<void (const MediaData &md)> m_sigPlayback;
+  std::wstring m_tipstring;
 
 private:
   float m_spacing;
