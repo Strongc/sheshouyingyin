@@ -89,7 +89,10 @@ int UILayerBlock::OnHittest(POINT pt, BOOL blbtndown)
   for (std::map<std::wstring, UILayer*>::iterator it = m_layers.begin();
        it != m_layers.end(); ++it)
   {
-    BOOL bl = it->second->OnHittest(pt, blbtndown);
+    int extent = 0;
+    if (it->first.find(L"mark") != std::wstring::npos)
+      extent = 20;
+    BOOL bl = it->second->OnHittest(pt, blbtndown, extent);
     if (it->first.find(L"del") != std::wstring::npos && blbtndown && bl)
       return BEDELETE;
     else if (it->first.find(L"play") != std::wstring::npos && blbtndown && bl)

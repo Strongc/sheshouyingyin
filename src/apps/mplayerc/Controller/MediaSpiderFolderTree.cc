@@ -2,12 +2,13 @@
 #include "MediaSpiderFolderTree.h"
 #include "..\Controller\PlayerPreference.h"
 #include "..\Controller\SPlayerDefs.h"
-#include <boost/filesystem.hpp>
-#include <boost/lambda/lambda.hpp>
-#include <boost/lambda/bind.hpp>
 #include "../Resource.h"
 #include "../mplayerc.h"
 #include "MediaCenterController.h"
+#include <boost/filesystem.hpp>
+#include <boost/lambda/lambda.hpp>
+#include <boost/lambda/bind.hpp>
+#include <boost/regex.hpp>
 
 ////////////////////////////////////////////////////////////////////////////////
 // Normal part
@@ -40,11 +41,6 @@ MediaSpiderFolderTree::~MediaSpiderFolderTree()
   // Store the last search path, if the path is NULL, then represent the last
   // search is a complete search
   PlayerPreference::GetInstance()->SetStringVar(STRVAR_LASTSPIDERPATH, m_sLastSearchPath);
-}
-
-bool _sort_tree_folders(const MediaTreeFolder &treeFolder1, const MediaTreeFolder &treeFolder2)
-{
-  return treeFolder1.nMerit > treeFolder2.nMerit;  // descending order
 }
 
 //void cDebug(const std::wstring &sDebugInfo, bool bAutoBreak = true)
@@ -110,10 +106,12 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
   using std::wstring;
   using std::vector;
   using namespace boost::filesystem;
+  using boost::wregex;
+  using boost::regex_replace;
 
-  // see if need to be stop
-  if (_Exit_state(0))
-    return;  
+  // ---------------------------------------------------------------------------
+  // Note:search current folder and its parent's sub folders
+  // ---------------------------------------------------------------------------
 
   // if the folder is not exist or the folder is been exclude, then return
   if (!is_directory(sFolder) || IsExcludePath(sFolder))
@@ -126,6 +124,10 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
 
   while (itCur != itEnd)
   {
+    // see if need to be stop
+    if (_Exit_state(0))
+      return;  
+
     if (is_regular_file(itCur->path()) && IsSupportExtension(itCur->path().wstring()))
     {
       // add it to the folder tree
@@ -151,5 +153,61 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
 
     // sleep for a moment
     ::Sleep(50);
+  }
+
+  // search the current folder's parent's sub folders(current folder's brother)
+  wpath ptParent(folder.parent_path());
+  directory_iterator itParentCur(ptParent);
+  directory_iterator itParentEnd;
+  while (itParentCur != itParentEnd)
+  {
+    // see if need to be stop
+    if (_Exit_state(0))
+      return;  
+    
+    if (is_directory(itParentCur->path()) && (itParentCur->path().wstring() != sFolder))
+    {
+      directory_iterator itSubCur(itParentCur->path());
+      directory_iterator itSubEnd;
+      while (itSubCur != itSubEnd)
+      {
+        // see if need to be stop
+        if (_Exit_state(0))
+          return;
+        
+        if (is_regular_file(itSubCur->path()) && IsSupportExtension(itSubCur->path().wstring()))
+        {
+          // Note: do not add it to the folder tree
+          //// add it to the folder tree
+          MediaData md;
+          md.path = itSubCur->path().parent_path().wstring();
+          md.path = regex_replace(md.path, wregex(L"\\\\*$"), L"\\\\");
+          md.filename = itSubCur->path().filename().wstring();
+          //m_treeModel.addFile(md);
+
+          // add it to the media center for appending
+          MediaCenterController::GetInstance()->AddNewFoundData(md);
+
+          // notify this change to main frame window
+          CMPlayerCApp *pApp = AfxGetMyApp();
+          if (pApp)
+          {
+            CWnd *pWnd = pApp->GetMainWnd();
+            if (pWnd)
+              pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
+          }
+        }
+
+        ++itSubCur;
+
+        // sleep for a moment
+        ::Sleep(50);
+      }
+    }
+
+    // sleep for a moment
+    ::Sleep(50);
+
+    ++itParentCur;
   }
 }

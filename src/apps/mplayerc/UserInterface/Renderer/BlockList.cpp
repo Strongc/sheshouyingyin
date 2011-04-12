@@ -1,4 +1,3 @@
-
 #include "stdafx.h"
 #include "BlockList.h"
 
@@ -7,7 +6,6 @@
 #define  BEHITTEST 11
 #define  BEDELETE   12
 #define  BEPLAY    13
-
 
 BlockUnit::BlockUnit() :
   m_layer(new UILayerBlock)
@@ -25,7 +23,7 @@ void BlockUnit::DefLayer()
 {
   m_layer->AddUILayer(L"mark", new UILayer(L"\\skin\\mark.png"));
   m_layer->AddUILayer(L"def", new UILayer(L"\\skin\\def.png"));
-  m_layer->AddUILayer(L"play", new UILayer(L"\\skin\\play.png", FALSE));
+  m_layer->AddUILayer(L"play", new UILayer(L"\\skin\\play.png"));
   m_layer->AddUILayer(L"del", new UILayer(L"\\skin\\del.png", FALSE));
 }
 
@@ -40,6 +38,9 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   m_layer->GetUILayer(L"def", &def);
   m_layer->GetUILayer(L"play", &play);
   m_layer->GetUILayer(L"del", &del);
+
+  layer->SetDisplay(TRUE);
+  def->SetDisplay(TRUE);
 
   POINT play_fixpt = {40, 70};
   POINT def_fixpt = {5, 5};
@@ -86,6 +87,7 @@ int BlockUnit::OnHittest(POINT pt, BOOL blbtndown)
 #define UPOFFSETNO 2
 #define DOWNOFFSETSUCCESS 3
 #define UPOFFSETSUCCESS 4
+#define TIMER_TIPS 15
 
 BlockList::BlockList()
 {
@@ -398,11 +400,17 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown)
       DeleteBlock(it);
       return state;
     case BEPLAY:
+      {
+        if (!m_sigPlayback.empty())
+          m_sigPlayback((*it)->m_data); // emit a signal
+      }
       return state;
     case BEHITTEST:
+      m_tipstring = (*it)->m_data.filename;
       return state;
     }
   }
+  m_tipstring = L"";
   return state;
 }
 
@@ -506,5 +514,8 @@ void BlockListView::HandleMouseMove(POINT pt, RECT rcclient)
   if (bscroll)
     ::InvalidateRect(m_hwnd, &rcclient, FALSE);
   if (blayer == BEHITTEST)
+  {
+    SetTimer(m_hwnd, TIMER_TIPS, 500, NULL);
     ::InvalidateRect(m_hwnd, &rcclient, FALSE);
+  }
 }

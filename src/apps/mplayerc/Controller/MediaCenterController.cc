@@ -1,6 +1,8 @@
 #include "StdAfx.h"
 #include "MediaCenterController.h"
 #include <boost/filesystem.hpp>
+#include <boost/bind.hpp>
+#include "../MainFrm.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // normal part
@@ -13,7 +15,8 @@ MediaCenterController::MediaCenterController()
   for (it = mps.begin(); it != mps.end(); ++it)
     m_treeModel.addFolder(*it);
 
-  //m_model.FindAll(m_mediadata);
+  // connect signals and slots
+  m_blocklist.m_sigPlayback.connect(boost::bind(&MediaCenterController::HandlePlayback, this, _1));
 }
 
 MediaCenterController::~MediaCenterController()
@@ -134,4 +137,28 @@ void MediaCenterController::DelBlock(int index)
 {
   m_blocklist.DeleteBlock(index);
   ::InvalidateRect(m_hwnd, 0, FALSE);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// slots to handle user events
+void MediaCenterController::HandlePlayback(const MediaData &md)
+{
+  CMainFrame *pMainWnd = (CMainFrame *)(AfxGetApp()->GetMainWnd());
+  if (pMainWnd)
+  {
+    pMainWnd->SendMessage(WM_COMMAND, ID_FILE_CLOSEMEDIA);
+    pMainWnd->ShowWindow(SW_SHOW);
+    pMainWnd->SetForegroundWindow();
+
+    CAtlList<CString> fns;
+    fns.AddTail((md.path + md.filename).c_str());
+    pMainWnd->m_wndPlaylistBar.Open(fns, false);
+
+    if(pMainWnd->m_wndPlaylistBar.GetCount() == 1 && 
+       pMainWnd->m_wndPlaylistBar.IsWindowVisible() && 
+      !pMainWnd->m_wndPlaylistBar.IsFloating())
+        pMainWnd->ShowControlBar(&pMainWnd->m_wndPlaylistBar, FALSE, TRUE);
+
+    pMainWnd->OpenCurPlaylistItem();
+  }
 }
