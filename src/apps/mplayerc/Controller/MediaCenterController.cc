@@ -94,10 +94,12 @@ void MediaCenterController::AddBlock()
       BlockUnit* one = new BlockUnit;
       one->m_data = *it;
       m_blocklist.AddBlock(one);
+      
       RECT rc;
       GetClientRect(m_hwnd, &rc);
       m_blocklist.Update(rc.right - rc.left, rc.bottom - rc.top);
-      InvalidateRect(m_hwnd, 0, FALSE);
+      if (m_blocklist.ContiniuPaint())
+        InvalidateRect(m_hwnd, 0, FALSE);
     }
 
     ++it;

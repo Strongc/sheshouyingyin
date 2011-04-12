@@ -60,6 +60,7 @@ public:
   void AlignScrollBar();
   void UpdateScrollBar(POINT pt);
   RECT GetScrollBarHittest();
+  BOOL ContiniuPaint();
   
 // signals
 public:
