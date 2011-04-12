@@ -24,6 +24,7 @@
 #include "libpng.h"
 #include "SUIButton.h"
 #include "Controller\MediaCenterController.h"
+#include "SeekBarTip.h"
 
 class CChildView : public CWnd
 {
@@ -59,6 +60,8 @@ public:
 
   int m_offsetspeed;
   int m_preoffsetspeed;
+
+  CSeekBarTip m_tip;
 
 	void ReCalcBtn();
 	DECLARE_DYNAMIC(CChildView)
@@ -96,7 +99,7 @@ public:
 	afx_msg LRESULT OnNcHitTest(CPoint point);
 	afx_msg void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
   afx_msg void OnTimer(UINT_PTR nIDEvent);
-
+  
   void ShowMediaCenter(BOOL bl);
 
 };

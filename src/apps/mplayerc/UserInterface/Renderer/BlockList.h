@@ -6,6 +6,7 @@
 #include "MediaCenterScrollBar.h"
 #include "UILayerBlock.h"
 #include "../../Model/MediaComm.h"
+#include <boost/signals.hpp>
 /* 
  * Class BlockUnit implements block UI and UnitData
  */
@@ -59,6 +60,11 @@ public:
   void AlignScrollBar();
   void UpdateScrollBar(POINT pt);
   RECT GetScrollBarHittest();
+  
+// signals
+public:
+  boost::signal<void (const MediaData &md)> m_sigPlayback;
+  std::wstring m_tipstring;
 
 private:
   float m_spacing;

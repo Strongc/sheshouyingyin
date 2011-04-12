@@ -42,6 +42,7 @@ static char THIS_FILE[] = __FILE__;
 
 #define TIMER_OFFSET 11
 #define  TIMER_SLOWOFFSET 12
+#define TIMER_TIPS 15
 
 CChildView::CChildView() :
 m_vrect(0,0,0,0)
@@ -286,7 +287,7 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_WM_LBUTTONUP()
 	ON_WM_NCHITTEST()
 	ON_WM_KEYUP()
-    ON_WM_TIMER()
+  ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 static COLORREF colorNextLyricColor(COLORREF lastColor)
@@ -592,6 +593,29 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	GetSystemFontWithScale(&m_font, 14.0);
     GetSystemFontWithScale(&m_font_lyric, 20.0, FW_BOLD, s.subdefstyle.fontName); //
 	// TODO:  Add your specialized creation code here
+    
+    DWORD dwTransFlag = 0; 
+    if (s.bUserAeroUI())
+      dwTransFlag = WS_EX_TRANSPARENT;
+    
+    WNDCLASSEX layeredClass;
+    layeredClass.cbSize        = sizeof(WNDCLASSEX);
+    layeredClass.style         = CS_HREDRAW | CS_VREDRAW;
+    layeredClass.lpfnWndProc   = 0;
+    layeredClass.cbClsExtra    = 0;
+    layeredClass.cbWndExtra    = 0;
+    layeredClass.hInstance     = AfxGetMyApp()->m_hInstance;
+    layeredClass.hIcon         = NULL;
+    layeredClass.hCursor       = NULL;
+    layeredClass.hbrBackground = NULL;
+    layeredClass.lpszMenuName  = NULL;
+    layeredClass.lpszClassName = _T("SVPLayered");
+    layeredClass.hIconSm       = NULL;
+    RegisterClassEx(&layeredClass) ;
+    if (!m_tip.CreateEx(WS_EX_NOACTIVATE|WS_EX_TOPMOST|dwTransFlag, _T("SVPLayered"), _T("TIP"), WS_POPUP, CRect( 20,20,21,21 ) , this,  0))
+      AfxMessageBox(ResStr(IDS_MSG_CREATE_SEEKTIP_FAIL));
+    
+
     m_blocklistview->SetFrameHwnd(m_hWnd);
     m_blocklistview->SetScrollSpeed(&m_offsetspeed);
     
@@ -750,6 +774,16 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
         KillTimer(TIMER_SLOWOFFSET);
     }
 
+    if (nIDEvent == TIMER_TIPS)
+    {
+      KillTimer(TIMER_TIPS);
+      std::wstring tips = m_blocklistview->m_tipstring;
+      if (tips.empty())
+        m_tip.ClearStat();
+      else
+        m_tip.SetTips(tips.c_str(), TRUE);
+    }
+
     RECT rc;
     GetClientRect(&rc);
     m_blocklistview->Update(rc.right - rc.left, rc.bottom - rc.top);
@@ -764,3 +798,4 @@ void CChildView::ShowMediaCenter(BOOL bl)
   GetClientRect(&rc);
   m_mediacenter->UpdateBlock(rc);
 }
+
