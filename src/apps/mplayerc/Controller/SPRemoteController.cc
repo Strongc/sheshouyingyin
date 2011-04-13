@@ -1,30 +1,30 @@
 #include "StdAfx.h"
-
 #include "SPRemoteController.h"
 #include "../../../../Prototype/SPRemote/cmdmap.h"
+#include "../MainFrm.h"
+#include <boost/bind.hpp>
 
 SPRemoteController::SPRemoteController() :
-  m_wndframe(NULL),
   m_running(FALSE),
   m_q(NULL)
 {
+  using boost::bind;
+
   char pid[16];
   sprintf_s(pid, 16, "%u", GetCurrentProcessId());
   m_queuename = REMOTEMSG_CHANNELNAME;
   m_queuename += pid;
-  Logging("Remote URL: http://127.0.0.1:8080/splayer?id=%s&cmd=play|stop|next|prev&p=", pid);
+  Logging("Remote URL: http://127.0.0.1:8080/splayer?id=%s&cmd=play|pause|next|prev&p=", pid);
   InitQ();
+
+  // connect
+  m_event.Connect(bind(&CMainFrame::SendMessage, bind(&CWinThread::GetMainWnd, AfxGetApp()), _1, _2, _3));
 }
 
 SPRemoteController::~SPRemoteController()
 {
   _Stop();
   Clean();
-}
-
-void SPRemoteController::SetFrame(HWND hwnd)
-{
-  m_wndframe = hwnd;
 }
 
 BOOL SPRemoteController::IsRun()
@@ -49,7 +49,7 @@ void SPRemoteController::InitQ()
 
 void SPRemoteController::_Thread()
 {
-  if (!m_wndframe || !m_q)
+  if (!m_q)
     return;
 
   m_running = TRUE;
@@ -70,11 +70,7 @@ void SPRemoteController::_Thread()
       if (m_q->try_receive(&msg, sizeof(RemoteMsg), recvsize, priority)
         && timestamp - msg.timestamp < 4)
       {
-        std::string param = msg.cmdstring;
-        if (msg.msgid == 919 || msg.msgid == 918)
-          ::PostMessage(m_wndframe, WM_COMMAND, msg.msgid, (LPARAM)msg.msgid);
-        else
-        ::PostMessage(m_wndframe, WM_COMMAND, msg.msgid, NULL);
+        m_event.dispatch(msg);
       }
     }
   }

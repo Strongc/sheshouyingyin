@@ -1900,6 +1900,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Controller\SPRemoteEventForwarding.cc"
+				>
+			</File>
+			<File
+				RelativePath=".\Controller\SPRemoteEventForwarding.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Controller\SubTransController.cc"
 				>
 			</File>

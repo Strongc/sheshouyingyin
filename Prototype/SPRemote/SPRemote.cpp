@@ -47,10 +47,13 @@ void* SPCall(enum mg_event event,
    * http://xxx.xxx.xxx/splayer?id={PID}&cmd={CMD}&p={PARAM}
    * 
    * {PID} is a splayer process id
-   * {CMD} is a one of follow play/stop/next/...
+   * {CMD} is a one of follow play/pause/next/...
    * {PARAM} is a append value
    */
-
+  
+  uri ? printf(uri) : 0;
+  printf("\n");
+  query ? printf(query) : 0;
   // {SIGN}
   if (!strcmp("/splayer", uri))
   {
@@ -65,15 +68,17 @@ void* SPCall(enum mg_event event,
     
     mg_get_var(query, strlen(query), "p", val, 127);
     std::string param = val;
-
-    if (!cmds[cmd])
+    printf("\n msgid: %d", cmds[cmd]);
+    if (!cmds[cmd].msgid)
       send_http(conn, 500, "error url");
     else
     {
       RemoteMsg msg;
       msg.timestamp = time(NULL);
       msg.cmdstring = param;
-      msg.msgid = cmds[cmd];
+      msg.msgid = cmds[cmd].msgid;
+      msg.wParam = cmds[cmd].wParam;
+      msg.lParam = cmds[cmd].lParam;
 
       try
       {
@@ -124,7 +129,7 @@ int _tmain(int argc, _TCHAR* argv[])
       NULL
     };
     ctx = mg_start(&SPCall, options);
-    Sleep(1000*60*1);
+    Sleep(1000*60*60);
     mg_stop(ctx);
   }
   else if (cmd[0] == '-' && cmd[1] == 'h')
