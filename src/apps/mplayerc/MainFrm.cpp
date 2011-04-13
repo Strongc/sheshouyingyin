@@ -7233,7 +7233,6 @@ void CMainFrame::OnShowDrawStats()
 {
   if (!m_spremote.IsRun())
   {
-    m_spremote.SetFrame(m_hWnd);
     m_spremote._Start();
   }
   
