@@ -29,15 +29,15 @@ enum {
 
 const int g_phash_collectcfg[] = {
   // times;
-  4,
+  2,
   // datasecs;
-  5,
+  15,
   // start collect time;
   0,  // this is a placeholder
   0,
-  10,
-  20,
-  30
+  25//,
+//  20,
+//  30
 };
 
 

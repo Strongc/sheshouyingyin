@@ -74,6 +74,7 @@
 #include "Controller/HashController.h"
 #include "Controller/MediaCenterController.h"
 #include "Controller/ShareController.h"
+#include "Controller/pHashController.h"
 #include <Strings.h>
 #include "Utils/SPlayerGUID.h"
 
@@ -11976,7 +11977,7 @@ bool CMainFrame::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
           hashctrl->SetpASF(pASF);
           pASF->SetpHashControl(&m_phashblock);
           pASF->SetSeek(false);
-          hashctrl->SetSwitchStatus(pHashController::PHASHANDSPHASH);
+          hashctrl->SetSwitchStatus(pHashController::INSERT);
           m_phashblock.phashcnt = 0;
           m_phashblock.prevcnt = -1;
           Logging(L"result:%d, hashctrl->SetpASF, pASF->SetpHashControl, pASF->SetSeek, hashctrl->SetSwitchStatus", result);
@@ -11986,7 +11987,7 @@ bool CMainFrame::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
           hashctrl->SetpASF(pASF);
           pASF->SetpHashControl(&m_phashblock);
           pASF->SetSeek(false);
-          hashctrl->SetSwitchStatus(pHashController::ONLYPHASH);
+          hashctrl->SetSwitchStatus(pHashController::LOOKUP);
           m_phashblock.phashcnt = 0;
           m_phashblock.prevcnt = -1;
           Logging(L"result:%d, hashctrl->SetpASF, pASF->SetpHashControl, pASF->SetSeek, hashctrl->SetSwitchStatus", result);
@@ -17663,7 +17664,7 @@ void CMainFrame::OnFilledUp4pHash()
 {
   // Start dealing with the data from audioswitcher filter
   pHashController* hashctrl = pHashController::GetInstance();  
-  if (hashctrl->GetSwitchStatus())
+  if (hashctrl->GetSwitchStatus() != pHashController::NOCALCHASH)
   {
     if (hashctrl->SetpHashData(&m_phashblock) == S_OK)
     {
