@@ -11965,35 +11965,50 @@ bool CMainFrame::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
 
       std::wstring szFileHash = HashController::GetInstance()->GetSPHash(m_fnCurPlayingFile);
       CString FPath = szFileHash.c_str();
- 
-      // Set phash when open a file
-      if( CComQIPtr<IAudioSwitcherFilter> pASF = FindFilter(__uuidof(CAudioSwitcherFilter), pGB))
+      if (pHashController::GetInstance()->GetSwitchStatus() != pHashController::NOCALCHASH)
       {
-        pHashController* hashctrl = pHashController::GetInstance();
-        int result;
-        hashctrl->IspHashInNeed(m_fnCurPlayingFile, result);
-        if (result == 1) // need phash insert 
+        // Set phash when open a file
+        if( CComQIPtr<IAudioSwitcherFilter> pASF = FindFilter(__uuidof(CAudioSwitcherFilter), pGB))
         {
-          hashctrl->SetpASF(pASF);
-          pASF->SetpHashControl(&m_phashblock);
-          pASF->SetSeek(false);
-          hashctrl->SetSwitchStatus(pHashController::INSERT);
-          m_phashblock.phashcnt = 0;
-          m_phashblock.prevcnt = -1;
-          Logging(L"result:%d, hashctrl->SetpASF, pASF->SetpHashControl, pASF->SetSeek, hashctrl->SetSwitchStatus", result);
+          pHashController* hashctrl = pHashController::GetInstance();
+          int result;
+          hashctrl->IspHashInNeed(m_fnCurPlayingFile, result);
+          if (result == 1) // need phash insert 
+          {
+            hashctrl->SetpASF(pASF);
+            pASF->SetpHashControl(&m_phashblock);
+            pASF->SetSeek(false);
+            hashctrl->SetSwitchStatus(pHashController::INSERT);
+            m_phashblock.phashcnt = 0;
+            m_phashblock.prevcnt = -1;
+            Logging(L"result:%d, hashctrl->SetpASF, pASF->SetpHashControl, pASF->SetSeek, hashctrl->SetSwitchStatus", result);
+          }
+          else if (result == 0)
+          {
+            hashctrl->SetpASF(pASF);
+            pASF->SetpHashControl(&m_phashblock);
+            pASF->SetSeek(false);
+            hashctrl->SetSwitchStatus(pHashController::LOOKUP);
+            m_phashblock.phashcnt = 0;
+            m_phashblock.prevcnt = -1;
+            Logging(L"result:%d, hashctrl->SetpASF, pASF->SetpHashControl, pASF->SetSeek, hashctrl->SetSwitchStatus", result);
+          }
         }
-        else if (result == 0)
-        {
-          hashctrl->SetpASF(pASF);
-          pASF->SetpHashControl(&m_phashblock);
-          pASF->SetSeek(false);
-          hashctrl->SetSwitchStatus(pHashController::LOOKUP);
-          m_phashblock.phashcnt = 0;
-          m_phashblock.prevcnt = -1;
-          Logging(L"result:%d, hashctrl->SetpASF, pASF->SetpHashControl, pASF->SetSeek, hashctrl->SetSwitchStatus", result);
-        }
-        
       }
+      else
+      {
+        if( CComQIPtr<IAudioSwitcherFilter> pASF = FindFilter(__uuidof(CAudioSwitcherFilter), pGB))
+        {
+          pHashController* hashctrl = pHashController::GetInstance();
+          hashctrl->SetpASF(pASF);
+          pASF->SetpHashControl(&m_phashblock);
+          pASF->SetSeek(false);
+          hashctrl->SetSwitchStatus(pHashController::NOCALCHASH);
+          m_phashblock.phashcnt = 0;
+          m_phashblock.prevcnt = -1;
+        }
+      }
+    
 
 
       if(m_pCAP && (!m_fAudioOnly || m_fRealMediaGraph))
@@ -15017,10 +15032,12 @@ void CMainFrame::OpenCurPlaylistItem(REFERENCE_TIME rtStart)
           PosStr.Empty();
         }
       }
-      if(!PosStr.IsEmpty()){
+      if(!PosStr.IsEmpty())
+      {
 
         int iPos = PosStr.ReverseFind( _T(';') );
-        if(iPos >= 0){
+        if(iPos >= 0)
+        {
           CString s2 = PosStr.Right( PosStr.GetLength() - iPos - 1 );
           _stscanf(s2, _T("%I64d"), &rtStart); // pos
         }
@@ -15032,10 +15049,16 @@ void CMainFrame::OpenCurPlaylistItem(REFERENCE_TIME rtStart)
   }else if(rtStart == -1){
     rtStart = 0;
   }
+
   CAutoPtr<OpenMediaData> p(m_wndPlaylistBar.GetCurOMD(rtStart));
 
   // MediaCenterController::GetInstance()->Playback(pli.m_fns.GetHead().GetString());
   if(p) OpenMedia(p);
+  // if Start point is not zero , turn off phash
+  if (rtStart != 0)
+    pHashController::GetInstance()->SetSwitchStatus(pHashController::NOCALCHASH);
+  else
+    pHashController::GetInstance()->SetSwitchStatus(pHashController::PHASHANDSPHASH);
 
 }
 
