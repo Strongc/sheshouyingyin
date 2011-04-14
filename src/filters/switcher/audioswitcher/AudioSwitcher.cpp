@@ -1387,8 +1387,11 @@ STDMETHODIMP CAudioSwitcherFilter::SetEQControl ( int lEQBandControlPreset, floa
 // phash data filler
 STDMETHODIMP CAudioSwitcherFilter::FillData4pHash(BYTE* pDataIn, long BufferLen)
 {
-   for (int i = 0; i < BufferLen; i++ )
-      m_pHashPtr->phashdata.push_back(((unsigned char *)pDataIn)[i]); 
+  if (m_pHashPtr == NULL)
+    return S_OK;
+
+  for (int i = 0; i < BufferLen; i++ )
+    m_pHashPtr->phashdata.push_back(((unsigned char *)pDataIn)[i]); 
   return S_OK;
 }
 
