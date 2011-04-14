@@ -1,8 +1,9 @@
 /*
-    Audio Scout - audio content indexing software
-    Copyright (C) 2010  D. Grant Starkweather & Evan Klinger
+    Acoustic Fingerprint Server
     
-    Audio Scout is free software: you can redistribute it and/or modify
+	Modified version of Audio Scout - audio content indexing software
+    
+    Acoustic Fingerprint Server is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -503,6 +504,35 @@ void kill_process()
 
 // global variable to assign position id
 static uint32_t g_posid = 0;
+uint32_t GeneratePosid()
+{
+	char log[80];
+	FILE *fp;
+	
+	uint32_t posid = 0;
+	// read the last time posid
+	fp = fopen("./POSID.cfg", "r");
+	if (!fp)
+	{
+		LOG("Can not find or read POSID.cfg");
+		exit(1);
+	}
+	fseek(fp, 0, SEEK_SET);
+	fscanf(fp, "%d", &posid);
+	sprintf(log, "last time posid: %u", posid);
+	LOG(log);
+	fclose(fp);
+	
+	// write new value
+	fp = fopen("./POSID.cfg", "w");
+	fseek(fp, 0, SEEK_SET);
+	fprintf(fp, "%d\n", posid+1);
+	sprintf(log, "posid: %u", posid+1);
+	LOG(log);
+	fclose(fp);
+	return posid +1;
+	
+}
 
 // aux function to worker threads for sending the results
 static int send_results(void *receiver, uint8_t threadnb, uint32_t posid, float cs, uint8_t cmd)
@@ -605,7 +635,9 @@ static int execute_command(uint8_t thrn, uint8_t cmd, uint32_t* hash, uint32_t n
 			waitfor_tmp_index(GlobalArgs.nbthreads+1);
 			while (audioindex_tmp == NULL)
 				pthread_cond_wait(&tmpaccess_cond, &tmpaccess_mutex);
-			sprintf(log, "WORKER%d: inserting id = %d, hash[%d]", thrn, *posid, nbframes);
+			*posid = GeneratePosid();
+			g_posid++;
+			sprintf(log, "WORKER%d: inserting id = %u, hash[%d], g_posid =%u", thrn, *posid, nbframes, g_posid);
 			LOG(log);
 			syslog(LOG_DEBUG,"WORKER%d: inserting id = %d, hash[%d]", thrn, *posid, nbframes);
 			err = insert_into_audioindex(audioindex_tmp, *posid, (uint32_t*)hash, nbframes);
@@ -679,8 +711,7 @@ static int pull_message(int thrn, void *receiver)
     int64_t more;
     size_t msg_size, more_size = sizeof(int64_t);
     float cs = -1.0f;
-	g_posid++;
-    posid = (uint32_t)thrn*1000 + g_posid;
+	
     // pull cmd msg part
     int ret = RECEIVEMSG(sizeof(uint8_t),&m_phashframe.cmd,MISSINGCMD);
 	sprintf(log, "RECEIVEMSG: WORKER%d m_phashframe.cmd:%d", thrn, m_phashframe.cmd);
@@ -755,24 +786,25 @@ static int pull_message(int thrn, void *receiver)
     err = execute_command(thrn, m_phashframe.cmd, m_phashframe.phash, m_phashframe.nbframes, &posid, &cs);
 	if (err < 0)
 	{
-		sprintf(log, "WORKER%d: unable to execute command, err=%d",thrn, err);
+		sprintf(log, "WORKER%d: unable to execute command, err=%d", thrn, err);
 		LOG(log);
-		syslog(LOG_DEBUG,"WORKER%d: unable to execute command, err=%d",thrn, err);
+		syslog(LOG_DEBUG,"WORKER%d: unable to execute command, err=%d", thrn, err);
     }
     free(m_phashframe.phash);
     m_phashframe.phash = NULL;
 
     if (cs >= GlobalArgs.threshold)
 	{
-		sprintf(log, "WORKER%d: %f cs, %u id", thrn, cs, posid);
+		sprintf(log, "WORKER%d: %f cs, %u posid", thrn, cs, posid);
 		LOG(log);
-		syslog(LOG_DEBUG,"WORKER%d: %f cs, %u id", thrn, cs, posid);
+		syslog(LOG_DEBUG,"WORKER%d: %f cs, %u posid", thrn, cs, posid);
 		posid = hosttonet32(posid);
 		cs = hosttonetf(cs);	
     }
 	send_results(receiver, thrn, posid, cs, m_phashframe.cmd);
-   	sprintf(log, "WORKER%d:  %f cs, %u id", thrn, cs, posid);
+   	sprintf(log, "WORKER%d:  %f cs, %u posid", thrn, cs, posid);
 	LOG(log);
+
     return 0;
 }
 
