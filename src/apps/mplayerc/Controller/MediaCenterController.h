@@ -53,7 +53,7 @@ private:
 
   // Data
   MediaModel            m_model;
-  MediaTreeModel        m_treeModel;
+  media_tree::model     m_treeModel;
   MediaCheckDB          m_checkDB;
   MediaSpiderFolderTree m_spider;
 

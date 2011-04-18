@@ -1,237 +1,195 @@
 #include "stdafx.h"
 #include "MediaTreeModel.h"
-#include <boost/filesystem.hpp>
+#include <stack>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
-#include <boost/regex.hpp>
+#include <boost/foreach.hpp>
+//#include "SVPToolBox.h"
+//#include "../Utils/SPlayerGUID.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // normal part
-MediaTreeFolders MediaTreeModel::m_lsFolderTree;
-
-MediaTreeModel::MediaTreeModel()
-{
-}
-
-MediaTreeModel::~MediaTreeModel()
-{
-}
+MediaTreeFolders media_tree::model::m_lsFolderTree;
 
 ////////////////////////////////////////////////////////////////////////////////
 // properties
-MediaTreeFolders MediaTreeModel::mediaTreeFolders() const
+media_tree::model::TreeIterator media_tree::model::findFolder(const std::wstring &sPath, bool bCreateIfNotExist /* = false */)
+{
+  using namespace boost::lambda;
+  using std::wstring;
+  using std::vector;
+  using std::stack;
+
+  wstring sPreferredPath = makePathPreferred(sPath);
+  stack<wstring> skPathParts;
+  splitPath(sPreferredPath, skPathParts);
+
+  MediaTreeFolders::tree_type *pCurTree = &m_lsFolderTree;
+  TreeIterator itCurTree = pCurTree->begin();
+  TreeIterator itTreeEnd;
+  TreeIterator itResult;
+  while (!skPathParts.empty())
+  {
+    wstring sCurPart = skPathParts.top();
+    TreeIterator itFind = std::find_if(pCurTree->begin(), pCurTree->end(),
+                          bind(&media_tree::folder::sFolderPath, _1) == sCurPart);
+    if (itFind == pCurTree->end())
+    {
+      // insert new node if allowed else return an invalid iterator
+      if (bCreateIfNotExist)
+      {
+        media_tree::folder fd;
+        fd.sFolderPath = sCurPart;
+        itFind = pCurTree->insert(fd);
+
+        pCurTree = itFind.node();
+        itCurTree = pCurTree->begin();
+        itResult = itFind;
+      }
+      else
+      {
+        itResult = itTreeEnd;
+        break;
+      }
+    }
+    else
+    {
+      pCurTree = itFind.node();
+      itCurTree = pCurTree->begin();
+      itResult = itFind;
+    }
+
+    skPathParts.pop();
+  }
+
+  return itResult;
+}
+
+MediaTreeFolders& media_tree::model::mediaTree()
 {
   return m_lsFolderTree;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // add media info to the tree and save the info to the database
-void MediaTreeModel::addFolder(const MediaPath &mp)
+void media_tree::model::addFolder(const std::wstring &sFolder, bool bIncreaseMerit /* = false */)
+{
+  TreeIterator itFolder = findFolder(sFolder, true);
+  TreeIterator itEnd;
+  if (itFolder != itEnd)
+  {
+    // modify something about this folder
+    if (bIncreaseMerit)
+      ++(itFolder->nMerit);
+  }
+  else
+  {
+    // should never go here
+  }
+}
+
+void media_tree::model::addFile(const std::wstring &sFolder, const std::wstring &sFilename)
 {
   using namespace boost::lambda;
-  using std::wstring;
-  using std::vector;
 
-  wstring sPreferredPath = makePathPreferred(mp.path);
-
-  vector<wstring> vtSplitPaths;
-  splitPath(sPreferredPath, vtSplitPaths);
-
-  for (size_t i = 0; i < vtSplitPaths.size(); ++i)
+  TreeIterator itFolder = findFolder(sFolder, true);
+  TreeIterator itEnd;
+  if (itFolder != itEnd)
   {
-    // if the path is exist in the list, then return
-    MediaTreeFolders::iterator itFind;
-    itFind = std::find_if(m_lsFolderTree.begin(), m_lsFolderTree.end(),
-                          bind(&MediaTreeFolder::sFolderPath, _1) == vtSplitPaths[i]);
-    bool bIsExist = itFind == m_lsFolderTree.end() ? false : true;
-
-    // add path
-    if (!bIsExist)
+    // modify something about this folder's file list
+    // insert unique file
+    MediaTreeFiles &files = itFolder->lsFiles;
+    MediaTreeFiles::iterator itFiles = std::find_if(files.begin(), files.end(),
+                                       bind(&media_tree::file::sFilename, _1) == sFilename);
+    if (itFiles == files.end())
     {
-      MediaTreeFolder treefolder;
-      treefolder.sFolderPath = vtSplitPaths[i];
-      //treefolder.sFolderHash = ;
-      treefolder.tFolderCreateTime = ::time(0);
-
-      m_lsFolderTree.push_back(treefolder);
+      media_tree::file fe;
+      fe.sFilename = sFilename;
+      //      CSVPToolBox toolbox;
+      //      std::wstring sThumbnailPath;
+      //      toolbox.GetAppDataPath(sThumbnailPath);
+      //      sThumbnailPath += L"\\" + SPlayerGUID::RandMakeGUID() + L".jpg";
+      //fe.sFileThumbnail = sThumbnailPath;
+      //fe.sFileHash = ;
+      //fe.sFileUID = ;
+      fe.tFileCreateTime = ::time(0);
+      files.push_back(fe);
     }
-
-    // assign merit to the path
-    if (!bIsExist && vtSplitPaths[i] == mp.path)
-      assignMerit(mp);
+  }
+  else
+  {
+    // should never go here
   }
 }
 
-void MediaTreeModel::addFile(const MediaData &md)
+void media_tree::model::save2DB()
 {
-  // first, add the folder to the list if it isn't exist
-  std::wstring sPreferredPath = makePathPreferred(md.path);
-
-  MediaPath mpTemp;
-  mpTemp.path = sPreferredPath;
-  addFolder(mpTemp);
-
-  // second, add the file
-  MediaTreeFolders::iterator it = m_lsFolderTree.begin();
-  while (it != m_lsFolderTree.end())
+  MediaTreeFolders::tree_type::pre_order_iterator it = m_lsFolderTree.pre_order_begin();
+  while (it != m_lsFolderTree.pre_order_end())
   {
-    if (it->sFolderPath == sPreferredPath)
-    {
-      MediaTreeFile treefile;
-      treefile.sFilename = md.filename;
-      //treefile.sFileHash = ;
-      //treefile.sFileUID = ;
-      treefile.tFileCreateTime = ::time(0);
-      it->lsFiles.push_back(treefile);
-      break;
-    }
+    // store path info
+    std::wstring sFolderPath = fullFolderPath(it.node());
 
-    ++it;
-  }
-}
-
-void MediaTreeModel::increaseMerit(const std::wstring &sPath)
-{
-  std::wstring sPreferredPath = makePathPreferred(sPath);
-
-  MediaTreeFolders::iterator it = m_lsFolderTree.begin();
-  while (it != m_lsFolderTree.end())
-  {
-    if (it->sFolderPath == sPreferredPath)
-      it->nMerit += 1;
-
-    ++it;
-  }
-}
-
-void MediaTreeModel::setNextSpiderInterval(const std::wstring &sPath, time_t tInterval)
-{
-  MediaTreeFolders::iterator it = m_lsFolderTree.begin();
-
-  while (it != m_lsFolderTree.end())
-  {
-    if (it->sFolderPath == sPath)
-      it->tNextSpiderInterval = tInterval;
-
-    ++it;
-  }
-}
-
-void MediaTreeModel::saveToDB()
-{
-  // store path to the detect_path
-  MediaTreeFolders::const_iterator itTreeFolders = m_lsFolderTree.begin();
-  while (itTreeFolders != m_lsFolderTree.end())
-  {
     MediaPath mp;
-    mp.path = itTreeFolders->sFolderPath;
-    mp.merit = itTreeFolders->nMerit;
-    
+    mp.path = sFolderPath;
+    mp.merit = it->nMerit;
     m_model.Add(mp);
-    
-    ++itTreeFolders;
-  }
 
-  // store file info to the media_data table
-  itTreeFolders = m_lsFolderTree.begin();
-  MediaTreeFiles::const_iterator itTreeFiles;
-  while (itTreeFolders != m_lsFolderTree.end())
-  {
-    itTreeFiles = itTreeFolders->lsFiles.begin();
-    while (itTreeFiles != itTreeFolders->lsFiles.end())
+    // store file info
+    MediaTreeFiles &files = it->lsFiles;
+    MediaTreeFiles::iterator itFile = files.begin();
+    while (itFile != files.end())
     {
       MediaData md;
-      md.filename = itTreeFiles->sFilename;
-      md.path = itTreeFolders->sFolderPath;
-      // md.thumbnailpath = ;
+      md.path = sFolderPath;
+      md.filename = itFile->sFilename;
+      md.thumbnailpath = itFile->sFileThumbnail;
       // md.videotime = ;
 
       m_model.Add(md);
 
-      ++itTreeFiles;
+      ++itFile;
     }
 
-    ++itTreeFolders;
+    ++it;
   }
 }
 
-void MediaTreeModel::splitPath(const std::wstring &sPath, std::vector<std::wstring> &vtResult)
+void media_tree::model::splitPath(const std::wstring &sPath, std::stack<std::wstring> &skResult)
 {
-  using namespace boost::filesystem;
+  using namespace boost;
+  using namespace boost::regex_constants;
+  using std::wstring;
+  using std::vector;
+  using std::stack;
 
-  // analysis the path and add it to the detect_path table
+  // split the path into various parts
+  vector<wstring> vtResult;
   std::wstring sTemp(sPath);
 
-  while (!sTemp.empty() && sTemp != L"\\\\")
+  wsmatch what;
+  wregex rx(L"(^[^\\\\]+)\\\\?|(^\\\\\\\\[^\\\\]+)\\\\?");  // match both normal path and UNC path
+  wstring::const_iterator start = sTemp.begin();
+  wstring::const_iterator end   = sTemp.end();
+  while (regex_search(start, end, what, rx, match_default))
   {
-    // deal with the path
-    if (is_directory(sTemp))
-      vtResult.push_back(sTemp);
-
-    // remove the back slash to avoid dead loop
-    if (sTemp[sTemp.size() - 1] == L'\\')
-      sTemp.erase(sTemp.end() - 1, sTemp.end());
-
-    // remove the last suffix
-    if (sTemp.find_last_of(L'\\') != std::wstring::npos)
-      sTemp.erase(sTemp.begin() + sTemp.find_last_of(L'\\') + 1, sTemp.end());
+    if (!what[1].str().empty())
+      vtResult.push_back(what[1]);  // Normal path's each part
     else
-      sTemp.clear();
+      vtResult.push_back(what[2]);  // UNC prefix
+
+    start = what[0].second;
   }
+
+  std::for_each(vtResult.rbegin(), vtResult.rend(), lambda::bind(&std::stack<std::wstring>::push, &skResult, lambda::_1));
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// helper functions
-void MediaTreeModel::assignMerit(const MediaPath &mp)
+void media_tree::model::initMerit(const std::wstring &sFolder, int nMerit)
 {
-  using namespace boost::lambda;
-
-  MediaTreeFolders::iterator it;
-  it = std::find_if(m_lsFolderTree.begin(), m_lsFolderTree.end(),
-                    bind(&MediaTreeFolder::sFolderPath, _1) == mp.path);
-  if (it != m_lsFolderTree.end())
-    it->nMerit = mp.merit;
-}
-
-std::wstring MediaTreeModel::makePathPreferred(const std::wstring &sPath)
-{
-  using namespace boost::filesystem;
-  using namespace boost;
-  using std::wstring;
-
-  // ***************************************************************************
-  // note:
-  // we deal with normal path and UNC path, will erase the filename
-  // ***************************************************************************
-  // if it's a UNC path, then save the prefix: "\\"
-  wstring sPrefix;
-  if (regex_search(sPath, wregex(L"^\\\\\\\\")))
-    sPrefix = L"\\\\";
-
-  wstring sPathResult;
-  if (!sPrefix.empty())
-    sPathResult.assign(sPath.begin() + 2, sPath.end());
-  else
-    sPathResult = sPath;
-
-  // modify the path, let it to be normalized
-  // replace all '/' to '\'
-  sPathResult = regex_replace(sPathResult, wregex(L"/"), std::wstring(L"\\"));
-
-  // replace multi '\' to single '\'
-  sPathResult = regex_replace(sPathResult, wregex(L"\\\\+"), std::wstring(L"\\"));
-
-  // remove the filename in the end
-  if (!is_directory(sPathResult))
-    sPathResult = regex_replace(sPathResult, wregex(L"\\\\[^\\\\]+$"), std::wstring(L"\\"));
-
-  // append slash to the end if the path
-  // after this, the path looks like this: "c:\cjbw1234\test\"
-  if (sPathResult[sPathResult.size() - 1] != L'\\')
-    sPathResult += L"\\";
-
-  // add the prefix
-  sPathResult = sPrefix + sPathResult;
-
-  return sPathResult;
+  TreeIterator itFolder = findFolder(sFolder, true);
+  TreeIterator itEnd;
+  if (itFolder != itEnd)
+  {
+    itFolder->nMerit = nMerit;
+  }
 }

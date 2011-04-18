@@ -15,5 +15,5 @@ public:
 
 private:
   std::wstring m_sLastSearchPath;
-  MediaTreeModel m_treeModel;
+  media_tree::model m_treeModel;
 };
