@@ -3,29 +3,27 @@
 #include "MediaComm.h"
 #include "MediaModel.h"
 
-class MediaTreeModel
+namespace media_tree {
+
+class model
 {
 public:
-  MediaTreeModel();
-  ~MediaTreeModel();
+  typedef MediaTreeFolders::iterator TreeIterator;
 
 public:
-  MediaTreeFolders mediaTreeFolders() const;
+  TreeIterator findFolder(const std::wstring &sPath, bool bCreateIfNotExist = false);
+  MediaTreeFolders& mediaTree();
 
 public:
-  void addFolder(const MediaPath &mp);
-  void addFile(const MediaData &md);
-  void increaseMerit(const std::wstring &sPath);
-  void setNextSpiderInterval(const std::wstring &sPath, time_t tInterval);
-  void saveToDB();
-
-  void splitPath(const std::wstring &sPath, std::vector<std::wstring> &vtResult);
-
-protected:
-  void assignMerit(const MediaPath &mp);
-  std::wstring makePathPreferred(const std::wstring &sPath);
+  void initMerit(const std::wstring &sFolder, int nMerit);
+  void addFolder(const std::wstring &sFolder, bool bIncreaseMerit = false);
+  void addFile(const std::wstring &sFolder, const std::wstring &sFilename);
+  void save2DB();
+  void splitPath(const std::wstring &sPath, std::stack<std::wstring> &skResult);
 
 private:
   static MediaTreeFolders m_lsFolderTree;
   MediaModel       m_model;
 };
+
+} // namespace

@@ -1,6 +1,10 @@
 #pragma once
 
-////////////////////////////////////////////////////////////////////////////////
+#include <boost/filesystem.hpp>
+#include <boost/regex.hpp>
+#include <tcl/tree.h>
+
+// *****************************************************************************
 // MediaData and MediaPath
 struct MediaData
 {
@@ -25,7 +29,8 @@ struct MediaPath
 typedef std::vector<MediaData> MediaDatas;
 typedef std::vector<MediaPath> MediaPaths;
 
-// When search the media, use this to judge if the media should be searched
+// When search the media, 
+// use this to judge if the media should be searched
 typedef struct
 {
   long long uniqueid;
@@ -39,37 +44,104 @@ typedef struct
   int merit;
 } MediaPathCondition;
 
-////////////////////////////////////////////////////////////////////////////////
+// *****************************************************************************
 // Media folder tree related structures
 // time_t's unit is second!!!!!!!!!
-struct MediaTreeRoot
+namespace media_tree {
+
+struct root
 {
-  MediaTreeRoot() {}
 };
 
-struct MediaTreeFile
+struct file
 {
-  MediaTreeFile() : tFileCreateTime(-1) {}
+  file() : tFileCreateTime(-1) {}
 
   std::wstring sFileHash;
   std::wstring sFilename;
   std::wstring sFileUID;  // unique id
+  std::wstring sFileThumbnail;  // thumbnail path
   time_t tFileCreateTime; // -1 indicate invalid
 };
 
-typedef std::list<MediaTreeFile> MediaTreeFiles;
-
-struct MediaTreeFolder
+struct folder
 {
-  MediaTreeFolder() : tFolderCreateTime(-1), tNextSpiderInterval(3), nMerit(0) {}
+  folder() : tFolderCreateTime(-1), tNextSpiderInterval(3), nMerit(0) {}
 
-  std::wstring sFolderPath;  // dir's full path, include backslash
+  std::wstring sFolderPath;  // dir's name, not include backslash
   std::wstring sFolderHash;
   time_t tFolderCreateTime;  // -1 indicate invalid
   time_t tNextSpiderInterval;  // 0 indicate spider can start next loop immediate
   int nMerit;  // 0 is the start value, spider can find this folder earlier than others
 
-  MediaTreeFiles lsFiles;
+  std::list<media_tree::file> lsFiles;
 };
 
-typedef std::list<MediaTreeFolder> MediaTreeFolders;
+inline bool operator<(const folder &left, const folder &right)
+{
+  return left.sFolderPath < right.sFolderPath;
+}
+
+} // namespace
+
+typedef std::list<media_tree::file> MediaTreeFiles;
+typedef tcl::tree<media_tree::folder> MediaTreeFolders;
+
+// *****************************************************************************
+// some helper functions
+inline std::wstring fullFolderPath(const MediaTreeFolders *pFolder)
+{
+  std::wstring sCurFolderPath;
+  const MediaTreeFolders *pCur = pFolder;
+  while (pCur && pCur->parent())
+  {
+    sCurFolderPath = pCur->get()->sFolderPath + L"\\" + sCurFolderPath;
+
+    pCur = pCur->parent();
+  }
+
+  return sCurFolderPath;
+}
+
+inline std::wstring makePathPreferred(const std::wstring &sPath)
+{
+  using namespace boost::filesystem;
+  using namespace boost;
+  using std::wstring;
+
+  // ***************************************************************************
+  // note:
+  // we deal with normal path and UNC path, will erase the filename
+  // ***************************************************************************
+  // if it's a UNC path, then save the prefix: "\\"
+  wstring sPrefix;
+  if (regex_search(sPath, wregex(L"^\\\\\\\\")))
+    sPrefix = L"\\\\";
+
+  wstring sPathResult;
+  if (!sPrefix.empty())
+    sPathResult.assign(sPath.begin() + 2, sPath.end());
+  else
+    sPathResult = sPath;
+
+  // modify the path, let it to be normalized
+  // replace all '/' to '\'
+  sPathResult = regex_replace(sPathResult, wregex(L"/"), std::wstring(L"\\"));
+
+  // replace multi '\' to single '\'
+  sPathResult = regex_replace(sPathResult, wregex(L"\\\\+"), std::wstring(L"\\"));
+
+  // remove the filename in the end
+  if (!is_directory(sPathResult))
+    sPathResult = regex_replace(sPathResult, wregex(L"\\\\[^\\\\]+$"), std::wstring(L"\\"));
+
+  // append slash to the end if the path
+  // after this, the path looks like this: "c:\cjbw1234\test\"
+  if (sPathResult[sPathResult.size() - 1] != L'\\')
+    sPathResult += L"\\";
+
+  // add the prefix
+  sPathResult = sPrefix + sPathResult;
+
+  return sPathResult;
+}

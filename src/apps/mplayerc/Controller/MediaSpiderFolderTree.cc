@@ -66,7 +66,6 @@ void MediaSpiderFolderTree::_Thread()
   using namespace boost::lambda;
   using std::wstring;
   using std::vector;
-  using std::list;
 
   while (true)
   {
@@ -74,24 +73,37 @@ void MediaSpiderFolderTree::_Thread()
     if (_Exit_state(0))
       return;
 
+    // 只能先保存节点指针到vector里再排序了
+    MediaTreeFolders &mediaTree = m_treeModel.mediaTree();
+
+    typedef vector<MediaTreeFolders::pre_order_iterator> TreeIteratorVector;
+    TreeIteratorVector vtIteratorTree;
+    MediaTreeFolders::pre_order_iterator itTreeIterator = mediaTree.pre_order_begin();
+    while (itTreeIterator != mediaTree.pre_order_end())
+    {
+      vtIteratorTree.push_back(itTreeIterator);
+      ++itTreeIterator;
+    }
+
     // sort the path according the merit by descending order
-    MediaTreeFolders treeFolders = m_treeModel.mediaTreeFolders();
-    treeFolders.sort(bind(&MediaTreeFolder::nMerit, _1) > bind(&MediaTreeFolder::nMerit, _2));
+    std::sort(vtIteratorTree.begin(), vtIteratorTree.end(), 
+              bind(&media_tree::folder::nMerit, *_1) > bind(&media_tree::folder::nMerit, *_2));
 
     // search the media files
-    MediaTreeFolders::const_iterator it = treeFolders.begin();
+    TreeIteratorVector::iterator it = vtIteratorTree.begin();
     time_t tCur = ::time(0);
-    while (it != treeFolders.end())
+    while (it != vtIteratorTree.end())
     {
       // see if need to be stop
       if (_Exit_state(0))
         return;
 
       // search the path for media files
-      if (it->tNextSpiderInterval == 0)
-        Search(it->sFolderPath);
-      else if (((tCur - it->tFolderCreateTime) % it->tNextSpiderInterval) == 0)
-        Search(it->sFolderPath);
+      std::wstring sFullPath = fullFolderPath(it->node());
+      if ((*it)->tNextSpiderInterval == 0)
+        Search(sFullPath);
+      else if (((tCur - (*it)->tFolderCreateTime) % (*it)->tNextSpiderInterval) == 0)
+        Search(sFullPath);
 
       ++it;
     }
@@ -126,17 +138,18 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
   {
     // see if need to be stop
     if (_Exit_state(0))
-      return;  
+      return;
 
-    if (is_regular_file(itCur->path()) && IsSupportExtension(itCur->path().wstring()))
+    if (!is_directory(itCur->path()) && IsSupportExtension(itCur->path().wstring()))
     {
       // add it to the folder tree
+      m_treeModel.addFile(sFolder, itCur->path().filename().wstring());
+
+      // add it to the media center for appending
       MediaData md;
       md.path = sFolder;
       md.filename = itCur->path().filename().wstring();
-      m_treeModel.addFile(md);
 
-      // add it to the media center for appending
       MediaCenterController::GetInstance()->AddNewFoundData(md);
 
       // notify this change to main frame window
@@ -175,7 +188,7 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
         if (_Exit_state(0))
           return;
         
-        if (is_regular_file(itSubCur->path()) && IsSupportExtension(itSubCur->path().wstring()))
+        if (!is_directory(itSubCur->path()) && IsSupportExtension(itSubCur->path().wstring()))
         {
           // Note: do not add it to the folder tree
           //// add it to the folder tree
@@ -183,6 +196,7 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
           md.path = itSubCur->path().parent_path().wstring();
           md.path = regex_replace(md.path, wregex(L"\\\\*$"), L"\\\\");
           md.filename = itSubCur->path().filename().wstring();
+
           //m_treeModel.addFile(md);
 
           // add it to the media center for appending

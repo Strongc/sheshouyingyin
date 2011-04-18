@@ -13,7 +13,10 @@ MediaCenterController::MediaCenterController()
   MediaPaths::iterator it;
   m_model.FindAll(mps);
   for (it = mps.begin(); it != mps.end(); ++it)
-    m_treeModel.addFolder(*it);
+  {
+    m_treeModel.addFolder(it->path);
+    m_treeModel.initMerit(it->path, it->merit);
+  }
 
   // connect signals and slots
   m_blocklist.m_sigPlayback.connect(boost::bind(&MediaCenterController::HandlePlayback, this, _1));
@@ -28,23 +31,14 @@ void MediaCenterController::Playback(std::wstring file)
   if (!m_spider.IsSupportExtension(file))
     return;
 
-  MediaPath mp;
-  mp.path = file;
-  m_treeModel.addFolder(mp);
-  m_treeModel.increaseMerit(mp.path);
+  m_treeModel.addFolder(file, true);
 
   std::wstring name(::PathFindFileName(file.c_str()));
   MediaFindCondition mc = {0, name};
   MediaData mdc;
   m_model.FindOne(mdc, mc);
   if (mdc.uniqueid == 0)
-  {
-    MediaData md;
-    md.path = file;
-    md.filename = name;
-
-    m_treeModel.addFile(md);
-  }
+    m_treeModel.addFile(file, name);
 }
 
 void MediaCenterController::SetFrame(HWND hwnd)
@@ -68,7 +62,7 @@ void MediaCenterController::SpiderStop()
 {
   m_spider._Stop();
   m_checkDB._Stop();
-  m_treeModel.saveToDB();
+  m_treeModel.save2DB();
 }
 
 void MediaCenterController::AddNewFoundData(const MediaData &md)
