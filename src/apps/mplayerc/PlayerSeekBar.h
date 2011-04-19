@@ -24,6 +24,7 @@
 #include "SUIButton.h"
 // CPlayerSeekBar
 #include "SeekBarTip.h"
+#include "TimeBmpManage.h"
 
 class CPlayerSeekBar : public CDialogBar
 {
@@ -37,6 +38,7 @@ private:
 
   BITMAP m_curbm;
   BITMAP m_rmnbm;
+  TimeBmpManage m_tbmn;
 	
 	void MoveThumb(CPoint point);
 	void SetPosInternal(__int64 pos);

@@ -41,6 +41,7 @@ PlayerPreference::PlayerPreference(void):
   m_map_strvar[STRVAR_SUBTITLE_SAVE_CUSTOMPATH] = GetProfileString(L"Settings", L"SubtitleSaveFolder", L"");  // subtitle save folder
 
   m_map_strvar[STRVAR_AD] = GetProfileString(L"Settings", L"Ad", L"");   // ad
+  m_map_strvar[STRVAR_TIMEBMP_TYPE] = GetProfileString(L"Settings", L"TimeBmpType", L"Display_TimeLeft");
 }
 
 void PlayerPreference::Update()
@@ -68,6 +69,7 @@ void PlayerPreference::Update()
 
   WriteProfileString(L"Settings", L"LastSpiderPath", m_map_strvar[STRVAR_LASTSPIDERPATH].c_str());  // last spider path
   WriteProfileString(L"Settings", L"Ad", m_map_strvar[STRVAR_AD].c_str());
+  WriteProfileString(L"Settings", L"TimeBmpType", m_map_strvar[STRVAR_TIMEBMP_TYPE].c_str());
 }
 
 PlayerPreference::~PlayerPreference(void)

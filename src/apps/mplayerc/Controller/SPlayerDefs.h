@@ -33,6 +33,7 @@
 #define STRVAR_SUBTITLE_SAVE_CUSTOMPATH 1009    // "custom path"
 
 #define STRVAR_AD                   1010        // string to get ads
+#define STRVAR_TIMEBMP_TYPE         1011        // "Display_TimeLeft", "Display_TimeTotal", "Display_Power"
 
 // string array variables
 #define STRARRAY_PLAYLIST           1000

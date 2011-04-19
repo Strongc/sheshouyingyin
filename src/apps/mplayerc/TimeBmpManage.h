@@ -6,7 +6,8 @@ public:
   TimeBmpManage(void);
   ~TimeBmpManage(void);
 
-  BITMAP CreateTimeBmp(CDC& dc, BOOL bRemain);
+  BITMAP CreateLeftTimeBmp(CDC& dc);
+  BITMAP CreateRightTimeBmp(CDC& dc);
 
   CDC* CreateBmp(CDC& dc, BITMAP& bm, std::wstring bmpname, HBITMAP oldbmp);
 
@@ -15,9 +16,12 @@ public:
   void SetPlaytime(REFERENCE_TIME rTimeCur, REFERENCE_TIME rTimeStop);
 
   void ParseDigital(BYTE time, std::wstring& firststr, std::wstring& secondstr);
+  void ToggleDisplayType();
+  int GetRightTimeBmpWidth();
 
 private:
   DVD_HMSF_TIMECODE m_tc;
-  HBITMAP           m_oldbmp;
+  DVD_HMSF_TIMECODE m_tcStop;
   BOOL              m_bshortmovie;
+  int               m_nRightTimeBmpWidth;
 };

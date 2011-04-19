@@ -277,7 +277,6 @@ void CPlayerSeekBar::OnPaint()
   CDC dcrmn;
   CBitmap cbmpcur, cbmprmn;
   HBITMAP oldbmpcur, oldbmprmn;
-  TimeBmpManage tbmn;
   if (pFrame && pFrame->IsSomethingLoaded())
   {
     dccur.CreateCompatibleDC(&dc);
@@ -288,12 +287,11 @@ void CPlayerSeekBar::OnPaint()
     cbmprmn.Attach(CreateDigitalDIB());
     oldbmprmn = (HBITMAP)dcrmn.SelectObject(cbmprmn);
 
-    TimeBmpManage tbmn;
-    tbmn.SetPlaytime(m_posreal, m_stop);
-    m_curbm = tbmn.CreateTimeBmp(dccur, FALSE);
+    m_tbmn.SetPlaytime(m_posreal, m_stop);
+    m_curbm = m_tbmn.CreateLeftTimeBmp(dccur);
 
-    tbmn.SetPlaytime(m_stop - m_posreal, m_stop);
-    m_rmnbm = tbmn.CreateTimeBmp(dcrmn, TRUE);
+    m_tbmn.SetPlaytime(m_stop - m_posreal, m_stop);  // set the playtime, minus or full
+    m_rmnbm = m_tbmn.CreateRightTimeBmp(dcrmn);     // create the bitmap according to the playtime
   }
   else
   {
@@ -540,6 +538,12 @@ void CPlayerSeekBar::OnLButtonDown(UINT nFlags, CPoint point)
 
 void CPlayerSeekBar::OnLButtonUp(UINT nFlags, CPoint point)
 {
+  // toggle the display type of the right time area
+  CRect rcClient;
+  GetClientRect(&rcClient);
+  if (rcClient.right - point.x <= m_tbmn.GetRightTimeBmpWidth())
+    m_tbmn.ToggleDisplayType();
+
 	ReleaseCapture();
 
 	CDialogBar::OnLButtonUp(nFlags, point);
