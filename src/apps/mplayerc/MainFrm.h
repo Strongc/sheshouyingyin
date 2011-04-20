@@ -757,6 +757,8 @@ public:
   afx_msg void OnSetsnapshotpath();
   afx_msg void OnMovieShare();
 
+  afx_msg void OnFilledUp4pHash(); // response to data filled up
+
   /*NEW UI*/
   LRESULT OnNcPaint( WPARAM wParam, LPARAM lParam );
   LRESULT OnNcActivate( WPARAM wParam, LPARAM lParam);
@@ -768,8 +770,6 @@ public:
   LRESULT OnSuggestVolume(  WPARAM wParam, LPARAM lParam);
   LRESULT OnFailedInDXVA(  WPARAM wParam, LPARAM lParam);
   LRESULT OnImeSetContext(  WPARAM wParam, LPARAM lParam);
-  void OnFilledUp4pHash(); // response to data filled up
-  struct phashblock m_phashblock; 
 
   afx_msg void OnKillFocus(CWnd* pNewWnd);
   afx_msg void OnChangebackground();
