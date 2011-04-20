@@ -13,14 +13,13 @@
 #include "../FGManager.h"
 
 #define FREE_PHASHMEM() \
-  m_pbPtr->phashdata.clear();\
-  m_pbPtr->phashdata.resize(0);
+  m_phashblock.phashdata.clear(); \
+  m_phashblock.phashdata.resize(0);
 
 #define PHASH_SERVER "tcp://192.168.10.33:5000"
 
 pHashController::pHashController(void) :
   m_buffer(NULL),
-  m_pbPtr(NULL),
   m_sr(8000),
   m_phashswitcher(0),
   m_bufferlen(0),
@@ -50,33 +49,14 @@ void pHashController::SetSwitchStatus(int status)
   m_phashswitcher = status;
 }
 
-HRESULT pHashController::SetpHashData(struct phashblock* pbPtr)
-{
-  m_pbPtr = pbPtr;
-
-  if (!m_pbPtr)
-  {
-    Logging(L"m_pbPtr is invalid\n");
-    return S_FALSE;
-  }
-  return S_OK;
-}
-
 BOOL pHashController::IsSeek()
 {
-  if(m_pASF)
-    return  m_pASF->IsSeek(); 
+  return m_phashblock.isseek; 
 }
 
-void pHashController::SetSeek(int seekflag)
-{
-  if(m_pASF)
-  {
-    if (m_pASF->SetSeek(seekflag) == S_OK)
-      Logging(L"pASF->SetSeek OK");
-    else
-      Logging(L"pASF->SetSeek Failed");
-  }
+void pHashController::SetSeek(BOOL seekflag)
+{  
+  m_phashblock.isseek = seekflag;
 }
 
 void pHashController::_Thread()
@@ -101,25 +81,25 @@ void pHashController::_Thread()
 
 HRESULT pHashController::_thread_MonopHash()
 {
-  int buflen = m_pbPtr->phashdata.size();
+  int buflen = m_phashblock.phashdata.size();
   float *buf = new float[buflen];
 
-  int samplebyte = (m_pbPtr->format.wBitsPerSample >> 3);                          // the size of one sample in Byte unit
-  int nsample = m_pbPtr->phashdata.size()/m_pbPtr->format.nChannels/samplebyte;    // each channel sample amount
-  int samples = nsample * m_pbPtr->format.nChannels;                               // all channels sample amount
+  int samplebyte = (m_phashblock.format.wBitsPerSample >> 3);                          // the size of one sample in Byte unit
+  int nsample = m_phashblock.phashdata.size()/m_phashblock.format.nChannels/samplebyte;    // each channel sample amount
+  int samples = nsample * m_phashblock.format.nChannels;                               // all channels sample amount
 
   // input buffer for signal
-  unsigned char* indata = &m_pbPtr->phashdata[0];
+  unsigned char* indata = &m_phashblock.phashdata[0];
 
   // Making all data into float type 
-  if (SampleToFloat(indata, buf, samples, m_pbPtr->type) == FALSE)
+  if (SampleToFloat(indata, buf, samples, m_phashblock.type) == FALSE)
   {
     delete [] buf;
     FREE_PHASHMEM();
     return S_FALSE;
   }
   
-  int chns = m_pbPtr->format.nChannels;
+  int chns = m_phashblock.format.nChannels;
   float* tmpmem = new float[nsample];
   
   for (int n = 0; n < chns; ++n)
@@ -136,7 +116,7 @@ HRESULT pHashController::_thread_MonopHash()
     fs.close();
     float* outmem = NULL;
     int outnums;
-    DownSample(tmpmem, nsample, m_sr, m_pbPtr->format.nSamplesPerSec, &outmem, outnums);
+    DownSample(tmpmem, nsample, m_sr, m_phashblock.format.nSamplesPerSec, &outmem, outnums);
     m_hashes[m_hashcount] = ph_audiohash(outmem, outnums, m_sr, m_phashlen);
     m_lens[m_hashcount] = m_phashlen;
 
@@ -180,18 +160,18 @@ void pHashController::_thread_GetAudiopHash()
 {
   int count = g_phash_collectcfg[CFG_PHASHTIMES]*2-1;
   int step = g_phash_collectcfg[CFG_PHASHTIMES];
-  if (m_pbPtr->phashcnt <= count)
+  if (m_phashblock.phashcnt <= count)
   {
-    int i = m_pbPtr->phashcnt;
+    int i = m_phashblock.phashcnt;
     m_hashes[i] = ph_audiohash(m_buffer, m_bufferlen, m_sr, m_phashlen);
     m_lens[i] = m_phashlen;
-    Logging(L"m_pbPtr->phashcnt:%d, length = %d, hashes[0]:%X, m_phashlen:%d",i, m_lens[i], m_hashes[i][0], m_phashlen);
+    Logging(L"m_phashblock.phashcnt:%d, length = %d, hashes[0]:%X, m_phashlen:%d",i, m_lens[i], m_hashes[i][0], m_phashlen);
     free(m_buffer);
     m_buffer = NULL;
     m_bufferlen = 0;
   }
 
-  if (m_pbPtr->phashcnt == count)
+  if (m_phashblock.phashcnt == count)
   {
       int nc;
       double* cs;
@@ -230,32 +210,46 @@ void pHashController::_thread_GetAudiopHash()
       free(m_lens);
       free(m_hashes);
   }
-  m_pbPtr->prevcnt = m_pbPtr->phashcnt;
-  m_pbPtr->phashcnt++;
-  if (m_pbPtr->phashcnt > count)
-    m_pbPtr->phashcnt = 0;
+  m_phashblock.prevcnt = m_phashblock.phashcnt;
+  m_phashblock.phashcnt++;
+  if (m_phashblock.phashcnt > count)
+    m_phashblock.phashcnt = 0;
 }
-void pHashController::SetpASF(CComQIPtr<IAudioSwitcherFilter> pASF)
+void pHashController::HookData(CComQIPtr<IAudioSwitcherFilter> pASF)
 {
-  m_pASF = pASF;
+  pASF->SetpHashControl(&m_phashblock);
 }
 
-CComQIPtr<IAudioSwitcherFilter> pHashController::GetpASF()
+void pHashController::Init(CComQIPtr<IAudioSwitcherFilter> pASF, std::wstring m_fnCurPlayingFile)
 {
-  return m_pASF;
+  if (pASF)
+  {
+    if (pHashController::GetInstance()->GetSwitchStatus() != pHashController::NOCALCHASH)
+    {
+      // Set phash when open a file
+      int result;
+      IspHashInNeed(m_fnCurPlayingFile.c_str(), result);
+      HookData(pASF);
+      int state = (result == 1) ? pHashController::INSERT : pHashController::LOOKUP;
+      SetSwitchStatus(state);
+      Logging(L"result:%d, hashctrl->SetpASF, pASF->SetpHashControl, pASF->SetSeek, hashctrl->SetSwitchStatus", result); 
+    }
+    else
+      SetSwitchStatus(pHashController::NOCALCHASH);
+  }
 }
 
 void pHashController::_thread_GetpHashAndSend(int cmd)
 {
   int count = g_phash_collectcfg[CFG_PHASHTIMES] - 1;
-  Logging("phashcnt:%d", m_pbPtr->phashcnt);
-  if (m_pbPtr->phashcnt <= count)
+  Logging("phashcnt:%d", m_phashblock.phashcnt);
+  if (m_phashblock.phashcnt <= count)
   { 
-    int i = m_pbPtr->phashcnt;
+    int i = m_phashblock.phashcnt;
     m_phashframe.cmd = cmd;
     m_phashframe.amount = g_phash_collectcfg[CFG_PHASHTIMES];
     m_phashframe.id = i;
-    if (IsSeek() == true)
+    if (IsSeek())
     {
       m_phashframe.earlyendflag = 1;
       m_phashframe.nbframes = 0;
@@ -267,7 +261,7 @@ void pHashController::_thread_GetpHashAndSend(int cmd)
       m_phashframe.earlyendflag = 0;
       m_hashes[i] = ph_audiohash(m_buffer, m_bufferlen, m_sr, m_phashlen);
       m_lens[i] = m_phashlen;
-      Logging(L"m_pbPtr->phashcnt: %d, length: %d, hashes[0]: %X, m_phashlen: %d", i, m_lens[i], m_hashes[i][0], m_phashlen);
+      Logging(L"m_phashblock.phashcnt: %d, length: %d, hashes[0]: %X, m_phashlen: %d", i, m_lens[i], m_hashes[i][0], m_phashlen);
       m_phashframe.nbframes = m_lens[i];
       m_phashframe.phash = m_hashes[i];
     }
@@ -283,11 +277,11 @@ void pHashController::_thread_GetpHashAndSend(int cmd)
     m_lens[i] = 0;
   }
 
-  m_pbPtr->prevcnt = m_pbPtr->phashcnt;
-  m_pbPtr->phashcnt++;
-  if (m_pbPtr->phashcnt > count)
+  m_phashblock.prevcnt = m_phashblock.phashcnt;
+  m_phashblock.phashcnt++;
+  if (m_phashblock.phashcnt > count)
   {
-    m_pbPtr->phashcnt = 0;
+    m_phashblock.phashcnt = 0;
     memset(m_hashes, 0, g_phash_collectcfg[CFG_PHASHTIMES]*sizeof(uint32_t));
     memset(m_lens, 0, g_phash_collectcfg[CFG_PHASHTIMES]*sizeof(int));
   }
@@ -344,17 +338,17 @@ BOOL pHashController::SampleToFloat(const unsigned char* const indata, float* ou
   switch (type)
   {
    // PCM8
-  case PCM8:
+  case CAudioSwitcherFilter::WETYPE_PCM8:
     for (samplecnt = 0; samplecnt < samples; samplecnt++)      
       outdata[samplecnt] = ((float)(((BYTE*)indata)[samplecnt]) -0x7f) / 0x80; //UCHAR_MAX
     break;
    // PCM16
-  case PCM16:
+  case CAudioSwitcherFilter::WETYPE_PCM16:
     for (samplecnt = 0; samplecnt < samples; samplecnt++)
       outdata[samplecnt] = (float)(((short*)indata)[samplecnt])/(float)SHRT_MAX;
     break;  
    // PCM24
-  case PCM24:
+  case CAudioSwitcherFilter::WETYPE_PCM24:
     for (samplecnt = 0; samplecnt < samples; samplecnt++)
     {
       memcpy(((BYTE*)&tmp)+1, &indata[3*samplecnt], 3);  
@@ -362,17 +356,17 @@ BOOL pHashController::SampleToFloat(const unsigned char* const indata, float* ou
     }
     break;
    // PCM32
-  case PCM32:
+  case CAudioSwitcherFilter::WETYPE_PCM32:
     for (samplecnt = 0; samplecnt < samples; samplecnt++)
       outdata[samplecnt] = (float)(((int*)indata)[samplecnt]);
     break;
     // FPCM32
-  case FPCM32:
+  case CAudioSwitcherFilter::WETYPE_FPCM32:
     for (samplecnt = 0; samplecnt < samples; samplecnt++)
       outdata[samplecnt] = (float)(((float*)indata)[samplecnt]);
     break;
     // FPCM64: did not have it tested
-  case FPCM64: 
+  case CAudioSwitcherFilter::WETYPE_FPCM64: 
     for (samplecnt = 0; samplecnt < samples; samplecnt++)
       outdata[samplecnt] = (float)(((double*)indata)[samplecnt]);
     break;
@@ -387,18 +381,18 @@ BOOL pHashController::SampleToFloat(const unsigned char* const indata, float* ou
 // mix into one channel and reduced samplerate to 8000HZ for further cal
 HRESULT pHashController::_thread_DigestpHashData()
 {
-  int buflen = m_pbPtr->phashdata.size();
+  int buflen = m_phashblock.phashdata.size();
   float *buf = new float[buflen];
 
-  int samplebyte = (m_pbPtr->format.wBitsPerSample >> 3);                             // the size of one sample in Byte unit
-  int nsample = m_pbPtr->phashdata.size()/m_pbPtr->format.nChannels/samplebyte;       // each channel sample amount
-  int samples = nsample * m_pbPtr->format.nChannels;                                  // all channels sample amount
+  int samplebyte = (m_phashblock.format.wBitsPerSample >> 3);                             // the size of one sample in Byte unit
+  int nsample = m_phashblock.phashdata.size()/m_phashblock.format.nChannels/samplebyte;       // each channel sample amount
+  int samples = nsample * m_phashblock.format.nChannels;                                  // all channels sample amount
   
   // alloc input buffer for signal
-  unsigned char* indata = &m_pbPtr->phashdata[0];
+  unsigned char* indata = &m_phashblock.phashdata[0];
 
   // Making all data into float type 
-  if (SampleToFloat(indata, buf, samples, m_pbPtr->type) == FALSE)
+  if (SampleToFloat(indata, buf, samples, m_phashblock.type) == FALSE)
   {
     delete [] buf;
     FREE_PHASHMEM();
@@ -410,9 +404,9 @@ HRESULT pHashController::_thread_DigestpHashData()
   }
 
   // Mix as Mono channel
-  int MonoLen = buflen/m_pbPtr->format.nChannels;
+  int MonoLen = buflen/m_phashblock.format.nChannels;
   float* MonoChannelBuf = new float[MonoLen];
-  if (MixChannels(buf, samples, m_pbPtr->format.nChannels, nsample, MonoChannelBuf) == TRUE)
+  if (MixChannels(buf, samples, m_phashblock.format.nChannels, nsample, MonoChannelBuf) == TRUE)
   {
     delete[] buf;
     FREE_PHASHMEM();
@@ -428,7 +422,7 @@ HRESULT pHashController::_thread_DigestpHashData()
   // Samplerate to 8kHz 
   float* outmem = NULL;
   int outnums = 0;
-  if (DownSample(MonoChannelBuf, nsample, m_sr, m_pbPtr->format.nSamplesPerSec, &outmem, outnums) == TRUE)
+  if (DownSample(MonoChannelBuf, nsample, m_sr, m_phashblock.format.nSamplesPerSec, &outmem, outnums) == TRUE)
   {
     delete[] MonoChannelBuf;
     m_buffer = outmem;
