@@ -115,9 +115,7 @@ CAudioSwitcherFilter::CAudioSwitcherFilter(LPUNKNOWN lpunk, HRESULT* phr)
 	, m_tPlayedtime(0)
 	, m_dRate(1.0)
 	, m_fUpSampleTo(0)
-  , m_pHashFlag(TRUE)
 	, m_iSS(0)
-  , m_isSeek(false)
 {
 	//memset(m_pSpeakerToChannelMap, 0, sizeof(m_pSpeakerToChannelMap));
 	memset(m_pChannelNormalize2, 0, sizeof(m_pChannelNormalize2));
@@ -323,114 +321,23 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
 	int iWePCMType = WETYPE_UNKNOWN;
 
   if(fPCM && wfe->wBitsPerSample == 8) 
-  {
     iWePCMType = WETYPE_PCM8;
-    m_pHashPtr->type = PCM8;
-  }
 	else if(fPCM && wfe->wBitsPerSample == 16) 
-  {
     iWePCMType = WETYPE_PCM16;
-    m_pHashPtr->type = PCM16;
-  }
   else if(fPCM && wfe->wBitsPerSample == 24) 
-  {
     iWePCMType = WETYPE_PCM24;
-    m_pHashPtr->type = PCM24;
-  }
 	else if(fPCM && wfe->wBitsPerSample == 32) 
-  {
     iWePCMType = WETYPE_PCM32;
-    m_pHashPtr->type = PCM32;
-  }
-	else if(fFloat && wfe->wBitsPerSample == 32) 
-  {
+	else if(fFloat && wfe->wBitsPerSample == 32)   
     iWePCMType = WETYPE_FPCM32;
-    m_pHashPtr->type = FPCM32;
-  }
 	else if(fFloat && wfe->wBitsPerSample == 64)
-  {
     iWePCMType = WETYPE_FPCM64;
-    m_pHashPtr->type = FPCM64;
-  }
 
 	int lTotalInputChannels = wfe->nChannels;
 	int lTotalOutputChannels =  wfeout->nChannels;
   
-
-  // MAIN Strategy: if time is Y mins ,the following X secs is what we want, pass them to another function
-  //          Then get downsampled and mixed, pass to phash cal function
-  //          Then send the result to get compared and return a confidence value(0~1) which shows the similarity of two samples
-
-  REFERENCE_TIME rtDurHash = (10000000i64) * g_phash_collectcfg[CFG_PHASHDATASECS];
-  
-  // In this part, we use a array g_phash_collectcfg[] to do configuration. 
-  // The first element of the array is the times of phash
-  // The second element of the array is lasting time in sec unit
-  // The following elements are the start time
-  // You can find cfg array in Model/pHashModel.h
-  int timepos = (m_pHashPtr->phashcnt%g_phash_collectcfg[CFG_PHASHTIMES]) + 1;
-  m_rtStartpHash = (10000000i64)*g_phash_collectcfg[CFG_PHASHSTARTTIME+timepos];    // collection start time
-  m_rtEndpHash = m_rtStartpHash + rtDurHash;                                        // collection end time
-
-  if (m_pHashPtr->prevcnt != m_pHashPtr->phashcnt)
-  {
-    m_pHashPtr->prevcnt = m_pHashPtr->phashcnt;
-  }
-
-  m_pHashPtr->format = *wfe;
-  if(SUCCEEDED(pIn->GetTime(&rtStart, &rtStop)))
-  {
-    // if user did seek, give up phash this time and later ones.
-    if (IsSeek() == true && m_pHashFlag == true)
-    {
-      m_pHashFlag = false;
-      PostMessage(AfxGetApp()->m_pMainWnd->m_hWnd, WM_COMMAND, ID_PHASH_COLLECTEND, NULL);
-    }
-    
-    if (IsSeek() == false)
-    {
-
-      if (rtStart < m_rtStartpHash && (rtDur + rtStart) > m_rtStartpHash 
-        && (rtDur + rtStart) < m_rtEndpHash)                                        // the first part of data
-      {
-        int firstlen = 0;
-        BYTE* dataout = pDataIn;
-        AlignDataBlock(pDataIn, rtStart, m_rtStartpHash,
-          m_pHashPtr->format.nChannels, m_pHashPtr->format.wBitsPerSample,
-          m_pHashPtr->format.nSamplesPerSec, dataout, firstlen);
-        FillData4pHash(dataout, (pIn->GetActualDataLength()-firstlen));
-        REFERENCE_TIME Dur = 10000000i64*(pIn->GetActualDataLength()-firstlen)/wfe->nSamplesPerSec/wfe->nChannels/(wfe->wBitsPerSample>>3);
-      }
-      else if (rtStart == m_rtStartpHash)
-      {
-        FillData4pHash(pDataIn, pIn->GetActualDataLength());
-      }
-      else if (rtStart == m_rtEndpHash)
-      {
-        PostMessage(AfxGetApp()->m_pMainWnd->m_hWnd, WM_COMMAND, ID_PHASH_COLLECTEND, NULL);
-      }
-      else if ((rtDur + rtStart) > m_rtEndpHash && rtStart < m_rtEndpHash 
-        && rtStart > m_rtStartpHash )                                        // the last part of data
-      { 
-        int lastlen = 0;
-        BYTE* dataout;
-        dataout = pDataIn;
-        AlignDataBlock(pDataIn, rtStart, m_rtEndpHash, m_pHashPtr->format.nChannels, 
-          m_pHashPtr->format.wBitsPerSample, m_pHashPtr->format.nSamplesPerSec, dataout, lastlen);
-        FillData4pHash(pDataIn, lastlen);
-
-        REFERENCE_TIME Dur = 10000000i64*(lastlen)/wfe->nSamplesPerSec/wfe->nChannels/(wfe->wBitsPerSample>>3);
-        // send a message and finish phash
-        PostMessage(AfxGetApp()->m_pMainWnd->m_hWnd, WM_COMMAND, ID_PHASH_COLLECTEND, NULL);
-      }
-      else if (rtStart > m_rtStartpHash && (rtDur + rtStart) < m_rtEndpHash )       // the middle part of data
-      {
-        FillData4pHash(pDataIn, pIn->GetActualDataLength());
-      }
-
-    }
-    
-  }
+  SetTypeOfPCM(iWePCMType);
+  FPCollect(pIn, pDataIn, wfe, rtStart, rtStop, rtDur);
 
 	SVP_LogMsg5(L"Chan %d %d %d %d %d %d %d %d %d",lTotalInputChannels ,lTotalOutputChannels , wfe->nSamplesPerSec , wfeout->nSamplesPerSec, wfe->wBitsPerSample, wfeout->wBitsPerSample
 		,wfe->nBlockAlign , wfeout->nBlockAlign, pIn->GetActualDataLength());
@@ -1384,8 +1291,23 @@ STDMETHODIMP CAudioSwitcherFilter::SetEQControl ( int lEQBandControlPreset, floa
 
 }
 
+STDMETHODIMP CAudioSwitcherFilter::SetpHashControl(PHASHBLOCK* pbPtr)
+{
+  FingerPrint::SetpHashControl(pbPtr);
+  return S_OK;
+}
+
+FingerPrint::FingerPrint():
+   m_pHashFlag(TRUE)
+{
+
+}
+FingerPrint::~FingerPrint()
+{
+
+}
 // phash data filler
-STDMETHODIMP CAudioSwitcherFilter::FillData4pHash(BYTE* pDataIn, long BufferLen)
+HRESULT FingerPrint::FillData4pHash(BYTE* pDataIn, long BufferLen)
 {
   if (m_pHashPtr == NULL)
     return S_OK;
@@ -1395,14 +1317,13 @@ STDMETHODIMP CAudioSwitcherFilter::FillData4pHash(BYTE* pDataIn, long BufferLen)
   return S_OK;
 }
 
-STDMETHODIMP CAudioSwitcherFilter::SetpHashControl(struct phashblock* pbPtr)
+void FingerPrint::SetpHashControl(PHASHBLOCK* pbPtr)
 {
   m_pHashPtr = pbPtr;
-  return S_OK;
 }
 
 // Get the exact time pointer of the block and the len after start point 
-void CAudioSwitcherFilter::AlignDataBlock(BYTE* datain, REFERENCE_TIME& start, REFERENCE_TIME& rttime, 
+void FingerPrint::AlignDataBlock(BYTE* datain, REFERENCE_TIME& start, REFERENCE_TIME& rttime, 
                                           int channels, int bitsPerSample, int samplePerSec,
                                           BYTE* dataout, int& len)
 {
@@ -1416,13 +1337,83 @@ void CAudioSwitcherFilter::AlignDataBlock(BYTE* datain, REFERENCE_TIME& start, R
   dataout = datain + len;
 }
 
-STDMETHODIMP CAudioSwitcherFilter::SetSeek(BOOL isSeek)
+void FingerPrint::FPCollect(IMediaSample* pIn, BYTE* pDataIn, WAVEFORMATEX* wfe, 
+                          REFERENCE_TIME& rtStart, REFERENCE_TIME& rtStop, REFERENCE_TIME& rtDur)
 {
-  m_isSeek = isSeek;
-  return S_OK;
+  // MAIN Strategy: if time is Y mins ,the following X secs is what we want, pass them to another function
+  //          Then get downsampled and mixed, pass to phash cal function
+  //          Then send the result to get compared and return a confidence value(0~1) which shows the similarity of two samples
+
+  REFERENCE_TIME rtDurHash = (10000000i64) * g_phash_collectcfg[CFG_PHASHDATASECS];
+
+  // In this part, we use a array g_phash_collectcfg[] to do configuration. 
+  // The first element of the array is the times of phash
+  // The second element of the array is lasting time in sec unit
+  // The following elements are the start time
+  // You can find cfg array in Model/pHashModel.h
+  int timepos = (m_pHashPtr->phashcnt%g_phash_collectcfg[CFG_PHASHTIMES]) + 1;
+  m_rtStartpHash = (10000000i64)*g_phash_collectcfg[CFG_PHASHSTARTTIME+timepos];    // collection start time
+  m_rtEndpHash = m_rtStartpHash + rtDurHash;                                        // collection end time
+
+  if (m_pHashPtr->prevcnt != m_pHashPtr->phashcnt)
+  {
+    m_pHashPtr->prevcnt = m_pHashPtr->phashcnt;
+  }
+
+  m_pHashPtr->format = *wfe;
+  if(SUCCEEDED(pIn->GetTime(&rtStart, &rtStop)))
+  {
+    // if user did seek, give up phash this time and later ones.
+    if (m_pHashPtr->isseek && m_pHashFlag)
+    {
+      m_pHashFlag = false;
+      PostMessage(AfxGetApp()->m_pMainWnd->m_hWnd, WM_COMMAND, ID_PHASH_COLLECTEND, NULL);
+    }
+
+    if (m_pHashPtr->isseek == FALSE)
+    {
+      if (rtStart < m_rtStartpHash && (rtDur + rtStart) > m_rtStartpHash 
+        && (rtDur + rtStart) < m_rtEndpHash)                                        // the first part of data
+      {
+        int firstlen = 0;
+        BYTE* dataout = pDataIn;
+        AlignDataBlock(pDataIn, rtStart, m_rtStartpHash,
+          m_pHashPtr->format.nChannels, m_pHashPtr->format.wBitsPerSample,
+          m_pHashPtr->format.nSamplesPerSec, dataout, firstlen);
+        FillData4pHash(dataout, (pIn->GetActualDataLength()-firstlen));
+        REFERENCE_TIME Dur = 10000000i64*(pIn->GetActualDataLength()-firstlen)/wfe->nSamplesPerSec/wfe->nChannels/(wfe->wBitsPerSample>>3);
+      }
+      else if (rtStart == m_rtStartpHash)
+      {
+        FillData4pHash(pDataIn, pIn->GetActualDataLength());
+      }
+      else if (rtStart == m_rtEndpHash)
+      {
+        PostMessage(AfxGetApp()->m_pMainWnd->m_hWnd, WM_COMMAND, ID_PHASH_COLLECTEND, NULL);
+      }
+      else if ((rtDur + rtStart) > m_rtEndpHash && rtStart < m_rtEndpHash 
+        && rtStart > m_rtStartpHash )                                        // the last part of data
+      { 
+        int lastlen = 0;
+        BYTE* dataout;
+        dataout = pDataIn;
+        AlignDataBlock(pDataIn, rtStart, m_rtEndpHash, m_pHashPtr->format.nChannels, 
+          m_pHashPtr->format.wBitsPerSample, m_pHashPtr->format.nSamplesPerSec, dataout, lastlen);
+        FillData4pHash(pDataIn, lastlen);
+
+        REFERENCE_TIME Dur = 10000000i64*(lastlen)/wfe->nSamplesPerSec/wfe->nChannels/(wfe->wBitsPerSample>>3);
+        // send a message and finish phash
+        PostMessage(AfxGetApp()->m_pMainWnd->m_hWnd, WM_COMMAND, ID_PHASH_COLLECTEND, NULL);
+      }
+      else if (rtStart > m_rtStartpHash && (rtDur + rtStart) < m_rtEndpHash )       // the middle part of data
+      {
+        FillData4pHash(pDataIn, pIn->GetActualDataLength());
+      }
+    }
+  }
 }
 
-STDMETHODIMP CAudioSwitcherFilter::IsSeek()
+void FingerPrint::SetTypeOfPCM(int type)
 {
-  return m_isSeek;
+  m_pHashPtr->type = type;
 }

@@ -3,14 +3,21 @@
 
 #include <vector>
 
-struct phashblock
+typedef struct phashblock_t
 {
+public:
+  phashblock_t():
+    phashcnt(0),
+    prevcnt(-1),
+    isseek(FALSE) {}
+
   WAVEFORMATEX format;
   std::vector<unsigned char> phashdata;
   int phashcnt;
   int prevcnt;
   int type;
-};
+  BOOL isseek;
+} PHASHBLOCK;
 
 enum{
   PCM8 = 0,

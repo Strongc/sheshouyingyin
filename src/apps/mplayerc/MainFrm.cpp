@@ -612,9 +612,6 @@ m_movieShared(false),
 m_bmenuinitialize(FALSE)
 {
   m_wndFloatToolBar = new CPlayerFloatToolBar();
-
-  m_phashblock.phashcnt = 0;
-  m_phashblock.prevcnt = -1;
 }
 
 CMainFrame::~CMainFrame()
@@ -11965,52 +11962,12 @@ bool CMainFrame::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
 
       std::wstring szFileHash = HashController::GetInstance()->GetSPHash(m_fnCurPlayingFile);
       CString FPath = szFileHash.c_str();
-      if (pHashController::GetInstance()->GetSwitchStatus() != pHashController::NOCALCHASH)
-      {
-        // Set phash when open a file
-        if( CComQIPtr<IAudioSwitcherFilter> pASF = FindFilter(__uuidof(CAudioSwitcherFilter), pGB))
-        {
-          pHashController* hashctrl = pHashController::GetInstance();
-          int result;
-          hashctrl->IspHashInNeed(m_fnCurPlayingFile, result);
-          if (result == 1) // need phash insert 
-          {
-            hashctrl->SetpASF(pASF);
-            pASF->SetpHashControl(&m_phashblock);
-            pASF->SetSeek(false);
-            hashctrl->SetSwitchStatus(pHashController::INSERT);
-            m_phashblock.phashcnt = 0;
-            m_phashblock.prevcnt = -1;
-            Logging(L"result:%d, hashctrl->SetpASF, pASF->SetpHashControl, pASF->SetSeek, hashctrl->SetSwitchStatus", result);
-          }
-          else if (result == 0)
-          {
-            hashctrl->SetpASF(pASF);
-            pASF->SetpHashControl(&m_phashblock);
-            pASF->SetSeek(false);
-            hashctrl->SetSwitchStatus(pHashController::LOOKUP);
-            m_phashblock.phashcnt = 0;
-            m_phashblock.prevcnt = -1;
-            Logging(L"result:%d, hashctrl->SetpASF, pASF->SetpHashControl, pASF->SetSeek, hashctrl->SetSwitchStatus", result);
-          }
-        }
-      }
-      else
-      {
-        if( CComQIPtr<IAudioSwitcherFilter> pASF = FindFilter(__uuidof(CAudioSwitcherFilter), pGB))
-        {
-          pHashController* hashctrl = pHashController::GetInstance();
-          hashctrl->SetpASF(pASF);
-          pASF->SetpHashControl(&m_phashblock);
-          pASF->SetSeek(false);
-          hashctrl->SetSwitchStatus(pHashController::NOCALCHASH);
-          m_phashblock.phashcnt = 0;
-          m_phashblock.prevcnt = -1;
-        }
-      }
+
+      // for collect phash
+      CComQIPtr<IAudioSwitcherFilter> pASF = FindFilter(__uuidof(CAudioSwitcherFilter), pGB);
+      pHashController::GetInstance()->Init(pASF, m_fnCurPlayingFile.GetBuffer());
+      m_fnCurPlayingFile.ReleaseBuffer();
     
-
-
       if(m_pCAP && (!m_fAudioOnly || m_fRealMediaGraph))
       {
         POSITION pos = pOMD->subs.GetHeadPosition();
@@ -17689,10 +17646,7 @@ void CMainFrame::OnFilledUp4pHash()
   pHashController* hashctrl = pHashController::GetInstance();  
   if (hashctrl->GetSwitchStatus() != pHashController::NOCALCHASH)
   {
-    if (hashctrl->SetpHashData(&m_phashblock) == S_OK)
-    {
-      hashctrl->_Stop();
-      hashctrl->_Start();
-    } 
+    hashctrl->_Stop();
+    hashctrl->_Start();
   }
 }

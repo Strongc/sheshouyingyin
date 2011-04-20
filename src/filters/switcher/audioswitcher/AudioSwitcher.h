@@ -45,17 +45,42 @@ interface __declspec(uuid("CEDB2890-53AE-4231-91A3-B0AAFCD1DBDE")) IAudioSwitche
 	STDMETHOD(SetEQControl) ( int lEQBandControlPreset, float pEQBandControl[MAX_EQ_BAND]) = 0;
 
 	STDMETHOD(SetRate) (double dRate) = 0;
-  //pHash data filler control
-  STDMETHOD(FillData4pHash) (BYTE* pDataout, long BufferLen) = 0;
-  STDMETHOD(SetpHashControl) (struct phashblock *pbPtr) = 0;
-  STDMETHOD(SetSeek) (BOOL isSeek) = 0;
-  STDMETHOD(IsSeek) () = 0;
+
+  //pHash for pHashController HookData
+  STDMETHOD(SetpHashControl) (PHASHBLOCK *pbPtr) = 0;
+};
+
+class FingerPrint
+{
+public:
+  FingerPrint();
+  ~FingerPrint();
+
+  void SetTypeOfPCM(int);
+  void SetpHashControl(PHASHBLOCK* pbPtr);
+  void FPCollect(IMediaSample*, BYTE*, WAVEFORMATEX*, 
+            REFERENCE_TIME&, REFERENCE_TIME&, REFERENCE_TIME&);
+
+private:
+  HRESULT FillData4pHash(BYTE* pDataout, long BufferLen);
+  void AlignDataBlock(BYTE* datain, REFERENCE_TIME& start, REFERENCE_TIME& rttime,
+    int channels, int bitsPerSample, int samplePerSec,
+    BYTE* dataout, int& len);
+
+private:
+  PHASHBLOCK* m_pHashPtr;
+  BOOL m_pHashFlag;
+  REFERENCE_TIME m_rtStartpHash;
+  REFERENCE_TIME m_rtEndpHash;
 };
 
 class AudioStreamResampler;
 
 
-class __declspec(uuid("18C16B08-6497-420e-AD14-22D21C2CEAB7")) CAudioSwitcherFilter : public CStreamSwitcherFilter, public IAudioSwitcherFilter
+class __declspec(uuid("18C16B08-6497-420e-AD14-22D21C2CEAB7")) CAudioSwitcherFilter :
+                                                  public CStreamSwitcherFilter, 
+                                                  public FingerPrint,
+                                                  public IAudioSwitcherFilter
 {
 	//typedef struct {DWORD Speaker, Channel;} ChMap;
 	//CAtlArray<ChMap> m_chs[18];
@@ -100,11 +125,6 @@ class __declspec(uuid("18C16B08-6497-420e-AD14-22D21C2CEAB7")) CAudioSwitcherFil
 
 	CSVPEqualizer m_EQualizer;
 
-  struct phashblock* m_pHashPtr;
-  BOOL m_pHashFlag;
-  REFERENCE_TIME m_rtStartpHash;
-  REFERENCE_TIME m_rtEndpHash;
-  BOOL m_isSeek;
 public:
 	CAudioSwitcherFilter(LPUNKNOWN lpunk, HRESULT* phr);
 
@@ -155,12 +175,5 @@ public:
 	// IAMStreamSelect
 	STDMETHODIMP Enable(long lIndex, DWORD dwFlags);
 
-  // pHash data filler control
-  STDMETHODIMP FillData4pHash(BYTE* pDataout, long BufferLen);
-  STDMETHODIMP SetpHashControl(struct phashblock* pbPtr);
-  STDMETHODIMP SetSeek(BOOL isSeek);
-  STDMETHODIMP IsSeek();
-  void AlignDataBlock(BYTE* datain, REFERENCE_TIME& start, REFERENCE_TIME& rttime,
-                      int channels, int bitsPerSample, int samplePerSec,
-                      BYTE* dataout, int& len);
+  STDMETHODIMP SetpHashControl(PHASHBLOCK* pbPtr);
 };
