@@ -486,7 +486,7 @@ void CPlayerSeekBar::OnLButtonDown(UINT nFlags, CPoint point)
 		AfxGetMainWnd()->PostMessage(WM_HSCROLL, MAKEWPARAM((short)m_pos, SB_THUMBPOSITION), (LPARAM)m_hWnd);
     
     // Set Seek flag for pHash
-    pHashController::GetInstance()->SetSeek(true);
+    pHashController::GetInstance()->SetSeek(TRUE);
 	}
 
 	CDialogBar::OnLButtonDown(nFlags, point);

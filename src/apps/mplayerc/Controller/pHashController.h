@@ -54,22 +54,23 @@ public:
   HRESULT _thread_DigestpHashData();                        // down samplerate and mix
   HRESULT _thread_MonopHash();                              // test only. Get each channel data and calc phash
   
+  void Init(CComQIPtr<IAudioSwitcherFilter> pASF, std::wstring m_fnCurPlayingFile);
   int GetSwitchStatus();
   void SetSwitchStatus(int status);
-  HRESULT SetpHashData(struct phashblock* pbPtr);
   BOOL IsSeek();
-  void SetSeek(int seekflag);
+  void SetSeek(BOOL seekflag);
   void _Thread();
-  void SetpASF(CComQIPtr<IAudioSwitcherFilter> pASF);
-  CComQIPtr<IAudioSwitcherFilter> GetpASF(); 
+//   void SetpASF(CComQIPtr<IAudioSwitcherFilter> pASF);
+//   CComQIPtr<IAudioSwitcherFilter> GetpASF(); 
   void IspHashInNeed(const wchar_t* filepath, int& result);
 
 private:
-  
+  void HookData(CComQIPtr<IAudioSwitcherFilter> pASF);
+
+  PHASHBLOCK m_phashblock;
   std::wstring m_sphash;
   uint32_t** m_hashes;                                     // Storage pHashes
   int *m_lens;
-  struct phashblock* m_pbPtr;
   int m_phashlen;
   float* m_buffer;
   int m_bufferlen;
