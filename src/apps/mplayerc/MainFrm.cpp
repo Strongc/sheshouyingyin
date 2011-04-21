@@ -17646,6 +17646,7 @@ void CMainFrame::OnFilledUp4pHash()
   pHashController* hashctrl = pHashController::GetInstance();  
   if (hashctrl->GetSwitchStatus() != pHashController::NOCALCHASH)
   {
+    Logging(L"GetSwitchStatus:%d", hashctrl->GetSwitchStatus());
     hashctrl->_Stop();
     hashctrl->_Start();
   }

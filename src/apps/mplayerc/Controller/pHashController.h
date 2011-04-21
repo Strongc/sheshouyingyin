@@ -47,27 +47,32 @@ public:
     PHASHANDSPHASH = 0x01 << 1,   // 0000 0010
     LOOKUP         = 0x01 << 2,   // 0000 0100
     INSERT         = 0x01 << 3,   // 0000 1000
-    NOCALCHASH     = 0x01 << 4    // 0001 0000
+ //   NOCALCHASH     = 0x01 << 4    // 0001 0000
   };
+  enum {NOCALCHASH = 0, CALPHASH};
   void _thread_GetAudiopHash();
-  BOOL VerifyAudiopHash(uint32_t* pHash);
+  void _thread_GetpHash();
   HRESULT _thread_DigestpHashData();                        // down samplerate and mix
   HRESULT _thread_MonopHash();                              // test only. Get each channel data and calc phash
   
   void Init(CComQIPtr<IAudioSwitcherFilter> pASF, std::wstring m_fnCurPlayingFile);
   int GetSwitchStatus();
   void SetSwitchStatus(int status);
+  int GetCmd();
+  void SetCmd(uint8_t cmd);
   BOOL IsSeek();
   void SetSeek(BOOL seekflag);
+  void Execute(BOOL isrun);
   void _Thread();
-//   void SetpASF(CComQIPtr<IAudioSwitcherFilter> pASF);
-//   CComQIPtr<IAudioSwitcherFilter> GetpASF(); 
+  BOOL CheckEnv();
+  void ResetAll();
   void IspHashInNeed(const wchar_t* filepath, int& result);
-
+  void ReleasePhash(UINT pos);
 private:
   void HookData(CComQIPtr<IAudioSwitcherFilter> pASF);
 
   PHASHBLOCK m_phashblock;
+  uint8_t m_cmd;
   std::wstring m_sphash;
   uint32_t** m_hashes;                                     // Storage pHashes
   int *m_lens;
@@ -89,21 +94,28 @@ private:
   BOOL MixChannels(float* buf, int samples, int channels, int nsample, float* MonoChannelBuf);
   void SixchannelsToStereo(float *output, float *input, int n);
 
-  // TODO: Upload phash 
-  typedef struct phashbox_t{
-    uint8_t cmd;           // 1 for query, 2 for submission
-    uint8_t earlyendflag;  // if end earlier , set the flag to 1; 
-    uint8_t amount;        // amount of phash times
-    uint8_t id;            // order of phash
-    uint32_t nbframes;     // length of phash 
-    uint32_t* phash;
-  } phashbox;
-  phashbox m_phashframe;
+  // Upload phash 
   void _thread_UploadpHash();
   void _thread_GetpHashAndSend(int cmd);
   int SendOnepHashFrame(phashbox phashframe);
-  void DisconnectUrl();
+
 };
 
-
+class pHashSender:
+  public ThreadHelperImpl<pHashSender>,
+  public NetworkControlerImpl
+{
+public:
+  pHashSender();
+  ~pHashSender();
+  
+  void _Thread();
+  void SetSphash(std::wstring phash);
+  void SetPhash(phashbox*);
+  
+private:
+  std::wstring m_sphash;
+  int SendOnepHashFrame();
+  phashbox* m_phashbox;
+};
 #endif //PHASHCONTROLLER_H
