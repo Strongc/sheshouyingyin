@@ -21,7 +21,7 @@
 pHashController::pHashController(void) :
   m_buffer(NULL),
   m_sr(8000),
-  m_phashswitcher(0),
+  m_phashswitcher(CALPHASH),
   m_bufferlen(0),
   m_phashlen(0),
   m_hashcount(0),
@@ -285,15 +285,21 @@ void pHashController::HookData(CComQIPtr<IAudioSwitcherFilter> pASF)
 {
   pASF->SetpHashControl(&m_phashblock);
 }
-BOOL pHashController::CheckEnv()
+void pHashController::ReleasePhashAll()
 {
-  // check status
-  if (GetSwitchStatus() == NOCALCHASH)
-    return FALSE;
+
+}
+void pHashController::CheckEnv(int64_t timelength)
+{
+  // check timelength
+  if (timelength < (10000000i64)*60*45)
+  {
+    Logging("time length < 45 mins");
+    SetSwitchStatus(FALSE);
+  }
 
   // TODO: check PC configuration, give up if the configuration is to low
   
-  return TRUE;
 }
 void pHashController::Init(CComQIPtr<IAudioSwitcherFilter> pASF, std::wstring m_fnCurPlayingFile)
 {
@@ -301,7 +307,7 @@ void pHashController::Init(CComQIPtr<IAudioSwitcherFilter> pASF, std::wstring m_
   {
     ResetAll();
 
-    if (!CheckEnv())
+    if (GetSwitchStatus() == NOCALCHASH)
       return;
 
     int result;
