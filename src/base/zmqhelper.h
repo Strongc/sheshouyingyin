@@ -20,13 +20,12 @@
 
     Modified By Soleo Shao
 */
+#ifndef _HELPERH_H
+#define _HELPHER_H
 
 #include <string.h>
 #include <stdint.h>
 #include <zmq.h>
-
-#ifndef _HELPERH_H
-#define _HELPHER_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -102,6 +101,7 @@ int recieve_msg_timeout(void *skt, size_t *msg_size, int64_t *more, size_t *more
   do 
   {
     res = zmq_recv(skt, &msg, ZMQ_NOBLOCK);
+    Sleep(1000);
   } while (res && time(NULL) < curr + timeout);
 
   if (res == 0)
