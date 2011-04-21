@@ -3585,6 +3585,8 @@ void CMainFrame::OnLButtonDown(UINT nFlags, CPoint point)
 
 void CMainFrame::OnLButtonUp(UINT nFlags, CPoint point)
 {
+  s_mDragFuc = 0;
+  s_mDragFucOn = false;
   //SVP_LogMsg5(L"MUP1");
   //SetCapture();
   //ReleaseCapture();
@@ -3628,9 +3630,7 @@ void CMainFrame::OnLButtonUp(UINT nFlags, CPoint point)
       SetTimer(TIMER_MOUSELWOWN, SINGLECLICK_INTERLEAVE_MS, NULL);
     }
   }
-  s_mDragFuc = 0;
-  s_mDragFucOn = false;
-
+  
   if(!OnButton(HotkeyCmd::LUP, nFlags, point))
     __super::OnLButtonUp(nFlags, point);
 }

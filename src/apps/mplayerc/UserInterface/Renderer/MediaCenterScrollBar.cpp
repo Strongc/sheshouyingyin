@@ -52,6 +52,11 @@ void  MediaCenterScrollBar::SetDisPlay(BOOL dp)
   m_display = dp;
 }
 
+BOOL  MediaCenterScrollBar::GetDisPlay()
+{
+  return m_display;
+}
+
 BOOL MediaCenterScrollBar::DoPaint(WTL::CDC& dc)
 {
   if (!m_display)

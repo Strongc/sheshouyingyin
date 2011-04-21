@@ -387,7 +387,10 @@ void BlockList::SetYOffset(float offset, int result)
 
 BOOL BlockList::OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetspeed, HWND hwnd)
 {
-  return m_scrollbar->OnHittest(pt, blbtndown, offsetspeed, hwnd);
+  if (m_scrollbar->GetDisPlay())
+    return m_scrollbar->OnHittest(pt, blbtndown, offsetspeed, hwnd);
+  else
+    return FALSE;
 }
 
 int BlockList::OnHittest(POINT pt, BOOL blbtndown)
@@ -530,6 +533,7 @@ void BlockListView::HandleMouseMove(POINT pt, RECT rcclient)
     ::InvalidateRect(m_hwnd, &rcclient, FALSE);
   if (!bscroll && m_lbtndown)
     PostMessage(m_hwnd, WM_LBUTTONUP, 0, 0);
+
   if (blayer == BEHITTEST)
   {
     SetTimer(m_hwnd, TIMER_TIPS, 500, NULL);
