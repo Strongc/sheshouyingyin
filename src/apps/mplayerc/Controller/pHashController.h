@@ -64,10 +64,11 @@ public:
   void SetSeek(BOOL seekflag);
   void Execute(BOOL isrun);
   void _Thread();
-  BOOL CheckEnv();
+  void CheckEnv(int64_t timelength);
   void ResetAll();
   void IspHashInNeed(const wchar_t* filepath, int& result);
   void ReleasePhash(UINT pos);
+  void ReleasePhashAll();
 private:
   void HookData(CComQIPtr<IAudioSwitcherFilter> pASF);
 

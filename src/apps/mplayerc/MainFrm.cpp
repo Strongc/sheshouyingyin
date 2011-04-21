@@ -11962,6 +11962,13 @@ bool CMainFrame::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
 
       std::wstring szFileHash = HashController::GetInstance()->GetSPHash(m_fnCurPlayingFile);
       CString FPath = szFileHash.c_str();
+      
+      if(pMS)
+      {
+        __int64 rtDur = 0;
+        pMS->GetDuration(&rtDur);
+        pHashController::GetInstance()->CheckEnv(rtDur);
+      }
 
       // for collect phash
       CComQIPtr<IAudioSwitcherFilter> pASF = FindFilter(__uuidof(CAudioSwitcherFilter), pGB);
@@ -12338,6 +12345,9 @@ void CMainFrame::CloseMediaPrivate()
   CAutoLock mOpenCloseLock(&m_csOpenClose);
   SVP_LogMsg5(L"CloseMediaPrivate");
   m_iMediaLoadState = MLS_CLOSING;
+  
+  Logging("Release pHash and reset");
+  pHashController::GetInstance()->ReleasePhashAll();
 
   OnPlayStop(); // SendMessage(WM_COMMAND, ID_PLAY_STOP);
 
@@ -15014,8 +15024,6 @@ void CMainFrame::OpenCurPlaylistItem(REFERENCE_TIME rtStart)
   // if Start point is not zero , turn off phash
   if (rtStart != 0)
     pHashController::GetInstance()->SetSwitchStatus(pHashController::NOCALCHASH);
-  else
-    pHashController::GetInstance()->SetSwitchStatus(pHashController::PHASHANDSPHASH);
 
 }
 
@@ -17646,7 +17654,6 @@ void CMainFrame::OnFilledUp4pHash()
   pHashController* hashctrl = pHashController::GetInstance();  
   if (hashctrl->GetSwitchStatus() != pHashController::NOCALCHASH)
   {
-    Logging(L"GetSwitchStatus:%d", hashctrl->GetSwitchStatus());
     hashctrl->_Stop();
     hashctrl->_Start();
   }
