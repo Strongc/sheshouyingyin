@@ -186,10 +186,7 @@ void pHashController::ResetAll()
 
 void pHashController::ReleasePhashAll()
 {
-  if (m_phashblock.isrun)
-    FREE_PHASHMEM();
-  
-
+  FREE_PHASHMEM();
 }
 void pHashController::_thread_GetpHash()
 {
