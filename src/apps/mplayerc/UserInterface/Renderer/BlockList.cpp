@@ -497,6 +497,9 @@ void BlockListView::HandleLButtonDown(POINT pt, RECT rcclient)
     m_lbtndown = TRUE;
   }
   
+  if (layerstate == BEPLAY)
+    SendMessage(m_hwnd, WM_LBUTTONUP, 0, 0);
+
   if (layerstate == BEDELETE)
   {
     Update(rcclient.right, rcclient.bottom);
