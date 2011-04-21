@@ -49,6 +49,14 @@ void pHashController::SetSwitchStatus(int status)
   m_phashswitcher = status;
 }
 
+int pHashController::GetCmd()
+{
+  return m_cmd;
+}
+void pHashController::SetCmd(uint8_t cmd)
+{
+  m_cmd = cmd;
+}
 BOOL pHashController::IsSeek()
 {
   return m_phashblock.isseek; 
@@ -58,24 +66,24 @@ void pHashController::SetSeek(BOOL seekflag)
 {  
   m_phashblock.isseek = seekflag;
 }
-
+void pHashController::Execute(BOOL isrun)
+{
+  m_phashblock.isrun = isrun;
+}
 void pHashController::_Thread()
 {
   Logging( L"pHashController::_thread enter %x", m_phashswitcher);
-  switch (m_phashswitcher)
+  if (m_phashswitcher != NOCALCHASH)
   {
-  case LOOKUP:
     //_thread_MonopHash();
     _thread_DigestpHashData();
-    _thread_GetpHashAndSend(LOOKUP);
-    break;
-  case INSERT:
-    _thread_DigestpHashData();
-    _thread_GetpHashAndSend(INSERT);
-  case NOCALCHASH:
-  default: 
-    break;
+    _thread_GetpHash();
   }
+  else
+  {
+    Logging(L"m_phashswitcher = NOCALCHASH ");
+  }
+  
   Logging( L"pHashController::_thread exit %x", m_phashswitcher);
 }
 
@@ -156,6 +164,64 @@ HRESULT pHashController::_thread_MonopHash()
 
   return S_OK;
 }
+
+void pHashController::ReleasePhash(UINT pos)
+{
+  sphash_freemem(NULL, m_hashes[pos]);
+  m_hashes[pos] = NULL;
+  m_lens[pos] = 0;
+
+  if (pos == (g_phash_collectcfg[CFG_PHASHTIMES] - 1))
+    ResetAll();
+}
+
+void pHashController::ResetAll()
+{
+  m_phashblock.prevcnt = -1;
+  m_phashblock.phashcnt = 0;
+  memset(m_hashes, 0, g_phash_collectcfg[CFG_PHASHTIMES]*sizeof(uint32_t*));
+  memset(m_lens, 0, g_phash_collectcfg[CFG_PHASHTIMES]*sizeof(int));
+  SetSeek(FALSE);
+}
+
+void pHashController::_thread_GetpHash()
+{
+  if (IsSeek())
+  {
+    SetSwitchStatus(NOCALCHASH);
+    Execute(FALSE);
+    return;
+  }
+
+  // calc phash
+  UINT pos = m_phashblock.phashcnt-1;
+
+  m_hashes[pos] = ph_audiohash(m_buffer, m_bufferlen, m_sr, m_phashlen);
+  m_lens[pos] = m_phashlen;
+
+  free(m_buffer);
+  m_buffer = NULL;
+  m_bufferlen = 0;
+
+  // send phash
+  pHashSender* sender = new pHashSender;
+
+  phashbox* hashbox = new phashbox;
+  hashbox->cmd = GetCmd();
+  hashbox->amount = g_phash_collectcfg[CFG_PHASHTIMES];
+  hashbox->id = pos;    
+  hashbox->nbframes = m_lens[pos];
+  hashbox->phash = m_hashes[pos];
+  hashbox->earlyendflag = 0;
+
+  if (GetCmd() == INSERT)
+      sender->SetSphash(m_sphash);
+  
+  sender->SetPhash(hashbox);
+
+  sender->_Start();
+}
+
 void pHashController::_thread_GetAudiopHash()
 {
   int count = g_phash_collectcfg[CFG_PHASHTIMES]*2-1;
@@ -219,73 +285,45 @@ void pHashController::HookData(CComQIPtr<IAudioSwitcherFilter> pASF)
 {
   pASF->SetpHashControl(&m_phashblock);
 }
+BOOL pHashController::CheckEnv()
+{
+  // check status
+  if (GetSwitchStatus() == NOCALCHASH)
+    return FALSE;
 
+  // TODO: check PC configuration, give up if the configuration is to low
+  
+  return TRUE;
+}
 void pHashController::Init(CComQIPtr<IAudioSwitcherFilter> pASF, std::wstring m_fnCurPlayingFile)
 {
   if (pASF)
   {
-    if (pHashController::GetInstance()->GetSwitchStatus() != pHashController::NOCALCHASH)
+    ResetAll();
+
+    if (!CheckEnv())
+      return;
+
+    int result;
+    IspHashInNeed(m_fnCurPlayingFile.c_str(), result);
+
+    switch(result)
     {
-      // Set phash when open a file
-      int result;
-      IspHashInNeed(m_fnCurPlayingFile.c_str(), result);
+    case NOCALCHASH:
+      Execute(FALSE);
+      break;
+    case CALPHASH:
+      // do insert 
       HookData(pASF);
-      int state = (result == 1) ? pHashController::INSERT : pHashController::LOOKUP;
-      SetSwitchStatus(state);
-      Logging(L"result:%d, hashctrl->SetpASF, pASF->SetpHashControl, pASF->SetSeek, hashctrl->SetSwitchStatus", result); 
+      Execute(TRUE);
+      uint8_t cmd = (result == 1) ? INSERT : LOOKUP;
+      SetCmd(cmd);
+      break;
     }
-    else
-      SetSwitchStatus(pHashController::NOCALCHASH);
   }
 }
 
-void pHashController::_thread_GetpHashAndSend(int cmd)
-{
-  int count = g_phash_collectcfg[CFG_PHASHTIMES] - 1;
-  Logging("phashcnt:%d", m_phashblock.phashcnt);
-  if (m_phashblock.phashcnt <= count)
-  { 
-    int i = m_phashblock.phashcnt;
-    m_phashframe.cmd = cmd;
-    m_phashframe.amount = g_phash_collectcfg[CFG_PHASHTIMES];
-    m_phashframe.id = i;
-    if (IsSeek())
-    {
-      m_phashframe.earlyendflag = 1;
-      m_phashframe.nbframes = 0;
-      m_phashframe.phash = NULL;
-      SetSwitchStatus(NOCALCHASH);    // turn off phash
-    }
-    else
-    {
-      m_phashframe.earlyendflag = 0;
-      m_hashes[i] = ph_audiohash(m_buffer, m_bufferlen, m_sr, m_phashlen);
-      m_lens[i] = m_phashlen;
-      Logging(L"m_phashblock.phashcnt: %d, length: %d, hashes[0]: %X, m_phashlen: %d", i, m_lens[i], m_hashes[i][0], m_phashlen);
-      m_phashframe.nbframes = m_lens[i];
-      m_phashframe.phash = m_hashes[i];
-    }
 
-    free(m_buffer);
-    m_buffer = NULL;
-    m_bufferlen = 0;
-    
-    //sending to server
-    SendOnepHashFrame(m_phashframe);
-    sphash_freemem(NULL, m_hashes[i]);
-    m_hashes[i] = NULL;
-    m_lens[i] = 0;
-  }
-
-  m_phashblock.prevcnt = m_phashblock.phashcnt;
-  m_phashblock.phashcnt++;
-  if (m_phashblock.phashcnt > count)
-  {
-    m_phashblock.phashcnt = 0;
-    memset(m_hashes, 0, g_phash_collectcfg[CFG_PHASHTIMES]*sizeof(uint32_t));
-    memset(m_lens, 0, g_phash_collectcfg[CFG_PHASHTIMES]*sizeof(int));
-  }
-}
 void pHashController::IspHashInNeed(const wchar_t* filepath, int& result)
 {
   m_sphash = HashController::GetInstance()->GetSPHash(filepath);
@@ -298,7 +336,7 @@ void pHashController::IspHashInNeed(const wchar_t* filepath, int& result)
   net_task->use_config(net_cfg);
   enum REQMODE{ SEARCH = 0 , INS};
   wchar_t tmpurl[512];
-  _snwprintf_s(tmpurl, 512, 512, L"http://webpj:8080/misc/phash.php?req=%d&sphs=%s\n", SEARCH, m_sphash.c_str());
+  _snwprintf_s(tmpurl, 512, 512, L"http://webpj:8080/misc/phash.php?req=%d&sphs=%s\n", INS, m_sphash.c_str());
   net_rqst->set_request_url(tmpurl);
   net_rqst->set_request_method(REQ_GET);
   net_task->append_request(net_rqst);
@@ -381,6 +419,9 @@ BOOL pHashController::SampleToFloat(const unsigned char* const indata, float* ou
 // mix into one channel and reduced samplerate to 8000HZ for further cal
 HRESULT pHashController::_thread_DigestpHashData()
 {
+  if (GetSwitchStatus() == NOCALCHASH)
+    return S_FALSE;
+
   int buflen = m_phashblock.phashdata.size();
   float *buf = new float[buflen];
 
@@ -536,47 +577,27 @@ void pHashController::SixchannelsToStereo(float* output, float* input, int n)
   }
 }
 
-// Upload pHash
-void pHashController::_thread_UploadpHash()
+
+
+pHashSender::pHashSender() :
+        m_phashbox(NULL)
 {
-  // connection
-  void* context = zmq_init(1);
-  void* client = socket_connect(context, ZMQ_REQ, PHASH_SERVER);
-  
-  // sending all phashes
-  m_phashframe.cmd = 1;
-  m_phashframe.amount = g_phash_collectcfg[CFG_PHASHTIMES];
-  for (int times = 0; times < g_phash_collectcfg[CFG_PHASHTIMES]; times++)
-  {
-    m_phashframe.id = times;
-    m_phashframe.nbframes = m_lens[times];
-    m_phashframe.phash = new uint32_t[m_lens[times]];
-    memcpy_s(m_phashframe.phash, m_lens[times], m_hashes[times], m_lens[times]);
-    sendmore_msg_vsm(client, &m_phashframe.cmd, sizeof(uint8_t));
-    sendmore_msg_vsm(client, &m_phashframe.amount, sizeof(uint8_t));
-    sendmore_msg_vsm(client, &m_phashframe.id, sizeof(uint8_t));
-    sendmore_msg_vsm(client, &m_phashframe.nbframes, sizeof(uint32_t));
-    sendmore_msg_data(client, m_phashframe.phash, m_phashframe.nbframes*sizeof(uint32_t), free_fn, NULL);
-  }
-  send_empty_msg(client);
-    
-  // get result
-  uint8* data = NULL;
-  uint8_t result;
-  int64_t more;
-  size_t msg_size, more_size = sizeof(int64_t);
-  recieve_msg(client, &msg_size, &more, &more_size, (void**)&data);
-  if (msg_size == sizeof(uint8_t))
-  {
-    memcpy(&result, data, sizeof(uint8_t));
-    Logging("Get result:%d", result);
-  }
-  zmq_close(client);
-  zmq_term(context);
+
 }
 
-// Send one phash at one time
-int pHashController::SendOnepHashFrame(phashbox phashframe)
+pHashSender::~pHashSender()
+{
+
+}
+
+void pHashSender::_Thread()
+{
+  Logging(L"pHashSender::_thread enter ");
+  SendOnepHashFrame();
+  Logging(L"pHashSender::_thread exit ");
+}
+
+int pHashSender::SendOnepHashFrame()
 {
   // connection
   void* context = zmq_init(1);
@@ -586,49 +607,48 @@ int pHashController::SendOnepHashFrame(phashbox phashframe)
     return -1;
   }
 
-  Logging("addr: %s", PHASH_SERVER);
   void* client = socket_connect(context, ZMQ_REQ, PHASH_SERVER);
   if (!client)
   {
     Logging(L"Client connection failed");
     return -1;
   }
-  std::string sphash = Strings::WStringToString(m_sphash);
-
+ 
   // sending all phashes  
-  sendmore_msg_vsm(client, &phashframe.cmd, sizeof(uint8_t));
-  if (phashframe.cmd == INSERT)
-     sendmore_msg_data(client, &sphash[0], sphash.length(), NULL, NULL);
-  
-  sendmore_msg_vsm(client, &phashframe.earlyendflag, sizeof(uint8_t));
-  sendmore_msg_vsm(client, &phashframe.amount, sizeof(uint8_t));
-  sendmore_msg_vsm(client, &phashframe.id, sizeof(uint8_t));
-  sendmore_msg_vsm(client, &phashframe.nbframes, sizeof(uint32_t));
-
-  send_msg_data(client, phashframe.phash, phashframe.nbframes*sizeof(uint32_t), NULL, NULL);
-
-  if (phashframe.earlyendflag == 0)
+  sendmore_msg_vsm(client, &m_phashbox->cmd, sizeof(uint8_t));
+  if (m_phashbox->cmd == pHashController::INSERT)
   {
-    Logging("send:cmd:%d, earlyendflag:%d, amount:%d, id:%d, nbframes:%d, phash[0]:%X", 
-      phashframe.cmd, phashframe.earlyendflag, phashframe.amount, phashframe.id , phashframe.nbframes, phashframe.phash[0]);
+    std::string sphash = Strings::WStringToString(m_sphash);
+    sendmore_msg_data(client, &sphash[0], sphash.length(), NULL, NULL);
+  }
+  sendmore_msg_vsm(client, &m_phashbox->earlyendflag, sizeof(uint8_t));
+  sendmore_msg_vsm(client, &m_phashbox->amount, sizeof(uint8_t));
+  sendmore_msg_vsm(client, &m_phashbox->id, sizeof(uint8_t));
+  sendmore_msg_vsm(client, &m_phashbox->nbframes, sizeof(uint32_t));
+  send_msg_data(client, m_phashbox->phash, m_phashbox->nbframes*sizeof(uint32_t), NULL, NULL);
+ 
+  if (m_phashbox->earlyendflag == 0)
+  {
+     Logging("send:cmd:%d, earlyendflag:%d, amount:%d, id:%d, nbframes:%d, phash[0]:%X", 
+       m_phashbox->cmd, m_phashbox->earlyendflag, m_phashbox->amount, m_phashbox->id , m_phashbox->nbframes, m_phashbox->phash[0]);
   }
 
   // get result
   uint8* data = NULL;
   int64_t more;
   size_t msg_size, more_size = sizeof(int64_t);
-  if (m_phashswitcher == NOCALCHASH)
+  if (m_phashbox->cmd == pHashController::NOCALCHASH)
   {
-    Logging("m_phashswitcher:%d NOCALCHASH", m_phashswitcher);
+    Logging("cmd:%d NOCALCHASH", m_phashbox->cmd);
     recieve_msg(client, &msg_size, &more, &more_size, (void**)&data);
     flushall_msg_parts(client);
   }
   else
   {
-    Logging("m_phashswitcher:%d CALCHASH", m_phashswitcher);
-    if (phashframe.cmd == INSERT)
+    Logging("m_phashswitcher:%d CALCHASH", m_phashbox->cmd);
+    if (m_phashbox->cmd == pHashController::INSERT)
     {
-      Logging("m_phashswitcher:%d INSERT", m_phashswitcher);
+      Logging("m_phashswitcher:%d INSERT", m_phashbox->cmd);
       uint32_t posid = 0;
       // Receive only positon ID
       recieve_msg(client, &msg_size, &more, &more_size, (void**)&data);
@@ -642,9 +662,9 @@ int pHashController::SendOnepHashFrame(phashbox phashframe)
       if (more)
         flushall_msg_parts(client);
     } 
-    else if (phashframe.cmd == LOOKUP)
+    else if (m_phashbox->cmd == pHashController::LOOKUP)
     {
-      Logging("m_phashswitcher:%d LOOKUP", m_phashswitcher);
+      Logging("m_phashswitcher:%d LOOKUP", m_phashbox->cmd);
       uint32_t posid = 0;
       float cs = -1.0;
       // Receive positon ID and cs value
@@ -656,7 +676,7 @@ int pHashController::SendOnepHashFrame(phashbox phashframe)
       }
       free(data);
       data = NULL;
-      
+
       recieve_msg(client, &msg_size, &more, &more_size, (void**)&data);
       if (msg_size == sizeof(float))
       {
@@ -670,12 +690,25 @@ int pHashController::SendOnepHashFrame(phashbox phashframe)
     {
       zmq_close(client);
       zmq_term(context);
+      pHashController::GetInstance()->ReleasePhash(m_phashbox->id);
       return -1;
     }
   }
+
+  pHashController::GetInstance()->ReleasePhash(m_phashbox->id);
   zmq_close(client);
   zmq_term(context);
-  
+
   return 0;
 }
 
+void pHashSender::SetSphash(std::wstring phash)
+{
+  m_sphash = phash; 
+  Logging(L"pHashSender:%s", m_sphash.c_str());
+}
+
+void pHashSender::SetPhash(phashbox* hash)
+{
+  m_phashbox = hash;
+}

@@ -2,14 +2,15 @@
 #define PHASHMODEL_H
 
 #include <vector>
-
+#include <stdint.h>
 typedef struct phashblock_t
 {
 public:
   phashblock_t():
     phashcnt(0),
     prevcnt(-1),
-    isseek(FALSE) {}
+    isseek(FALSE),
+    isrun(FALSE){}
 
   WAVEFORMATEX format;
   std::vector<unsigned char> phashdata;
@@ -17,16 +18,20 @@ public:
   int prevcnt;
   int type;
   BOOL isseek;
+  BOOL isrun;
 } PHASHBLOCK;
 
-enum{
-  PCM8 = 0,
-  PCM16,
-  PCM24,
-  PCM32,
-  FPCM32,
-  FPCM64
-};
+// sending pHash frame
+typedef struct phashbox_t{
+  uint8_t cmd;           
+  uint8_t earlyendflag;  // if end earlier , set the flag to 1; 
+  uint8_t amount;        // amount of phash times
+  uint8_t id;            // order of phash
+  uint32_t nbframes;     // length of phash 
+  uint32_t* phash;
+} phashbox;
+
+
 
 enum {
   CFG_PHASHTIMES = 0,
