@@ -654,8 +654,13 @@ int pHashSender::SendOnepHashFrame()
     // Receive only positon ID
     err = recieve_msg_timeout(client, &msg_size, &more, &more_size, (void**)&data, m_timeout);
     if (err != 0)
+    {
       Logging("Timeout");
-
+      pHashController::GetInstance()->ReleasePhash(m_phashbox->id);
+      zmq_close(client);
+      zmq_term(context);
+      return -1;
+    }
     if (msg_size == sizeof(uint32_t))
     {
       memcpy(&posid, data, sizeof(uint32_t));
@@ -673,7 +678,13 @@ int pHashSender::SendOnepHashFrame()
     // Receive positon ID and cs value
     err = recieve_msg_timeout(client, &msg_size, &more, &more_size, (void**)&data, m_timeout);
     if (err != 0)
+    {
       Logging("Timeout");
+      pHashController::GetInstance()->ReleasePhash(m_phashbox->id);
+      zmq_close(client);
+      zmq_term(context);
+      return -1;
+    }
 
     if (msg_size == sizeof(uint32_t))
     {
@@ -685,7 +696,13 @@ int pHashSender::SendOnepHashFrame()
 
     err = recieve_msg_timeout(client, &msg_size, &more, &more_size, (void**)&data, m_timeout);
     if (err != 0)
+    {
       Logging("Timeout");
+      pHashController::GetInstance()->ReleasePhash(m_phashbox->id);
+      zmq_close(client);
+      zmq_term(context);
+      return -1;
+    }
 
     if (msg_size == sizeof(float))
     {
