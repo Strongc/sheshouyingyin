@@ -89,6 +89,38 @@ int recieve_msg(void *skt, size_t *msg_size, int64_t *more, size_t *more_size, v
   return res;
 }
 
+int recieve_msg_timeout(void *skt, size_t *msg_size, int64_t *more, size_t *more_size, void **data, int timeout)
+{
+  if (skt == NULL) return -1;
+  
+  time_t curr;
+  time(&curr);
+
+  zmq_msg_t msg;
+  zmq_msg_init(&msg);
+  int res = 0;
+  do 
+  {
+    res = zmq_recv(skt, &msg, ZMQ_NOBLOCK);
+  } while (res && time(NULL) < curr + timeout);
+
+  if (res == 0)
+  {
+    if (msg_size)
+    {
+      *msg_size = zmq_msg_size(&msg);
+    }
+    if (data)
+    {
+      *data = malloc(zmq_msg_size(&msg));
+      memcpy(*data, zmq_msg_data(&msg), zmq_msg_size(&msg));
+    }
+  }
+
+  zmq_getsockopt(skt, ZMQ_RCVMORE, more, more_size);
+  zmq_msg_close(&msg);
+  return res;
+}
 int send_empty_msg(void *skt)
 {
   zmq_msg_t msg;

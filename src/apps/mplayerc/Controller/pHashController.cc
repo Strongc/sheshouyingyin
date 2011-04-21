@@ -647,62 +647,53 @@ int pHashSender::SendOnepHashFrame()
   uint8* data = NULL;
   int64_t more;
   size_t msg_size, more_size = sizeof(int64_t);
-  if (m_phashbox->cmd == pHashController::NOCALCHASH)
+  int err = 0;
+  if (m_phashbox->cmd == pHashController::INSERT)
   {
-    Logging("cmd:%d NOCALCHASH", m_phashbox->cmd);
-    recieve_msg(client, &msg_size, &more, &more_size, (void**)&data);
-    flushall_msg_parts(client);
-  }
-  else
-  {
-    Logging("m_phashswitcher:%d CALCHASH", m_phashbox->cmd);
-    if (m_phashbox->cmd == pHashController::INSERT)
-    {
-      Logging("m_phashswitcher:%d INSERT", m_phashbox->cmd);
-      uint32_t posid = 0;
-      // Receive only positon ID
-      recieve_msg(client, &msg_size, &more, &more_size, (void**)&data);
-      if (msg_size == sizeof(uint32_t))
-      {
-        memcpy(&posid, data, sizeof(uint32_t));
-        Logging("Get Postion ID:%d", posid);
-      }
-      free(data);
-      data = NULL;
-      if (more)
-        flushall_msg_parts(client);
-    } 
-    else if (m_phashbox->cmd == pHashController::LOOKUP)
-    {
-      Logging("m_phashswitcher:%d LOOKUP", m_phashbox->cmd);
-      uint32_t posid = 0;
-      float cs = -1.0;
-      // Receive positon ID and cs value
-      recieve_msg(client, &msg_size, &more, &more_size, (void**)&data);
-      if (msg_size == sizeof(uint32_t))
-      {
-        memcpy(&posid, data, sizeof(uint32_t));
-        Logging("Get Postion ID: %d", posid);
-      }
-      free(data);
-      data = NULL;
+    uint32_t posid = 0;
+    // Receive only positon ID
+    err = recieve_msg_timeout(client, &msg_size, &more, &more_size, (void**)&data, m_timeout);
+    if (err != 0)
+      Logging("Timeout");
 
-      recieve_msg(client, &msg_size, &more, &more_size, (void**)&data);
-      if (msg_size == sizeof(float))
-      {
-        memcpy(&cs, data, sizeof(float));
-        Logging("Get cs: %f", cs);
-      }
-      if (more)
-        flushall_msg_parts(client);
-    }
-    else
+    if (msg_size == sizeof(uint32_t))
     {
-      zmq_close(client);
-      zmq_term(context);
-      pHashController::GetInstance()->ReleasePhash(m_phashbox->id);
-      return -1;
+      memcpy(&posid, data, sizeof(uint32_t));
+      Logging("Get Postion ID:%d", posid);
     }
+    free(data);
+    data = NULL;
+    if (more)
+      flushall_msg_parts(client);
+  } 
+  else if (m_phashbox->cmd == pHashController::LOOKUP)
+  {
+    uint32_t posid = 0;
+    float cs = -1.0;
+    // Receive positon ID and cs value
+    err = recieve_msg_timeout(client, &msg_size, &more, &more_size, (void**)&data, m_timeout);
+    if (err != 0)
+      Logging("Timeout");
+
+    if (msg_size == sizeof(uint32_t))
+    {
+      memcpy(&posid, data, sizeof(uint32_t));
+      Logging("Get Postion ID: %d", posid);
+    }
+    free(data);
+    data = NULL;
+
+    err = recieve_msg_timeout(client, &msg_size, &more, &more_size, (void**)&data, m_timeout);
+    if (err != 0)
+      Logging("Timeout");
+
+    if (msg_size == sizeof(float))
+    {
+      memcpy(&cs, data, sizeof(float));
+      Logging("Get cs: %f", cs);
+    }
+    if (more)
+      flushall_msg_parts(client);
   }
 
   pHashController::GetInstance()->ReleasePhash(m_phashbox->id);
@@ -715,7 +706,6 @@ int pHashSender::SendOnepHashFrame()
 void pHashSender::SetSphash(std::wstring phash)
 {
   m_sphash = phash; 
-  Logging(L"pHashSender:%s", m_sphash.c_str());
 }
 
 void pHashSender::SetPhash(phashbox* hash)
