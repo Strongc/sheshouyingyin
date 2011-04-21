@@ -12345,11 +12345,12 @@ void CMainFrame::CloseMediaPrivate()
   CAutoLock mOpenCloseLock(&m_csOpenClose);
   SVP_LogMsg5(L"CloseMediaPrivate");
   m_iMediaLoadState = MLS_CLOSING;
-  
+
+  pHashController::GetInstance()->Execute(FALSE);
+  OnPlayStop(); // SendMessage(WM_COMMAND, ID_PLAY_STOP);
+
   Logging("Release pHash and reset");
   pHashController::GetInstance()->ReleasePhashAll();
-
-  OnPlayStop(); // SendMessage(WM_COMMAND, ID_PLAY_STOP);
 
   m_iPlaybackMode = PM_NONE;
   m_iSpeedLevel = 0;
