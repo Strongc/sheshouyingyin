@@ -71,7 +71,7 @@ public:
   void ReleasePhashAll();
 private:
   void HookData(CComQIPtr<IAudioSwitcherFilter> pASF);
-
+  
   PHASHBLOCK m_phashblock;
   uint8_t m_cmd;
   std::wstring m_sphash;
@@ -118,5 +118,7 @@ private:
   std::wstring m_sphash;
   int SendOnepHashFrame();
   phashbox* m_phashbox;
+  const static int m_timeout  = 10;
+
 };
 #endif //PHASHCONTROLLER_H
