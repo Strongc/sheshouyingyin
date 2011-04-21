@@ -728,9 +728,8 @@ void CChildView::OnLButtonUp(UINT nFlags, CPoint point)
 	}
 	m_nItemToTrack = ret;
 
-
-	//	__super::OnLButtonUp(nFlags, point);
-	m_bMouseDown = FALSE;
+  m_bMouseDown = FALSE;
+  __super::OnLButtonUp(nFlags, point);
 }
 
 LRESULT CChildView::OnNcHitTest(CPoint point)

@@ -9,6 +9,7 @@ public:
   void  CreatScrollBar(std::wstring respath);
   void  SetPosition(POINT pt);
   void  SetDisPlay(BOOL dp);
+  BOOL  GetDisPlay();
   void  SetScrollBarRange(float winh);
   BOOL  DoPaint(WTL::CDC& dc);
   BOOL  OnHittest(POINT pt, BOOL bLbtdown, int& offsetspeed, HWND hwnd);
