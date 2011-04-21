@@ -184,6 +184,13 @@ void pHashController::ResetAll()
   SetSeek(FALSE);
 }
 
+void pHashController::ReleasePhashAll()
+{
+  if (m_phashblock.isrun)
+    FREE_PHASHMEM();
+  
+
+}
 void pHashController::_thread_GetpHash()
 {
   if (IsSeek())
@@ -285,10 +292,7 @@ void pHashController::HookData(CComQIPtr<IAudioSwitcherFilter> pASF)
 {
   pASF->SetpHashControl(&m_phashblock);
 }
-void pHashController::ReleasePhashAll()
-{
 
-}
 void pHashController::CheckEnv(int64_t timelength)
 {
   // check timelength
