@@ -1350,69 +1350,78 @@ void FingerPrint::FPCollect(IMediaSample* pIn, BYTE* pDataIn, WAVEFORMATEX* wfe,
     m_pHashPtr->isrun = FALSE;
     return;
   }
-
-  // MAIN Strategy: if time is Y mins ,the following X secs is what we want, pass them to another function
-  //          Then get downsampled and mixed, pass to phash cal function
-  //          Then send the result to get compared and return a confidence value(0~1) which shows the similarity of two samples
-
-  REFERENCE_TIME rtDurHash = (10000000i64) * g_phash_collectcfg[CFG_PHASHDATASECS];
-
-  // In this part, we use a array g_phash_collectcfg[] to do configuration. 
-  // The first element of the array is the times of phash
-  // The second element of the array is lasting time in sec unit
-  // The following elements are the start time
-  // You can find cfg array in Model/pHashModel.h
-  int timepos = (m_pHashPtr->phashcnt%g_phash_collectcfg[CFG_PHASHTIMES]) + 1;
-  m_rtStartpHash = (10000000i64)*g_phash_collectcfg[CFG_PHASHSTARTTIME+timepos];    // collection start time
-  m_rtEndpHash = m_rtStartpHash + rtDurHash;                                        // collection end time
-
-  if (m_pHashPtr->prevcnt != m_pHashPtr->phashcnt)
+  
+  try
   {
-    m_pHashPtr->prevcnt = m_pHashPtr->phashcnt;
+  
+
+    // MAIN Strategy: if time is Y mins ,the following X secs is what we want, pass them to another function
+    //          Then get downsampled and mixed, pass to phash cal function
+    //          Then send the result to get compared and return a confidence value(0~1) which shows the similarity of two samples
+
+    REFERENCE_TIME rtDurHash = (10000000i64) * g_phash_collectcfg[CFG_PHASHDATASECS];
+
+    // In this part, we use a array g_phash_collectcfg[] to do configuration. 
+    // The first element of the array is the times of phash
+    // The second element of the array is lasting time in sec unit
+    // The following elements are the start time
+    // You can find cfg array in Model/pHashModel.h
+    int timepos = (m_pHashPtr->phashcnt%g_phash_collectcfg[CFG_PHASHTIMES]) + 1;
+    m_rtStartpHash = (10000000i64)*g_phash_collectcfg[CFG_PHASHSTARTTIME+timepos];    // collection start time
+    m_rtEndpHash = m_rtStartpHash + rtDurHash;                                        // collection end time
+
+    if (m_pHashPtr->prevcnt != m_pHashPtr->phashcnt)
+    {
+      m_pHashPtr->prevcnt = m_pHashPtr->phashcnt;
+    }
+
+    m_pHashPtr->format = *wfe;
+    if(SUCCEEDED(pIn->GetTime(&rtStart, &rtStop)))
+    {
+      if (rtStart < m_rtStartpHash && (rtDur + rtStart) > m_rtStartpHash 
+        && (rtDur + rtStart) < m_rtEndpHash)                                        // the first part of data
+      {
+        int firstlen = 0;
+        BYTE* dataout = pDataIn;
+        AlignDataBlock(pDataIn, rtStart, m_rtStartpHash,
+          m_pHashPtr->format.nChannels, m_pHashPtr->format.wBitsPerSample,
+          m_pHashPtr->format.nSamplesPerSec, dataout, firstlen);
+        FillData4pHash(dataout, (pIn->GetActualDataLength()-firstlen));
+        REFERENCE_TIME Dur = 10000000i64*(pIn->GetActualDataLength()-firstlen)/wfe->nSamplesPerSec/wfe->nChannels/(wfe->wBitsPerSample>>3);
+      }
+      else if (rtStart == m_rtStartpHash)
+      {
+        FillData4pHash(pDataIn, pIn->GetActualDataLength());
+      }
+      else if (rtStart == m_rtEndpHash)
+      {
+        m_pHashPtr->phashcnt += 1;
+        PostMessage(AfxGetApp()->m_pMainWnd->m_hWnd, WM_COMMAND, ID_PHASH_COLLECTEND, NULL);
+      }
+      else if ((rtDur + rtStart) > m_rtEndpHash && rtStart < m_rtEndpHash 
+        && rtStart > m_rtStartpHash )                                        // the last part of data
+      { 
+        int lastlen = 0;
+        BYTE* dataout;
+        dataout = pDataIn;
+        AlignDataBlock(pDataIn, rtStart, m_rtEndpHash, m_pHashPtr->format.nChannels, 
+          m_pHashPtr->format.wBitsPerSample, m_pHashPtr->format.nSamplesPerSec, dataout, lastlen);
+        FillData4pHash(pDataIn, lastlen);
+
+        REFERENCE_TIME Dur = 10000000i64*(lastlen)/wfe->nSamplesPerSec/wfe->nChannels/(wfe->wBitsPerSample>>3);
+        // send a message and finish phash
+        m_pHashPtr->phashcnt += 1;
+        PostMessage(AfxGetApp()->m_pMainWnd->m_hWnd, WM_COMMAND, ID_PHASH_COLLECTEND, NULL);
+      }
+      else if (rtStart > m_rtStartpHash && (rtDur + rtStart) < m_rtEndpHash )       // the middle part of data
+      {
+        FillData4pHash(pDataIn, pIn->GetActualDataLength());
+      }
+    }
   }
-
-  m_pHashPtr->format = *wfe;
-  if(SUCCEEDED(pIn->GetTime(&rtStart, &rtStop)))
+  catch(...)
   {
-    if (rtStart < m_rtStartpHash && (rtDur + rtStart) > m_rtStartpHash 
-      && (rtDur + rtStart) < m_rtEndpHash)                                        // the first part of data
-    {
-      int firstlen = 0;
-      BYTE* dataout = pDataIn;
-      AlignDataBlock(pDataIn, rtStart, m_rtStartpHash,
-        m_pHashPtr->format.nChannels, m_pHashPtr->format.wBitsPerSample,
-        m_pHashPtr->format.nSamplesPerSec, dataout, firstlen);
-      FillData4pHash(dataout, (pIn->GetActualDataLength()-firstlen));
-      REFERENCE_TIME Dur = 10000000i64*(pIn->GetActualDataLength()-firstlen)/wfe->nSamplesPerSec/wfe->nChannels/(wfe->wBitsPerSample>>3);
-    }
-    else if (rtStart == m_rtStartpHash)
-    {
-      FillData4pHash(pDataIn, pIn->GetActualDataLength());
-    }
-    else if (rtStart == m_rtEndpHash)
-    {
-      m_pHashPtr->phashcnt += 1;
-      PostMessage(AfxGetApp()->m_pMainWnd->m_hWnd, WM_COMMAND, ID_PHASH_COLLECTEND, NULL);
-    }
-    else if ((rtDur + rtStart) > m_rtEndpHash && rtStart < m_rtEndpHash 
-      && rtStart > m_rtStartpHash )                                        // the last part of data
-    { 
-      int lastlen = 0;
-      BYTE* dataout;
-      dataout = pDataIn;
-      AlignDataBlock(pDataIn, rtStart, m_rtEndpHash, m_pHashPtr->format.nChannels, 
-        m_pHashPtr->format.wBitsPerSample, m_pHashPtr->format.nSamplesPerSec, dataout, lastlen);
-      FillData4pHash(pDataIn, lastlen);
-
-      REFERENCE_TIME Dur = 10000000i64*(lastlen)/wfe->nSamplesPerSec/wfe->nChannels/(wfe->wBitsPerSample>>3);
-      // send a message and finish phash
-      m_pHashPtr->phashcnt += 1;
-      PostMessage(AfxGetApp()->m_pMainWnd->m_hWnd, WM_COMMAND, ID_PHASH_COLLECTEND, NULL);
-    }
-    else if (rtStart > m_rtStartpHash && (rtDur + rtStart) < m_rtEndpHash )       // the middle part of data
-    {
-      FillData4pHash(pDataIn, pIn->GetActualDataLength());
-    }
+    ;
   }
 }
 
