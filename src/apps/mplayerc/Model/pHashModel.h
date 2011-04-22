@@ -39,17 +39,18 @@ enum {
   CFG_PHASHSTARTTIME
 };
 
+// We have checked the time length is long enough, so it is safe to use this cfg
 const int g_phash_collectcfg[] = {
   // times;
-  2,
+  4,
   // datasecs;
-  15,
+  20,
   // start collect time;
   0,  // this is a placeholder
-  0,
-  25//,
-//  20,
-//  30
+  5*60,
+  15*60,
+  30*60,
+  40*60
 };
 
 
