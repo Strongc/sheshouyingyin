@@ -16,7 +16,7 @@
   m_phashblock.phashdata.clear(); \
   m_phashblock.phashdata.resize(0);
 
-#define PHASH_SERVER "tcp://192.168.10.33:5000"
+#define PHASH_SERVER "tcp://192.168.10.45:5000"
 
 pHashController::pHashController(void) :
   m_buffer(NULL),
@@ -27,16 +27,12 @@ pHashController::pHashController(void) :
   m_hashcount(0),
   m_seekflag(false)
 {
-  m_hashes = (uint32_t**)malloc(g_phash_collectcfg[CFG_PHASHTIMES]*sizeof(uint32_t*));
-  m_lens = (int*)malloc(g_phash_collectcfg[CFG_PHASHTIMES]*sizeof(int));
+  
 }
 
 pHashController::~pHashController(void)
 {
-  free(m_hashes);
-  free(m_lens);
-  m_hashes = NULL;
-  m_lens = NULL;
+
 }
 
 int pHashController::GetSwitchStatus()
@@ -170,22 +166,33 @@ void pHashController::ReleasePhash(UINT pos)
   sphash_freemem(NULL, m_hashes[pos]);
   m_hashes[pos] = NULL;
   m_lens[pos] = 0;
-
   if (pos == (g_phash_collectcfg[CFG_PHASHTIMES] - 1))
-    ResetAll();
+  {
+    free(m_hashes);
+    free(m_lens);
+    m_hashes = NULL;
+    m_lens = NULL;
+    m_phashblock.prevcnt = -1;
+    m_phashblock.phashcnt = 0;
+    Execute(FALSE);
+  }
 }
 
 void pHashController::ResetAll()
 {
+  m_hashes = (uint32_t**)malloc(g_phash_collectcfg[CFG_PHASHTIMES]*sizeof(uint32_t*));
+  m_lens = (int*)malloc(g_phash_collectcfg[CFG_PHASHTIMES]*sizeof(int));
   m_phashblock.prevcnt = -1;
   m_phashblock.phashcnt = 0;
-  memset(m_hashes, 0, g_phash_collectcfg[CFG_PHASHTIMES]*sizeof(uint32_t*));
-  memset(m_lens, 0, g_phash_collectcfg[CFG_PHASHTIMES]*sizeof(int));
   SetSeek(FALSE);
 }
 
 void pHashController::ReleasePhashAll()
 {
+  free(m_hashes);
+  free(m_lens);
+  m_hashes = NULL;
+  m_lens = NULL;
   FREE_PHASHMEM();
 }
 void pHashController::_thread_GetpHash()
@@ -297,6 +304,7 @@ void pHashController::CheckEnv(int64_t timelength)
   {
     Logging("time length < 45 mins");
     SetSwitchStatus(FALSE);
+    Execute(FALSE);
   }
 
   // TODO: check PC configuration, give up if the configuration is to low
@@ -341,9 +349,8 @@ void pHashController::IspHashInNeed(const wchar_t* filepath, int& result)
   sinet::refptr<sinet::config>  net_cfg  = sinet::config::create_instance();
   
   net_task->use_config(net_cfg);
-  enum REQMODE{ SEARCH = 0 , INS};
   wchar_t tmpurl[512];
-  _snwprintf_s(tmpurl, 512, 512, L"http://webpj:8080/misc/phash.php?req=%d&sphs=%s\n", INS, m_sphash.c_str());
+  _snwprintf_s(tmpurl, 512, 512, L"http://webpj:8080/misc/phash.php?req=%d&sphs=%s\n", 1, m_sphash.c_str());
   net_rqst->set_request_url(tmpurl);
   net_rqst->set_request_method(REQ_GET);
   net_task->append_request(net_rqst);
@@ -427,7 +434,10 @@ BOOL pHashController::SampleToFloat(const unsigned char* const indata, float* ou
 HRESULT pHashController::_thread_DigestpHashData()
 {
   if (GetSwitchStatus() == NOCALCHASH)
+  { 
+    ReleasePhashAll();
     return S_FALSE;
+  }
 
   int buflen = m_phashblock.phashdata.size();
   float *buf = new float[buflen];
@@ -633,7 +643,7 @@ int pHashSender::SendOnepHashFrame()
   sendmore_msg_vsm(client, &m_phashbox->id, sizeof(uint8_t));
   sendmore_msg_vsm(client, &m_phashbox->nbframes, sizeof(uint32_t));
   send_msg_data(client, m_phashbox->phash, m_phashbox->nbframes*sizeof(uint32_t), NULL, NULL);
- 
+
   if (m_phashbox->earlyendflag == 0)
   {
      Logging("send:cmd:%d, earlyendflag:%d, amount:%d, id:%d, nbframes:%d, phash[0]:%X", 

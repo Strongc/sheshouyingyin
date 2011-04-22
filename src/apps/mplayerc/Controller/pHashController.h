@@ -103,8 +103,7 @@ private:
 };
 
 class pHashSender:
-  public ThreadHelperImpl<pHashSender>,
-  public NetworkControlerImpl
+  public ThreadHelperImpl<pHashSender>
 {
 public:
   pHashSender();
