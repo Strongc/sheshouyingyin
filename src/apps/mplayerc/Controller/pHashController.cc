@@ -20,6 +20,8 @@
 
 pHashController::pHashController(void) :
   m_buffer(NULL),
+  m_hashes(NULL),
+  m_lens(NULL),
   m_sr(8000),
   m_phashswitcher(CALPHASH),
   m_bufferlen(0),
@@ -72,8 +74,15 @@ void pHashController::_Thread()
   if (m_phashswitcher != NOCALCHASH)
   {
     //_thread_MonopHash();
-    _thread_DigestpHashData();
-    _thread_GetpHash();
+    try
+    {
+      _thread_DigestpHashData();
+      _thread_GetpHash();
+    }
+    catch(...)
+    {
+      Logging(L"pHashController thread crash");
+    }
   }
   else
   {
@@ -168,10 +177,7 @@ void pHashController::ReleasePhash(UINT pos)
   m_lens[pos] = 0;
   if (pos == (g_phash_collectcfg[CFG_PHASHTIMES] - 1))
   {
-    free(m_hashes);
-    free(m_lens);
-    m_hashes = NULL;
-    m_lens = NULL;
+    ReleasePhashAll();
     m_phashblock.prevcnt = -1;
     m_phashblock.phashcnt = 0;
     Execute(FALSE);
@@ -189,8 +195,10 @@ void pHashController::ResetAll()
 
 void pHashController::ReleasePhashAll()
 {
-  free(m_hashes);
-  free(m_lens);
+  if (m_hashes)
+    free(m_hashes);
+  if (m_lens)
+    free(m_lens);
   m_hashes = NULL;
   m_lens = NULL;
   FREE_PHASHMEM();
@@ -609,9 +617,17 @@ pHashSender::~pHashSender()
 
 void pHashSender::_Thread()
 {
-  Logging(L"pHashSender::_thread enter ");
-  SendOnepHashFrame();
-  Logging(L"pHashSender::_thread exit ");
+  try
+  {
+    Logging(L"pHashSender::_thread enter ");
+    SendOnepHashFrame();
+    Logging(L"pHashSender::_thread exit ");
+  }
+  catch(...)
+  {
+    Logging(L"pHashSender thread crash");
+  }
+  
 }
 
 int pHashSender::SendOnepHashFrame()
