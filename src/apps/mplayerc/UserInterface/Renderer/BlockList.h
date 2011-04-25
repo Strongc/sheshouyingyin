@@ -7,6 +7,7 @@
 #include "UILayerBlock.h"
 #include "../../Model/MediaComm.h"
 #include <boost/signals.hpp>
+#include "../../Model/MCBlockModel.h"
 /* 
  * Class BlockUnit implements block UI and UnitData
  */
@@ -36,6 +37,10 @@ class BlockList
 public:
   BlockList();
   ~BlockList();
+
+  typedef boost::shared_ptr<MCBlockModel::abstract_model<BlockUnit> > ModelPtr;
+  void SetModel(ModelPtr ptr);
+  ModelPtr m_pModel;
 
   bool IsBlockExist(const MediaData &md);
   void AddBlock(BlockUnit* unit);  

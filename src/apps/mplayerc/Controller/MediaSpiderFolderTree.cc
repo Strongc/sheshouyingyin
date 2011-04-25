@@ -117,9 +117,9 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
 {
   using std::wstring;
   using std::vector;
-  using namespace boost::filesystem;
   using boost::wregex;
   using boost::regex_replace;
+  using namespace boost::filesystem;
 
   // ---------------------------------------------------------------------------
   // Note:search current folder and its parent's sub folders
@@ -131,97 +131,115 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
 
   // search the folder
   wpath folder(sFolder);
-  directory_iterator itCur(folder);
-  directory_iterator itEnd;
-
-  while (itCur != itEnd)
+  if (exists(folder))
   {
-    // see if need to be stop
-    if (_Exit_state(0))
-      return;
-
-    if (!is_directory(itCur->path()) && IsSupportExtension(itCur->path().wstring()))
+    directory_iterator itCur(folder);
+    directory_iterator itEnd;
+    while (itCur != itEnd)
     {
-      // add it to the folder tree
-      m_treeModel.addFile(sFolder, itCur->path().filename().wstring());
+      // see if need to be stop
+      if (_Exit_state(0))
+        return;
 
-      // add it to the media center for appending
-      MediaData md;
-      md.path = sFolder;
-      md.filename = itCur->path().filename().wstring();
-
-      MediaCenterController::GetInstance()->AddNewFoundData(md);
-
-      // notify this change to main frame window
-      CMPlayerCApp *pApp = AfxGetMyApp();
-      if (pApp)
+      if (!is_directory(itCur->path()) && !isHiddenPath(itCur->path().wstring()) && IsSupportExtension(itCur->path().wstring()))
       {
-        CWnd *pWnd = pApp->GetMainWnd();
-        if (pWnd)
-          pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
+        // add it to the folder tree
+        m_treeModel.addFile(sFolder, itCur->path().filename().wstring());
+
+        // add it to the media center for appending
+        MediaData md;
+        md.path = sFolder;
+        md.filename = itCur->path().filename().wstring();
+
+        MediaCenterController::GetInstance()->AddNewFoundData(md);
+
+        // notify this change to main frame window
+        CMPlayerCApp *pApp = AfxGetMyApp();
+        if (pApp)
+        {
+          CWnd *pWnd = pApp->GetMainWnd();
+          if (pWnd)
+            pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
+        }
       }
+
+      ++itCur;
+
+      // sleep for a moment
+      ::Sleep(50);
     }
-
-    ++itCur;
-
-    // sleep for a moment
-    ::Sleep(50);
   }
 
   // search the current folder's parent's sub folders(current folder's brother)
+  folder = regex_replace(folder.wstring(), wregex(L"\\\\*$"), L"");
   wpath ptParent(folder.parent_path());
-  directory_iterator itParentCur(ptParent);
-  directory_iterator itParentEnd;
-  while (itParentCur != itParentEnd)
+  if (exists(ptParent))
   {
-    // see if need to be stop
-    if (_Exit_state(0))
-      return;  
-    
-    if (is_directory(itParentCur->path()) && (itParentCur->path().wstring() != sFolder))
+    directory_iterator itParentCur(ptParent);
+    directory_iterator itParentEnd;
+    while (itParentCur != itParentEnd)
     {
-      directory_iterator itSubCur(itParentCur->path());
-      directory_iterator itSubEnd;
-      while (itSubCur != itSubEnd)
+      // see if need to be stop
+      if (_Exit_state(0))
+        return;  
+
+      if (is_directory(itParentCur->path()) &&
+          !::isHiddenPath(itParentCur->path().wstring()) &&
+          (itParentCur->path() != folder) &&
+          (itParentCur->path().wstring() != sFolder))
       {
-        // see if need to be stop
-        if (_Exit_state(0))
-          return;
-        
-        if (!is_directory(itSubCur->path()) && IsSupportExtension(itSubCur->path().wstring()))
+        try
         {
-          // Note: do not add it to the folder tree
-          //// add it to the folder tree
-          MediaData md;
-          md.path = itSubCur->path().parent_path().wstring();
-          md.path = regex_replace(md.path, wregex(L"\\\\*$"), L"\\\\");
-          md.filename = itSubCur->path().filename().wstring();
-
-          //m_treeModel.addFile(md);
-
-          // add it to the media center for appending
-          MediaCenterController::GetInstance()->AddNewFoundData(md);
-
-          // notify this change to main frame window
-          CMPlayerCApp *pApp = AfxGetMyApp();
-          if (pApp)
+          directory_iterator itSubCur(itParentCur->path());
+          directory_iterator itSubEnd;
+          while (itSubCur != itSubEnd)
           {
-            CWnd *pWnd = pApp->GetMainWnd();
-            if (pWnd)
-              pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
+            // see if need to be stop
+            if (_Exit_state(0))
+              return;
+            
+            if (!is_directory(itSubCur->path()) &&
+                !::isHiddenPath(itSubCur->path().wstring()) &&
+                IsSupportExtension(itSubCur->path().wstring()))
+            {
+              // Note: do not add it to the folder tree
+              // add it to the folder tree
+              MediaData md;
+              md.path = itSubCur->path().parent_path().wstring();
+              md.path = regex_replace(md.path, wregex(L"\\\\*$"), L"\\\\");
+              md.filename = itSubCur->path().filename().wstring();
+
+              m_treeModel.addFile(md.path, md.filename);
+
+              // add it to the media center for appending
+              MediaCenterController::GetInstance()->AddNewFoundData(md);
+
+              // notify this change to main frame window
+              CMPlayerCApp *pApp = AfxGetMyApp();
+              if (pApp)
+              {
+                CWnd *pWnd = pApp->GetMainWnd();
+                if (pWnd)
+                  pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
+              }
+            }
+
+            ++itSubCur;
+
+            // sleep for a moment
+            ::Sleep(50);
           }
         }
+        catch (const filesystem_error &err)
+        {
 
-        ++itSubCur;
-
-        // sleep for a moment
-        ::Sleep(50);
+        }
       }
+
+      // sleep for a moment
+      ::Sleep(50);
+
+      ++itParentCur;
     }
-
-    // sleep for a moment
-    ::Sleep(50);
-
-    ++itParentCur;
   }
 }
