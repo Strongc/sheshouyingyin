@@ -717,6 +717,7 @@ bool CGraphCore::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
         }
       }
 
+
       if(m_fOpeningAborted) throw aborted;
 
       OpenCreateGraphObject(pOMD);
@@ -819,6 +820,20 @@ bool CGraphCore::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
       {
         POSITION pos = pOMD->subs.GetHeadPosition();
         while(pos){ LoadSubtitle(pOMD->subs.GetNext(pos));}
+
+        // Setup pHash Env
+        if(pMS)
+        {
+          __int64 rtDur = 0;
+          pMS->GetDuration(&rtDur);
+          pHashController::GetInstance()->CheckEnv(rtDur);
+        }
+
+        // for collect phash
+        CComQIPtr<IAudioSwitcherFilter> pASF = FindFilter(__uuidof(CAudioSwitcherFilter), pGB);
+        pHashController::GetInstance()->Init(pASF, m_fnCurPlayingFile.GetBuffer());
+        m_fnCurPlayingFile.ReleaseBuffer();
+
       }
 
       if(::GetCurrentThreadId() == AfxGetApp()->m_nThreadID)
@@ -886,8 +901,12 @@ void CGraphCore::CloseMediaPrivate()
   CAutoLock mOpenCloseLock(&m_csOpenClose);
   SVP_LogMsg5(L"CloseMediaPrivate");
   m_iMediaLoadState = MLS_CLOSING;
-
+ 
+  pHashController::GetInstance()->Execute(FALSE);
   OnPlayStop(); // SendMessage(WM_COMMAND, ID_PLAY_STOP);
+
+  Logging("Release pHash and reset");
+  pHashController::GetInstance()->ReleasePhashAll();
 
   m_iPlaybackMode = PM_NONE;
   m_iSpeedLevel = 0;

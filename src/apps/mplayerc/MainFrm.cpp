@@ -511,6 +511,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
   ON_UPDATE_COMMAND_UI_RANGE(ID_SKIN_FIRST, ID_SKIN_TENTH, OnUpdateSkinSelection)
 
   ON_COMMAND(ID_SKIN_MORESELECTION, OnSkinMoreSelection)
+  ON_COMMAND(ID_PHASH_COLLECTEND, OnFilledUp4pHash)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -12309,7 +12310,11 @@ void CMainFrame::OpenCurPlaylistItem(REFERENCE_TIME rtStart)
 
   // MediaCenterController::GetInstance()->Playback(pli.m_fns.GetHead().GetString());
   if(p) OpenMedia(p);
-
+  
+  // if Start point is not zero , turn off phash
+  if (rtStart != 0)
+    pHashController::GetInstance()->SetSwitchStatus(pHashController::NOCALCHASH);
+ 
 }
 
 void CMainFrame::AddCurDevToPlaylist()
@@ -14807,4 +14812,16 @@ void CMainFrame::SearchSkinFolder()
   m_skinmanage.SetSkinPath(skinpath);
   m_skinmanage.SeachFile(skinpath.GetBuffer(MAX_PATH));
   skinpath.ReleaseBuffer();
+}
+
+void CMainFrame::OnFilledUp4pHash()
+{
+  // Start dealing with the data from audioswitcher filter
+  pHashController* hashctrl = pHashController::GetInstance();  
+  if (hashctrl->GetSwitchStatus() != pHashController::NOCALCHASH)
+  {
+    Logging("Start pHash filled up");
+    hashctrl->_Stop();
+    hashctrl->_Start();
+  }
 }

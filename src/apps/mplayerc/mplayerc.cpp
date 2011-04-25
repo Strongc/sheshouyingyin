@@ -77,7 +77,7 @@ DECLARE_LAZYINSTANCE(UpdateController);
 DECLARE_LAZYINSTANCE(MediaCenterController);
 DECLARE_LAZYINSTANCE(UserShareController);
 DECLARE_LAZYINSTANCE(PingPongController);
-
+DECLARE_LAZYINSTANCE(pHashController);
 /////////
 
 HINSTANCE (__stdcall * Real_ShellExecuteW)(HWND hwnd, LPCWSTR lpOperation, 
