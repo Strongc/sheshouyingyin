@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="windows-1250"?>
+﻿<?xml version="1.0" encoding="windows-1250"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
@@ -1969,6 +1969,14 @@
 			</File>
 			<File
 				RelativePath=".\Model\HotkeySchemeParser.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Model\MCBlockModel.cc"
+				>
+			</File>
+			<File
+				RelativePath=".\Model\MCBlockModel.h"
 				>
 			</File>
 			<File

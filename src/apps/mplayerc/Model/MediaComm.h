@@ -66,7 +66,7 @@ struct file
 
 struct folder
 {
-  folder() : tFolderCreateTime(-1), tNextSpiderInterval(3), nMerit(0) {}
+  folder() : tFolderCreateTime(-1), tNextSpiderInterval(0), nMerit(0) {}
 
   std::wstring sFolderPath;  // dir's name, not include backslash
   std::wstring sFolderHash;
@@ -89,6 +89,14 @@ typedef tcl::tree<media_tree::folder> MediaTreeFolders;
 
 // *****************************************************************************
 // some helper functions
+inline bool isHiddenPath(const std::wstring &sPath)
+{
+  DWORD dwAttr = ::GetFileAttributes(sPath.c_str());
+  bool bRet = dwAttr & FILE_ATTRIBUTE_HIDDEN ? true : false;
+
+  return bRet;
+}
+
 inline std::wstring fullFolderPath(const MediaTreeFolders *pFolder)
 {
   std::wstring sCurFolderPath;

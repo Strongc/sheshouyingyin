@@ -103,11 +103,21 @@ BlockList::BlockList()
   m_offsettotal = 0;
   m_scrollbar = 0;
   AddScrollBar();
+
+  ModelPtr ptr(new MCBlockModel::added_time_sort_model);
+  //ModelPtr ptr(new MCBlockModel::filename_sort_model);
+  SetModel(ptr); // using added time model to sort the files for default
 }
 
 BlockList::~BlockList()
 {
 
+}
+
+void BlockList::SetModel(ModelPtr ptr)
+{
+  m_pModel = ptr;
+  m_pModel->set_data(&m_list, &m_start);
 }
 
 void BlockList::DoPaint(HDC hdc, RECT rcclient)
@@ -167,7 +177,10 @@ bool BlockList::IsBlockExist(const MediaData &md)
 void BlockList::AddBlock(BlockUnit* unit)
 {
   unit->DefLayer();
-  m_list.push_back(unit);
+
+  // using model to insert data, because the model will insert data by an order
+  // the model is like a adapter
+  m_pModel->insert(unit);
 }
 
 BOOL BlockList::AddScrollBar()
