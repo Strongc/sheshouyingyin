@@ -35,11 +35,12 @@ media_tree::model::TreeIterator media_tree::model::findFolder(const std::wstring
                           bind(&media_tree::folder::sFolderPath, _1) == sCurPart);
     if (itFind == pCurTree->end())
     {
-      // insert new node if allowed else return an invalid iterator
+      // insert new node if allowed, else return an invalid iterator
       if (bCreateIfNotExist)
       {
         media_tree::folder fd;
         fd.sFolderPath = sCurPart;
+        fd.tFolderCreateTime = ::time(0);
         itFind = pCurTree->insert(fd);
 
         pCurTree = itFind.node();
