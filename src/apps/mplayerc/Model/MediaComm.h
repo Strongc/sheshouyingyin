@@ -66,7 +66,7 @@ struct file
 
 struct folder
 {
-  folder() : tFolderCreateTime(-1), tNextSpiderInterval(0), nMerit(0) {}
+  folder() : tFolderCreateTime(-1), tNextSpiderInterval(3), nMerit(0) {}
 
   std::wstring sFolderPath;  // dir's name, not include backslash
   std::wstring sFolderHash;
