@@ -12,6 +12,7 @@
 #include "../Model/UsrBehaviorData.h"
 #include "../Utils/SPlayerGUID.h"
 #include <Strings.h>
+#include "SVPToolBox.h"
 
 sinet::refptr<sinet::task> UploadForm(std::wstring file, std::wstring uid, std::wstring url)
 {
@@ -54,7 +55,7 @@ void UbdUploadController::_Thread()
   std::wstring uid, format, path;
   WIN32_FIND_DATA findfiledata;
   std::vector<std::wstring> uploadfiles, removelist;
-  wchar_t curdbname[MAX_PATH], apppath[MAX_PATH], findfileform[MAX_PATH];
+  wchar_t curdbname[MAX_PATH], findfileform[MAX_PATH];
 
   sinet::refptr<sinet::pool> pool = sinet::pool::create_instance();
   sinet::refptr<sinet::task> task = sinet::task::create_instance();
@@ -81,10 +82,10 @@ void UbdUploadController::_Thread()
   // find upload files
   SPlayerGUID::GenerateGUID(uid);
   UsrBehaviorData::GetYearAndWeekcount(year, weekcount);
-  ::GetEnvironmentVariable(L"APPDATA", apppath, MAX_PATH);
- 
-  path = apppath;
-  path += L"\\SPlayer\\ubdata\\";
+
+  CSVPToolBox toolbox;
+  toolbox.GetAppDataPath(path);
+  path += L"\\ubdata\\";
 
   format = path;
   format += LOGFILE_FORMAT;
