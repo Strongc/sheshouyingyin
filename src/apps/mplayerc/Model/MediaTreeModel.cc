@@ -4,8 +4,7 @@
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
 #include <boost/foreach.hpp>
-//#include "SVPToolBox.h"
-//#include "../Utils/SPlayerGUID.h"
+#include "MediaSQLite.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // normal part
@@ -125,6 +124,7 @@ void media_tree::model::addFile(const std::wstring &sFolder, const std::wstring 
 
 void media_tree::model::save2DB()
 {
+  MediaSQLite<>::exec(L"begin transaction");
   MediaTreeFolders::tree_type::pre_order_iterator it = m_lsFolderTree.pre_order_begin();
   while (it != m_lsFolderTree.pre_order_end())
   {
@@ -154,6 +154,7 @@ void media_tree::model::save2DB()
 
     ++it;
   }
+  MediaSQLite<>::exec(L"end transaction");
 }
 
 void media_tree::model::splitPath(const std::wstring &sPath, std::stack<std::wstring> &skResult)
