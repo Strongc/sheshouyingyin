@@ -10,6 +10,7 @@
 #include "../Controller/UsrBehaviorController.h"
 #include <comdef.h>
 #include <Wbemidl.h>
+#include "SVPToolBox.h"
 
 #define GET_EVNDATABYWMI(sql, f, var) \
 { \
@@ -42,14 +43,15 @@ UsrBehaviorData::~UsrBehaviorData()
   struct _stat buf;
   int year, weekcount;
   std::wstring uid, format, path;
-  wchar_t dbname[MAX_PATH], apppath[MAX_PATH];
+  wchar_t dbname[MAX_PATH];
   bool setenv = false;
 
   SPlayerGUID::GenerateGUID(uid);
   GetYearAndWeekcount(year, weekcount);
-  ::GetEnvironmentVariable(L"APPDATA", apppath, MAX_PATH);
-  path = apppath;
-  path += L"\\SPlayer\\ubdata\\";
+
+  CSVPToolBox toolbox;
+  toolbox.GetAppDataPath(path);
+  path += L"\\ubdata\\";
 
   if (!::CreateDirectory(path.c_str(), NULL))
   {
