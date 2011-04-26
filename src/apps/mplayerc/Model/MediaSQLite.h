@@ -2,6 +2,7 @@
 
 #include <sqlitepp/sqlitepp.hpp>
 #include "../../../base/CriticalSection.h"
+#include "SVPToolBox.h"
 
 extern sqlitepp::session g_dbMediaSQLite;
 extern CriticalSection g_csMediaSQLite;
@@ -191,7 +192,10 @@ protected:
     {
       try
       {
-        g_dbMediaSQLite.open(GetModuleFolder() + L"media.db");
+        std::wstring sPath;
+        CSVPToolBox toolbox;
+        toolbox.GetAppDataPath(sPath);
+        g_dbMediaSQLite.open(sPath + L"\\media.db");
 
         g_dbMediaSQLite << L"CREATE TABLE IF NOT EXISTS media_data ("
           L"uniqueid integer PRIMARY KEY, path text, filename text,"
@@ -209,23 +213,5 @@ protected:
         throw;
       }
     }
-  }
-
-  // helper functions
-  static std::wstring GetModuleFolder(HMODULE hModuleHandle = 0)
-  {
-    TCHAR szModuleFullPath[MAX_PATH] = {0};
-    ::GetModuleFileName(hModuleHandle, szModuleFullPath, MAX_PATH);
-
-    TCHAR szDrive[10] = {0};
-    TCHAR szDir[MAX_PATH] = {0};
-
-    ::_wsplitpath(szModuleFullPath, szDrive, szDir, 0, 0);
-
-    std::wstring sResult;
-    sResult += szDrive;
-    sResult += szDir;
-
-    return sResult;
   }
 };
