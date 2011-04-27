@@ -221,26 +221,26 @@ void BlockList::AlignColumnBlocks()
 {
   m_x.clear();
   float x = m_spacing;
-  while (x + m_blockw + m_spacing  + m_scrollbarwidth < m_winw)
+  
+  int scrollbarwidth = 0;
+  if (m_scrollbar->GetDisPlay())
+    scrollbarwidth = m_scrollbarwidth;
+  int count = (m_winw - 2 * m_spacing - scrollbarwidth) / m_blockw;
+  int totalspacing = (int)(m_winw - 2 * m_spacing - scrollbarwidth) % (int)m_blockw;
+  int spacing;
+  if (totalspacing / (count - 1) >= m_spacing)
+    spacing = totalspacing / (count - 1);
+  else
+    spacing = totalspacing / (count - 2);
+
+  while (count--)
   {
     m_x.push_back(x);
-    // next block
-    if (x + m_blockw + m_spacing + m_scrollbarwidth < m_winw)
-      x += m_blockw + m_spacing;
-    else
-      break;
+    x += m_blockw + spacing;
   }
 
   m_maxcolumn = m_x.size();
-  if (m_maxcolumn == 0)
-    return;
-
-  // fix each block is position
-  float distance = m_winw - x;
-  float offset = distance/2;
-  std::vector<float>::iterator it = m_x.begin();
-  for (; it != m_x.end(); ++it)
-    *it += offset;
+  
 }
 
 void BlockList::AlignRowBlocks()
