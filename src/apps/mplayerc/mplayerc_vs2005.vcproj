@@ -1800,6 +1800,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Controller\CoverDownloadController.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Controller\CoverDownloadController.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Controller\HashController.cc"
 				>
 			</File>

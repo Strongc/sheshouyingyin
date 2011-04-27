@@ -22,6 +22,7 @@ public:
   void DeleteLayer();
   void DoPaint(WTL::CDC& dc, POINT& pt);
   BOOL OnHittest(POINT pt, BOOL blbtndown);
+  void ChangeLayer(std::wstring bmppath);
 
 public:
   MediaData m_data;
