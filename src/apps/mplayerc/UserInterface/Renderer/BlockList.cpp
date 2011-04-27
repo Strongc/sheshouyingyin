@@ -4,7 +4,7 @@
 // BlockOne
 
 #define  BEHITTEST 11
-#define  BEDELETE   12
+#define  BEHIDE   12
 #define  BEPLAY    13
 
 BlockUnit::BlockUnit() :
@@ -24,7 +24,7 @@ void BlockUnit::DefLayer()
   m_layer->AddUILayer(L"mark", new UILayer(L"\\skin\\mark.png"));
   m_layer->AddUILayer(L"def", new UILayer(L"\\skin\\def.png"));
   m_layer->AddUILayer(L"play", new UILayer(L"\\skin\\play.png"));
-  m_layer->AddUILayer(L"del", new UILayer(L"\\skin\\del.png", FALSE));
+  m_layer->AddUILayer(L"hide", new UILayer(L"\\skin\\hide.png"));
 }
 
 void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
@@ -32,19 +32,19 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   UILayer* layer = NULL;
   UILayer* def = NULL;
   UILayer* play = NULL;
-  UILayer* del = NULL;
+  UILayer* hide = NULL;
 
   m_layer->GetUILayer(L"mark", &layer);
   m_layer->GetUILayer(L"def", &def);
   m_layer->GetUILayer(L"play", &play);
-  m_layer->GetUILayer(L"del", &del);
+  m_layer->GetUILayer(L"hide", &hide);
 
   layer->SetDisplay(TRUE);
   def->SetDisplay(TRUE);
-
+  
   POINT play_fixpt = {27, 57};
   POINT def_fixpt = {6, 6};
-  POINT del_fixpt = {95, 8};
+  POINT hide_fixpt = {65, 6};
 
   layer->SetTexturePos(pt);
 
@@ -54,8 +54,8 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   POINT playpt = {play_fixpt.x+pt.x, play_fixpt.y+pt.y};
   play->SetTexturePos(playpt);
 
-  POINT delpt = {del_fixpt.x+pt.x, del_fixpt.y+pt.y};
-  del->SetTexturePos(delpt);
+  POINT hidept = {hide_fixpt.x+pt.x, hide_fixpt.y+pt.y};
+  hide->SetTexturePos(hidept);
 
   m_layer->DoPaint(dc);
 
@@ -67,7 +67,13 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   rc.top = pt.y+117;
   rc.bottom = rc.top+20;
 
-  dc.DrawText(m_data.filename.c_str(), m_data.filename.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+  std::wstring fmnm;
+  if (m_data.filmname.empty())
+    fmnm = m_data.filename;
+  else
+    fmnm = m_data.filmname;
+  //dc.DrawText(m_data.filename.c_str(), m_data.filename.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+  dc.DrawText(fmnm.c_str(), fmnm.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
 }
 
 void BlockUnit::DeleteLayer()
@@ -421,7 +427,7 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown)
     state = (*it)->OnHittest(pt, blbtndown);
     switch (state)
     {
-    case BEDELETE:
+    case BEHIDE:
       DeleteBlock(it);
       return state;
     case BEPLAY:
@@ -431,7 +437,10 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown)
       }
       return state;
     case BEHITTEST:
-      m_tipstring = (*it)->m_data.filename;
+      if ((*it)->m_data.filmname.empty())
+        m_tipstring = (*it)->m_data.filename;
+      else
+        m_tipstring = (*it)->m_data.filmname;
       return state;
     }
   }
@@ -519,7 +528,7 @@ void BlockListView::HandleLButtonDown(POINT pt, RECT rcclient)
   if (layerstate == BEPLAY)
     SendMessage(m_hwnd, WM_LBUTTONUP, 0, 0);
 
-  if (layerstate == BEDELETE)
+  if (layerstate == BEHIDE)
   {
     Update(rcclient.right, rcclient.bottom);
     InvalidateRect(m_hwnd, &rcclient, FALSE);
