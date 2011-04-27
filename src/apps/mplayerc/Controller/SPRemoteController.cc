@@ -14,7 +14,7 @@ SPRemoteController::SPRemoteController() :
   sprintf_s(pid, 16, "%u", GetCurrentProcessId());
   m_queuename = REMOTEMSG_CHANNELNAME;
   m_queuename += pid;
-  Logging("Remote URL: http://127.0.0.1:8080/splayer?id=%s&cmd=play|pause|next|prev&p=", pid);
+  Logging("Remote URL: http://127.0.0.1:8080/command.html?id=%s&wm_command=play|pause|next|prev&p=", pid);
   InitQ();
 
   // connect

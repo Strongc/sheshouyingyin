@@ -8,6 +8,7 @@
 #include "cmdmap.h"
 #include "boost/interprocess/ipc/message_queue.hpp"
 
+#define SPREMOTE_PORT "8874"
 static wchar_t *service_name = L"SPRemote";
 static wchar_t *service_desc = L"SPlayer Service. See more http://splayer.org.";
 
@@ -33,6 +34,16 @@ static struct mg_context* ctx;
 static REMOTECMD cmds;
 static wchar_t path[MAX_PATH];
 
+DWORD GetSPlayerPID()
+{
+  DWORD pid = 0;
+  HWND wnd = FindWindow(L"SVPLayered", NULL);
+  if (wnd)
+    GetWindowThreadProcessId(wnd, &pid);
+
+  return pid;
+}
+
 void* SPCall(enum mg_event event,
               struct mg_connection *conn,
               const struct mg_request_info *request_info)
@@ -44,31 +55,30 @@ void* SPCall(enum mg_event event,
   char* query = request_info->query_string;
 
   /* Remote command format:
-   * http://xxx.xxx.xxx/splayer?id={PID}&cmd={CMD}&p={PARAM}
+   * http://xxx.xxx.xxx/command.html?id={PID}&wm_command={CMD}&p={PARAM}
    * 
-   * {PID} is a splayer process id
+   * {PID} is a splayer process id(if not define then it will do find by GetSplayerPID).
    * {CMD} is a one of follow play/pause/next/...
    * {PARAM} is a append value
    */
-  
-  uri ? printf(uri) : 0;
-  printf("\n");
-  query ? printf(query) : 0;
+
   // {SIGN}
-  if (!strcmp("/splayer", uri))
+  if (!strcmp("/command.html", uri))
   {
     char val[128];
     mg_get_var(query, strlen(query), "id", val, 127);
-
+    
+    if (val[0] == 0)
+      sprintf_s(val, sizeof(val), "%d", GetSPlayerPID());
     std::string queuename = REMOTEMSG_CHANNELNAME;
     queuename += val;
-    
-    mg_get_var(query, strlen(query), "cmd", val, 127);
+
+    mg_get_var(query, strlen(query), "wm_command", val, 127);
     std::string cmd = val;
     
     mg_get_var(query, strlen(query), "p", val, 127);
     std::string param = val;
-    printf("\n msgid: %d", cmds[cmd]);
+
     if (!cmds[cmd].msgid)
       send_http(conn, 500, "error url");
     else
@@ -88,7 +98,7 @@ void* SPCall(enum mg_event event,
         mq.send(&msg, sizeof(msg), 0);
         send_http(conn, 200, "OK");
       }
-      catch (boost::interprocess::interprocess_exception& e)
+      catch (...)
       {
         send_http(conn, 500, "Command send fail");
       }
@@ -111,7 +121,7 @@ int _tmain(int argc, _TCHAR* argv[])
 {
   GetModuleFileName(NULL, path, sizeof(path));
   wchar_t* cmd = argv[1];
-  
+
   if (cmd == NULL)
   {
     //return 0;
@@ -125,11 +135,11 @@ int _tmain(int argc, _TCHAR* argv[])
     root = root.substr(0, root.find_last_of('\\'));
     const char *options[] = {
       "document_root",  root.c_str(),
-      "listening_ports", "8080",
+      "listening_ports", SPREMOTE_PORT,
       NULL
     };
     ctx = mg_start(&SPCall, options);
-    Sleep(1000*60*60);
+    Sleep(1000*3600);
     mg_stop(ctx);
   }
   else if (cmd[0] == '-' && cmd[1] == 'h')
@@ -194,7 +204,7 @@ void WINAPI ServiceMain(void)
   root = root.substr(0, root.find_last_of('\\'));
   const char *options[] = {
     "document_root",  root.c_str(),
-    "listening_ports", "8080",
+    "listening_ports", SPREMOTE_PORT,
     NULL
   };
   ctx = mg_start(&SPCall, options);
