@@ -26,7 +26,7 @@ void CoverDownloadController::_Thread()
     std::wstring szFileHash = HashController::GetInstance()->GetSPHash(szFilePath.c_str());
     std::wstring url = L"http://m.shooter.cn/api/medias/getinfoBysphash/sphash:";
     url += szFileHash;
-    url = L"http://jay.webpj.com:8888/api/medias/getinfoBysphash/sphash: \
+    //url = L"http://jay.webpj.com:8888/api/medias/getinfoBysphash/sphash: \
           25026521a390357bd1fcf52899268c97;c0c3ddd9b5a1c1d292131a91c9200648;cb72fdc1ff58dfc5cda9943e098c304b;e7752a7553168a73f29b0e36f09a86a8";
     
     req->set_request_url(url.c_str());
