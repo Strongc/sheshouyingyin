@@ -2,7 +2,7 @@
 #include "UILayerBlock.h"
 
 #define  BEHITTEST 11
-#define  BEDELETE   12
+#define  BEHIDE   12
 #define  BEPLAY    13
 
 UILayerBlock::UILayerBlock():
@@ -93,8 +93,8 @@ int UILayerBlock::OnHittest(POINT pt, BOOL blbtndown)
     if (it->first.find(L"mark") != std::wstring::npos)
       extent = 20;
     BOOL bl = it->second->OnHittest(pt, blbtndown, extent);
-    if (it->first.find(L"del") != std::wstring::npos && blbtndown && bl)
-      return BEDELETE;
+    if (it->first.find(L"hide") != std::wstring::npos && blbtndown && bl)
+      return BEHIDE;
     else if (it->first.find(L"play") != std::wstring::npos && blbtndown && bl)
       return BEPLAY;
     else if (bl)
