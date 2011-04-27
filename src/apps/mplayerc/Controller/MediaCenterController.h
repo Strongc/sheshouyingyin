@@ -8,6 +8,7 @@
 #include "MediaSpiderFolderTree.h"
 #include <map>
 #include "..\UserInterface\Renderer\BlockList.h"
+#include "CoverDownloadController.h"
 
 class MediaCenterController:
   public LazyInstanceImpl<MediaCenterController>
@@ -50,7 +51,8 @@ private:
   BOOL m_planestate;
   MediaDatas m_mediadata;
   BlockListView m_blocklist;
-
+  CoverDownloadController m_cover;
+  
   // Data
   MediaModel            m_model;
   media_tree::model     m_treeModel;
