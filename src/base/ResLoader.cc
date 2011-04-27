@@ -1,4 +1,5 @@
-#include <Windows.h>
+//#include <Windows.h>
+#include "SVPToolBox.h"
 #include "ResLoader.h"
 
 #include <Shlwapi.h>
@@ -86,6 +87,23 @@ HBITMAP ResLoader::LoadBitmapFromModule(const std::wstring& sBitmapName,
   HBITMAP hBitmap = 0;
   hBitmap = (HBITMAP)::LoadImage(::GetModuleHandle(pcsz),
           sBitmapName.c_str(), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR | LR_CREATEDIBSECTION);
+
+  return hBitmap;
+}
+
+HBITMAP ResLoader::LoadBitmapFromAppData(const std::wstring& sBitmapPath)
+{
+  std::wstring sFullPath;
+  CSVPToolBox csvptb;
+  csvptb.GetAppDataPath(sFullPath);
+  sFullPath += L"\\MC\\" + sBitmapPath;
+
+  CImage igImage;
+  igImage.Load(sFullPath.c_str());
+
+  HBITMAP hBitmap = (HBITMAP)igImage;
+
+  igImage.Detach();
 
   return hBitmap;
 }

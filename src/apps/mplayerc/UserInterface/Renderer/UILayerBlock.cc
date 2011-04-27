@@ -32,8 +32,8 @@ BOOL UILayerBlock::GetUILayer(std::wstring key, UILayer** layer)
 
 BOOL UILayerBlock::AddUILayer(std::wstring key, UILayer* layer)
 {
-  if (m_layers.find(key) != m_layers.end())
-    return FALSE;
+//   if (m_layers.find(key) != m_layers.end())
+//     return FALSE;
 
   m_layers[key] = layer;
   return TRUE;

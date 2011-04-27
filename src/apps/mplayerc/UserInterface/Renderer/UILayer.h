@@ -10,8 +10,9 @@ public:
 public:
   BOOL SetTexture(HBITMAP texture);
   BOOL SetTexturePos(const POINT& pt);
+  BOOL SetTexturePos(const POINT& pt, int width, int height);
   BOOL SetDisplay(BOOL display = TRUE);
-
+  
   BOOL GetTexturePos(POINT& pt);
   BOOL GetTextureRect(RECT& rc);
 
@@ -19,10 +20,13 @@ public:
 
   BOOL OnHittest(POINT pt, BOOL blbtndown, int extent);
 
+  void ChangeLayer(std::wstring bmppath);
+
 private:
   WTL::CBitmap   m_texture;
   POINT          m_texturepos;
   BOOL           m_fixdisplay;
   BOOL           m_display;
   BITMAP         m_bm;
+  WTL::CRect     m_texturerect;
 };

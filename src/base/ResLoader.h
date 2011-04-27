@@ -21,4 +21,7 @@ public:
   // sResModuleName is the resource module name, L"" indicate it's the exe
   HBITMAP LoadBitmapFromModule(const std::wstring& sBitmapName,
                         const std::wstring& sResModuleName = L"");
+
+  // sBitmapPath is a relative path
+  HBITMAP LoadBitmapFromAppData(const std::wstring& sBitmapPath);
 };

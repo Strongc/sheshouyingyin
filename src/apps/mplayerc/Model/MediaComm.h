@@ -14,6 +14,7 @@ struct MediaData
   std::wstring path;
   std::wstring filename;
   std::wstring thumbnailpath;
+  std::wstring filmname;
   int videotime;
 };
 

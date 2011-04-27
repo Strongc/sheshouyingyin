@@ -42,14 +42,14 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   layer->SetDisplay(TRUE);
   def->SetDisplay(TRUE);
 
-  POINT play_fixpt = {40, 70};
-  POINT def_fixpt = {5, 5};
+  POINT play_fixpt = {27, 57};
+  POINT def_fixpt = {6, 6};
   POINT del_fixpt = {95, 8};
 
   layer->SetTexturePos(pt);
 
   POINT defpt = {def_fixpt.x+pt.x, def_fixpt.y+pt.y};
-  def->SetTexturePos(defpt);
+  def->SetTexturePos(defpt, 90, 103);
 
   POINT playpt = {play_fixpt.x+pt.x, play_fixpt.y+pt.y};
   play->SetTexturePos(playpt);
@@ -64,7 +64,7 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   RECT rc;
   layer->GetTextureRect(rc);
   rc.left = pt.x;
-  rc.top = pt.y+140;
+  rc.top = pt.y+117;
   rc.bottom = rc.top+20;
 
   dc.DrawText(m_data.filename.c_str(), m_data.filename.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
@@ -80,6 +80,12 @@ int BlockUnit::OnHittest(POINT pt, BOOL blbtndown)
   return m_layer->OnHittest(pt, blbtndown);
 }
 
+void BlockUnit::ChangeLayer(std::wstring bmppath)
+{
+  UILayer* def = NULL;
+  m_layer->GetUILayer(L"def", &def);
+  def->ChangeLayer(bmppath);
+}
 
 // BlockList
 
@@ -91,11 +97,11 @@ int BlockUnit::OnHittest(POINT pt, BOOL blbtndown)
 
 BlockList::BlockList()
 {
-  m_blockw = 138;
-  m_blockh = 138;
+  m_blockw = 102;
+  m_blockh = 115;
   m_spacing = 10;
   m_scrollbarwidth = 20;
-  m_top = 30;
+  m_top = 25;
   m_start = m_list.begin();
   m_end = m_list.begin();
   m_x.clear();
@@ -123,7 +129,7 @@ void BlockList::SetModel(ModelPtr ptr)
 void BlockList::DoPaint(HDC hdc, RECT rcclient)
 {
   WTL::CMemoryDC dc(hdc, rcclient);
-  HBRUSH hbrush = ::CreateSolidBrush(RGB(231, 231, 231));
+  HBRUSH hbrush = ::CreateSolidBrush(COLORREF(0x313131));
   dc.FillRect(&rcclient, hbrush);
   DoPaint(dc);
 }
@@ -235,7 +241,7 @@ void BlockList::AlignRowBlocks()
 {
   float y;
   if (m_y.empty())
-    y = 30;
+    y = m_top;
   else
     y = m_y.front();
   m_y.clear();
