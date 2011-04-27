@@ -77,7 +77,7 @@ void MediaCenterController::AddNewFoundData(const MediaData &md)
 void MediaCenterController::AddBlock()
 {
   m_csSpiderNewDatas.lock();
-
+  
   // add new found data to gui and then remove them
   std::vector<MediaData>::iterator it = m_vtSpiderNewDatas.begin();
   while (it != m_vtSpiderNewDatas.end())
@@ -88,6 +88,8 @@ void MediaCenterController::AddBlock()
       BlockUnit* one = new BlockUnit;
       one->m_data = *it;
       m_blocklist.AddBlock(one);
+
+      m_cover.SetBlockUnit(one);
       
       RECT rc;
       GetClientRect(m_hwnd, &rc);
@@ -99,6 +101,8 @@ void MediaCenterController::AddBlock()
     ++it;
   }
 
+  m_cover._Start();
+ 
   m_vtSpiderNewDatas.clear();
 
   m_csSpiderNewDatas.unlock();

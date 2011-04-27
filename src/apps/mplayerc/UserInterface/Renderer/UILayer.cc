@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "UILayer.h"
 #include <ResLoader.h>
-
+#include "logging.h"
 UILayer::UILayer(std::wstring respath, BOOL display /* = TRUE */)
 {
   ResLoader rs;
@@ -20,7 +20,7 @@ BOOL UILayer::SetTexture(HBITMAP texture)
   if (texture == NULL)
     return FALSE;
 
-  m_texture = texture;
+  m_texture.Attach(texture);
 
   m_texture.GetBitmap(&m_bm);
 
@@ -44,10 +44,11 @@ BOOL UILayer::SetTexture(HBITMAP texture)
 
 BOOL UILayer::GetTextureRect(RECT& rc)
 {
-  rc.top = m_texturepos.y;
-  rc.left = m_texturepos.x;
-  rc.right = m_texturepos.x + m_bm.bmWidth;
-  rc.bottom = m_texturepos.y + m_bm.bmHeight;
+//   rc.top = m_texturepos.y;
+//   rc.left = m_texturepos.x;
+//   rc.right = m_texturepos.x + m_bm.bmWidth;
+//   rc.bottom = m_texturepos.y + m_bm.bmHeight;
+  rc = m_texturerect;
 
   return TRUE;
 }
@@ -60,7 +61,20 @@ BOOL UILayer::GetTexturePos(POINT& pt)
 
 BOOL UILayer::SetTexturePos(const POINT& pt)
 {
-  m_texturepos = pt;
+  m_texturerect.left = pt.x;
+  m_texturerect.top = pt.y;
+  m_texturerect.right = pt.x + m_bm.bmWidth;
+  m_texturerect.bottom = pt.y + m_bm.bmHeight;
+  return TRUE;
+}
+
+BOOL UILayer::SetTexturePos(const POINT& pt, int width, int height)
+{
+  //m_texturepos = pt;
+  m_texturerect.left = pt.x;
+  m_texturerect.top = pt.y;
+  m_texturerect.right = pt.x + width;
+  m_texturerect.bottom = pt.y + height;
   return TRUE;
 }
 
@@ -82,9 +96,13 @@ BOOL UILayer::DoPaint(WTL::CDC& dc)
   hold_texture = texturedc.SelectBitmap(m_texture);
 
   BLENDFUNCTION bf = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
-  dc.AlphaBlend(m_texturepos.x, m_texturepos.y, m_bm.bmWidth, m_bm.bmHeight,
-                texturedc, 0, 0, m_bm.bmWidth, m_bm.bmHeight, bf);
-
+  if (m_bm.bmBitsPixel == 32)
+    dc.AlphaBlend(m_texturerect.left, m_texturerect.top, m_texturerect.Width(), m_texturerect.Height(),
+                  texturedc, 0, 0, m_bm.bmWidth, m_bm.bmHeight, bf);
+  else
+    dc.StretchBlt(m_texturerect.left, m_texturerect.top, m_texturerect.Width(), m_texturerect.Height(),
+                  texturedc, 0, 0, m_bm.bmWidth, m_bm.bmHeight, SRCCOPY);
+  
   texturedc.SelectBitmap(hold_texture);
   texturedc.DeleteDC();
   
@@ -96,12 +114,20 @@ BOOL UILayer::OnHittest(POINT pt, BOOL blbtndown, int extent)
   if (!m_fixdisplay)
     return FALSE;
 
-  RECT hittestrc = {m_texturepos.x, m_texturepos.y, m_texturepos.x + m_bm.bmWidth,
-             m_texturepos.y + m_bm.bmHeight + extent};
-  BOOL bl = PtInRect(&hittestrc, pt);
+//   RECT hittestrc = {m_texturepos.x, m_texturepos.y, m_texturepos.x + m_bm.bmWidth,
+//              m_texturepos.y + m_bm.bmHeight + extent};
+  BOOL bl = PtInRect(&m_texturerect, pt);
   if (bl)
     SetDisplay(TRUE);
   else
     SetDisplay(FALSE);
   return bl;
+}
+
+void UILayer::ChangeLayer(std::wstring bmppath)
+{
+  Logging(L"-----------changelayer:%s", bmppath.c_str());
+  ResLoader resLoad;
+  HBITMAP hbmp = resLoad.LoadBitmapFromAppData(bmppath);
+  SetTexture(hbmp);
 }
