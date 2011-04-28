@@ -10,6 +10,9 @@ class CoverDownloadController :
   public NetworkControlerImpl
 {
 public:
+  CoverDownloadController();
+  ~CoverDownloadController();
+
   void SetBlockUnit(BlockUnit* unit);
   void _Thread();
   void _Thread_old();

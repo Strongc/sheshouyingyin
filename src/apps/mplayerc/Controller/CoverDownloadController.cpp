@@ -6,6 +6,23 @@
 #include "json\json.h"
 #include "logging.h"
 
+CoverDownloadController::CoverDownloadController()
+{
+  // create folder if MC folder is not existed
+  std::wstring coverdownloadpath;
+  CSVPToolBox csvptb;
+  csvptb.GetAppDataPath(coverdownloadpath);
+  coverdownloadpath += L"\\mc";
+  ::CreateDirectory(coverdownloadpath.c_str(), NULL);
+  coverdownloadpath += L"\\cover\\";
+  ::CreateDirectory(coverdownloadpath.c_str(), NULL);
+}
+
+CoverDownloadController::~CoverDownloadController()
+{
+
+}
+
 void CoverDownloadController::SetBlockUnit(BlockUnit* unit)
 {
   m_list.push_back(unit);
@@ -13,15 +30,6 @@ void CoverDownloadController::SetBlockUnit(BlockUnit* unit)
 
 void CoverDownloadController::_Thread()
 {
-   // create folder if MC folder is not existed
-   std::wstring coverdownloadpath;
-   CSVPToolBox csvptb;
-   csvptb.GetAppDataPath(coverdownloadpath);
-   coverdownloadpath += L"\\mc";
-   ::CreateDirectory(coverdownloadpath.c_str(), NULL);
-   coverdownloadpath += L"\\cover\\";
-   ::CreateDirectory(coverdownloadpath.c_str(), NULL);
-   
    // sinet
    std::wstring requesturl = L"http://m.shooter.cn/api/medias/getinfoBysphash/sphash:";
    std::wstring downloadurl = L"http://img.shooter.cn/";
@@ -32,6 +40,12 @@ void CoverDownloadController::_Thread()
    std::list<BlockUnit*>::iterator it = m_list.begin();
    while (it != m_list.end())
    {
+     std::wstring thumbnailpath = (*it)->m_data.thumbnailpath;
+     if (!thumbnailpath.empty() &&
+        (GetFileAttributes(thumbnailpath.c_str()) != INVALID_FILE_ATTRIBUTES || 
+         GetLastError() != ERROR_FILE_NOT_FOUND))
+       continue;
+         
      refptr<request> req = request::create_instance();
      std::wstring szFilePath = (*it)->m_data.path + (*it)->m_data.filename; 
      std::wstring szFileHash = HashController::GetInstance()->GetSPHash(szFilePath.c_str());
@@ -57,7 +71,7 @@ void CoverDownloadController::_Thread()
      si_buffer buff = req->get_response_buffer();
      buff.push_back(0);
      std::string results = (char*)&buff[0];
-    
+     
      // parse results
      //std::wstring cover = L"4cfeb4ab4370be6a0f62b117";
      //std::wstring url = L"http://img.shooter.cn/b1//17//4cfeb4ab4370be6a0f62b117_100x0.jpg";
@@ -90,7 +104,10 @@ void CoverDownloadController::_Thread()
      url += cover + L"_100x0.jpg";
     
      //(L"C:\\Users\\Staff\\AppData\Roaming\\SPlayer\\MC\\4cfeb4ab4370be6a0f62b117.jpg");
-
+     std::wstring coverdownloadpath;
+     CSVPToolBox csvptb;
+     csvptb.GetAppDataPath(coverdownloadpath);
+     coverdownloadpath += L"\\mc\\cover\\";
      std::wstring extra = L"";
      std::wstring downloadpath;
      
