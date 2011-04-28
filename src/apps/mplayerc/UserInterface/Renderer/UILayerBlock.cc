@@ -1,10 +1,12 @@
 #include "stdafx.h"
 #include "UILayerBlock.h"
 
-#define  BEHITTEST 11
-#define  BEHIDE   12
-#define  BEPLAY    13
-
+#define  BEMARKORDEFHITTEST 11
+#define  BEHIDEHITTEST 12
+#define  BEPLAYHITTEST 13
+#define  BEHIDE   14
+#define  BEPLAY    15
+  
 UILayerBlock::UILayerBlock():
 m_lastbtnstate(FALSE)
 {
@@ -93,12 +95,25 @@ int UILayerBlock::OnHittest(POINT pt, BOOL blbtndown)
     if (it->first.find(L"mark") != std::wstring::npos)
       extent = 20;
     BOOL bl = it->second->OnHittest(pt, blbtndown, extent);
-    if (it->first.find(L"hide") != std::wstring::npos && blbtndown && bl)
-      return BEHIDE;
-    else if (it->first.find(L"play") != std::wstring::npos && blbtndown && bl)
-      return BEPLAY;
-    else if (bl)
-      state = BEHITTEST;
+
+    if (it->first.find(L"hide") != std::wstring::npos && bl)
+    {
+      if (blbtndown)
+        return BEHIDE;
+      else
+        return BEHIDEHITTEST;
+    }
+    
+    if (it->first.find(L"play") != std::wstring::npos && bl)
+    {
+      if (blbtndown)
+        return BEPLAY;
+      else
+        return BEPLAYHITTEST;
+    }
+    
+    if (bl)
+      state = BEMARKORDEFHITTEST;
   }
   return state;
 }

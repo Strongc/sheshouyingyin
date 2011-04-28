@@ -812,6 +812,11 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
         m_tip.ClearStat();
       else
         m_tip.SetTips(tips.c_str(), TRUE);
+
+      RECT rc;
+      rc = m_blockunit->GetHittest();
+      InvalidateRect(&rc);
+      return;
     }
 
     RECT rc;
@@ -847,7 +852,7 @@ BOOL CChildView::OnSetCover(UINT nID)
     m_blockunit->ChangeLayer(filedlg.GetFileName().GetString());
 
   CRect rc;
-  GetClientRect(&rc);
+  rc = m_blockunit->GetHittest();
   InvalidateRect(&rc);
   return TRUE;
 }
