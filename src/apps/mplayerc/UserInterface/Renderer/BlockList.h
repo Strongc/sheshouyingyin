@@ -51,7 +51,7 @@ public:
   void DoPaint(HDC hdc, RECT rcclient);
   void DoPaint(WTL::CDC& dc);
   BOOL OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetspeed, HWND hwnd);
-  int OnHittest(POINT pt, BOOL blbtndown);
+  int OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit);
   
   // logic
   void SetOffset(float offset);
@@ -109,9 +109,10 @@ public:
   BlockListView();
   ~BlockListView();
 
-  void HandleLButtonDown(POINT pt, RECT rcclient);
-  void HandleLButtonUp(POINT pt, RECT rcclient);
-  void HandleMouseMove(POINT pt, RECT rcclient);
+  void HandleLButtonDown(POINT pt, BlockUnit** unit);
+  void HandleLButtonUp(POINT pt, BlockUnit** unit);
+  void HandleMouseMove(POINT pt, BlockUnit** unit);
+  BOOL HandleRButtonUp(POINT pt, BlockUnit** unit, CMenu* menu);
 
   void SetFrameHwnd(HWND hwnd);
   void SetScrollSpeed(int* speed);
