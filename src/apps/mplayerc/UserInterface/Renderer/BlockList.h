@@ -1,4 +1,4 @@
-
+﻿
 #pragma once
 
 #include <list>
@@ -96,6 +96,7 @@ private:
   std::vector<float> m_x;
   std::vector<float> m_y;
   std::list<BlockUnit*> m_list;
+  std::list<BlockUnit*> m_listHide;  // store hidden items
 
   MediaCenterScrollBar* m_scrollbar;
 

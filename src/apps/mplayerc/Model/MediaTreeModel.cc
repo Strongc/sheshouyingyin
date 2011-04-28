@@ -65,6 +65,31 @@ media_tree::model::TreeIterator media_tree::model::findFolder(const std::wstring
   return itResult;
 }
 
+media_tree::model::FileIterator media_tree::model::findFile(const std::wstring &sPath, const std::wstring &sFilename)
+{
+  FileIterator itResult;  // return FileIterator() is fails, otherwise return the real iterator
+
+  TreeIterator itFolder = findFolder(sPath);
+  TreeIterator itEnd;
+  if (itFolder != itEnd)
+  {
+    // find this folder
+    FileIterator itFile = itFolder->lsFiles.begin();
+    while (itFile != itFolder->lsFiles.end())
+    {
+      if (itFile->sFilename == sFilename)
+      {
+        itResult = itFile;
+        break;
+      }
+
+      ++itFile;
+    }
+  }
+
+  return itResult;
+}
+
 MediaTreeFolders& media_tree::model::mediaTree()
 {
   return m_lsFolderTree;
@@ -105,6 +130,7 @@ void media_tree::model::addFile(const std::wstring &sFolder, const std::wstring 
     {
       media_tree::file fe;
       fe.sFilename = sFilename;
+      fe.sFileFolder = fullFolderPath(itFolder.node());
       //      CSVPToolBox toolbox;
       //      std::wstring sThumbnailPath;
       //      toolbox.GetAppDataPath(sThumbnailPath);
@@ -145,6 +171,7 @@ void media_tree::model::save2DB()
       md.path = sFolderPath;
       md.filename = itFile->sFilename;
       md.thumbnailpath = itFile->sFileThumbnail;
+      md.bHide = itFile->bHide;
       // md.videotime = ;
 
       m_model.Add(md);
@@ -191,7 +218,13 @@ void media_tree::model::initMerit(const std::wstring &sFolder, int nMerit)
   TreeIterator itFolder = findFolder(sFolder, true);
   TreeIterator itEnd;
   if (itFolder != itEnd)
-  {
     itFolder->nMerit = nMerit;
-  }
+}
+
+void media_tree::model::initHide(const std::wstring &sFolder, const std::wstring &sFilename, bool bHide)
+{
+  FileIterator itFile = findFile(sFolder, sFilename);
+  FileIterator itEnd;
+  if (itFile != itEnd)
+    itFile->bHide = bHide;
 }

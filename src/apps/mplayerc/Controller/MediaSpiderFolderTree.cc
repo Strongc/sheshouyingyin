@@ -147,19 +147,20 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
         m_treeModel.addFile(sFolder, itCur->path().filename().wstring());
 
         // add it to the media center for appending
-        MediaData md;
-        md.path = sFolder;
-        md.filename = itCur->path().filename().wstring();
-
-        MediaCenterController::GetInstance()->AddNewFoundData(md);
-
-        // notify this change to main frame window
-        CMPlayerCApp *pApp = AfxGetMyApp();
-        if (pApp)
+        media_tree::model::FileIterator itFile = m_treeModel.findFile(sFolder, itCur->path().filename().wstring());
+        media_tree::model::FileIterator itFileEnd;
+        if (itFile != itFileEnd)
         {
-          CWnd *pWnd = pApp->GetMainWnd();
-          if (pWnd)
-            pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
+          MediaCenterController::GetInstance()->AddNewFoundData(itFile);
+
+          // notify this change to main frame window
+          CMPlayerCApp *pApp = AfxGetMyApp();
+          if (pApp)
+          {
+            CWnd *pWnd = pApp->GetMainWnd();
+            if (pWnd)
+              pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
+          }
         }
       }
 
@@ -212,15 +213,22 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
               m_treeModel.addFile(md.path, md.filename);
 
               // add it to the media center for appending
-              MediaCenterController::GetInstance()->AddNewFoundData(md);
-
-              // notify this change to main frame window
-              CMPlayerCApp *pApp = AfxGetMyApp();
-              if (pApp)
+              media_tree::model::FileIterator itFile = m_treeModel.findFile(md.path, md.filename);
+              media_tree::model::FileIterator itFileEnd;
+              if (itFile != itFileEnd)
               {
-                CWnd *pWnd = pApp->GetMainWnd();
-                if (pWnd)
-                  pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
+                md.bHide = itFile->bHide;
+
+                MediaCenterController::GetInstance()->AddNewFoundData(itFile);
+
+                // notify this change to main frame window
+                CMPlayerCApp *pApp = AfxGetMyApp();
+                if (pApp)
+                {
+                  CWnd *pWnd = pApp->GetMainWnd();
+                  if (pWnd)
+                    pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
+                }
               }
             }
 

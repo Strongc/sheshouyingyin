@@ -13,6 +13,9 @@ template<typename _DataType, typename _Container = std::list<_DataType* > >
 class abstract_model
 {
 public:
+  virtual ~abstract_model() {}
+
+public:
   typedef _Container DataContainer;
   typedef _Container * DataPtr;
   typedef typename _Container::iterator * DataIteratorPtr;
