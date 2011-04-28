@@ -3,9 +3,11 @@
 
 // BlockOne
 
-#define  BEHITTEST 11
-#define  BEHIDE   12
-#define  BEPLAY    13
+#define  BEMARKORDEFHITTEST 11
+#define  BEHIDEHITTEST 12
+#define  BEPLAYHITTEST 13
+#define  BEHIDE   14
+#define  BEPLAY    15
 
 BlockUnit::BlockUnit() :
   m_layer(new UILayerBlock)
@@ -73,6 +75,7 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   else
     fmnm = m_data.filmname;
   //dc.DrawText(m_data.filename.c_str(), m_data.filename.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+  CPen pen;
   dc.DrawText(fmnm.c_str(), fmnm.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
 }
 
@@ -91,6 +94,15 @@ void BlockUnit::ChangeLayer(std::wstring bmppath)
   UILayer* def = NULL;
   m_layer->GetUILayer(L"def", &def);
   def->ChangeLayer(bmppath);
+}
+
+RECT BlockUnit::GetHittest()
+{
+  RECT rc;
+  UILayer* mark = NULL;
+  m_layer->GetUILayer(L"mark", &mark);
+  mark->GetTextureRect(rc);
+  return rc;
 }
 
 // BlockList
@@ -453,7 +465,11 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
           m_sigPlayback((*it)->m_data); // emit a signal
       }
       return state;
-    case BEHITTEST:
+    case  BEHIDEHITTEST:
+    case  BEPLAYHITTEST:
+      *unit = (*it);
+      return state;
+    case BEMARKORDEFHITTEST:
       if ((*it)->m_data.filmname.empty())
         m_tipstring = (*it)->m_data.filename;
       else
@@ -512,9 +528,10 @@ BOOL BlockList::ContiniuPaint()
 //BlockListView
 
 BlockListView::BlockListView():
-m_lbtndown(FALSE)
+ m_lbtndown(FALSE)
 {
-
+  RECT rc = {0,0,0,0};
+  m_prehittest = rc;
 }
 
 BlockListView::~BlockListView()
@@ -552,7 +569,8 @@ void BlockListView::HandleLButtonDown(POINT pt, BlockUnit** unit)
   if (layerstate == BEHIDE)
   {
     Update(rcclient.right, rcclient.bottom);
-    InvalidateRect(m_hwnd, &rcclient, FALSE);
+    //InvalidateRect(m_hwnd, &rcclient, FALSE);
+    InvalidateRect(m_hwnd, (&(*unit)->GetHittest()), FALSE);
   }
 }
 
@@ -591,10 +609,12 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
   if (!bscroll && m_lbtndown)
     PostMessage(m_hwnd, WM_LBUTTONUP, 0, 0);
 
-  if (blayer == BEHITTEST)
+  if (blayer == BEPLAYHITTEST || blayer == BEHIDEHITTEST)
   {
     SetTimer(m_hwnd, TIMER_TIPS, 500, NULL);
-    ::InvalidateRect(m_hwnd, &rcclient, FALSE);
+    ::InvalidateRect(m_hwnd, &m_prehittest, FALSE);
+    //::InvalidateRect(m_hwnd, &((*unit)->GetHittest()), FALSE);
+    m_prehittest = (*unit)->GetHittest();
   }
 }
 
@@ -604,7 +624,7 @@ BOOL BlockListView::HandleRButtonUp(POINT pt, BlockUnit** unit, CMenu* menu)
 
   int blayer = OnHittest(pt, FALSE, unit);
   
-  if (blayer == BEHITTEST)
+  if (blayer == BEMARKORDEFHITTEST)
   {
     RECT rc;
     GetWindowRect(m_hwnd, &rc);

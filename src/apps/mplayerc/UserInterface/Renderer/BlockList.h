@@ -23,6 +23,7 @@ public:
   void DoPaint(WTL::CDC& dc, POINT& pt);
   BOOL OnHittest(POINT pt, BOOL blbtndown);
   void ChangeLayer(std::wstring bmppath);
+  RECT GetHittest();
 
 public:
   MediaData m_data;
@@ -123,4 +124,5 @@ private:
   int*  m_scrollspeed;
   BOOL* m_boffset; 
   BOOL m_lbtndown;
+  RECT m_prehittest;
 };
