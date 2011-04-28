@@ -34,15 +34,17 @@ public:
    BlockListView& GetBlockListView();
 
 // slots
-protected:
+public:
   void HandlePlayback(const MediaData &md);
+
+  void HandleDelBlock(const BlockUnit *pBlock);
 
 public:
   // Data control
   void SpiderStart();
   void SpiderStop();
 
-  void AddNewFoundData(const MediaData &md);
+  void AddNewFoundData(media_tree::model::FileIterator fileIterator);
   void AddBlock();
 
 private:
@@ -59,6 +61,6 @@ private:
   MediaCheckDB          m_checkDB;
   MediaSpiderFolderTree m_spider;
 
-  std::vector<MediaData> m_vtSpiderNewDatas;  // remove when it added
+  std::vector<media_tree::model::FileIterator> m_vtSpiderNewDatas;  // remove when it added
   CriticalSection        m_csSpiderNewDatas;  // protect above vector member
 };

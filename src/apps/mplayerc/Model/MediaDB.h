@@ -6,7 +6,7 @@ extern const std::wstring g_sDBType;
 
 // Note:
 // this class is like a factory class
-template<typename T1 = int, typename T2 = int, typename T3 = int, typename T4 = int, typename T5 = int >
+template<typename T1 = int, typename T2 = int, typename T3 = int, typename T4 = int, typename T5 = int, typename T6 = int>
 class MediaDB
 {
 public:
@@ -15,11 +15,12 @@ public:
                   , T2 *pRet2 = 0
                   , T3 *pRet3 = 0
                   , T4 *pRet4 = 0
-                  , T5 *pRet5 = 0)
+                  , T5 *pRet5 = 0
+                  , T6 *pRet6 = 0)
   {
     if (g_sDBType == L"sqlite")
     {
-      MediaSQLite<T1, T2, T3, T4, T5 >::exec(sql, pRet1, pRet2, pRet3, pRet4, pRet5);
+      MediaSQLite<T1, T2, T3, T4, T5, T6 >::exec(sql, pRet1, pRet2, pRet3, pRet4, pRet5, pRet6);
     }
   }
 
@@ -28,11 +29,12 @@ public:
                 , std::vector<T2 > *pRet2 = 0
                 , std::vector<T3 > *pRet3 = 0
                 , std::vector<T4 > *pRet4 = 0
-                , std::vector<T5 > *pRet5 = 0)
+                , std::vector<T5 > *pRet5 = 0
+                , std::vector<T6 > *pRet6 = 0)
   {
     if (g_sDBType == L"sqlite")
     {
-      MediaSQLite<T1, T2, T3, T4, T5 >::exec(sql, pRet1, pRet2, pRet3, pRet4, pRet5);
+      MediaSQLite<T1, T2, T3, T4, T5, T6 >::exec(sql, pRet1, pRet2, pRet3, pRet4, pRet5, pRet6);
     }
   }
 
@@ -40,7 +42,7 @@ public:
   {
     if (g_sDBType == L"sqlite")
     {
-      MediaSQLite<T1, T2, T3, T4, T5 >::last_insert_rowid(llRet);
+      MediaSQLite<T1, T2, T3, T4, T5, T6 >::last_insert_rowid(llRet);
     }
   }
 
@@ -51,7 +53,7 @@ protected:
 
     if (DBType == L"sqlite")
     {
-      MediaSQLite<T1, T2, T3, T4, T5 >::init();
+      MediaSQLite<T1, T2, T3, T4, T5, T6 >::init();
     }
   }
 };

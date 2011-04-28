@@ -1,5 +1,6 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "BlockList.h"
+#include "..\..\Controller\MediaCenterController.h"
 
 // BlockOne
 
@@ -186,6 +187,7 @@ void BlockList::DoPaint(WTL::CDC& dc)
 
 bool BlockList::IsBlockExist(const MediaData &md)
 {
+  // search normal files
   std::list<BlockUnit*>::iterator it = m_list.begin();
   while (it != m_list.end())
   {
@@ -194,6 +196,17 @@ bool BlockList::IsBlockExist(const MediaData &md)
       return true;
 
     ++it;
+  }
+
+  // search hidden files
+  std::list<BlockUnit*>::iterator itHidden = m_listHide.begin();
+  while (itHidden != m_listHide.end())
+  {
+    if (((*itHidden)->m_data.path == md.path) && 
+      ((*itHidden)->m_data.filename == md.filename))
+      return true;
+
+    ++itHidden;
   }
   
   return false;
@@ -205,7 +218,10 @@ void BlockList::AddBlock(BlockUnit* unit)
 
   // using model to insert data, because the model will insert data by an order
   // the model is like a adapter
-  m_pModel->insert(unit);
+  if (unit->m_data.bHide)
+    m_listHide.push_back(unit);
+  else
+    m_pModel->insert(unit);
 }
 
 BOOL BlockList::AddScrollBar()
@@ -457,6 +473,7 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
     switch (state)
     {
     case BEHIDE:
+      if ((*unit) == (*it))        *unit = 0;
       DeleteBlock(it);
       return state;
     case BEPLAY:
@@ -489,6 +506,13 @@ RECT BlockList::GetScrollBarHittest()
 
 void BlockList::DeleteBlock(std::list<BlockUnit*>::iterator it)
 {
+  // add it into hide list
+  (*it)->m_data.bHide = true;
+  m_listHide.push_back(*it);
+
+  // tell media center
+  MediaCenterController::GetInstance()->HandleDelBlock(*it);
+
   (*it)->DeleteLayer();
 
   if (it == m_start)
@@ -569,8 +593,8 @@ void BlockListView::HandleLButtonDown(POINT pt, BlockUnit** unit)
   if (layerstate == BEHIDE)
   {
     Update(rcclient.right, rcclient.bottom);
-    //InvalidateRect(m_hwnd, &rcclient, FALSE);
-    InvalidateRect(m_hwnd, (&(*unit)->GetHittest()), FALSE);
+    InvalidateRect(m_hwnd, &rcclient, FALSE);
+    //InvalidateRect(m_hwnd, (&(*unit)->GetHittest()), FALSE);
   }
 }
 

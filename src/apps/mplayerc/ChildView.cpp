@@ -813,10 +813,7 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
       else
         m_tip.SetTips(tips.c_str(), TRUE);
 
-      RECT rc;
-      rc = m_blockunit->GetHittest();
-      InvalidateRect(&rc);
-      return;
+      if (m_blockunit)      {        RECT rc = {0};        rc = m_blockunit->GetHittest();        InvalidateRect(&rc);      }       return;
     }
 
     RECT rc;
