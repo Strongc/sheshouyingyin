@@ -95,10 +95,11 @@ void BlockUnit::ChangeLayer(std::wstring bmppath)
 
 // BlockList
 
-#define DOWNOFFSETNO 1
-#define UPOFFSETNO 2
+#define DOWNOFFSETONE 1
+#define UPOFFSETONE 2
 #define DOWNOFFSETSUCCESS 3
 #define UPOFFSETSUCCESS 4
+#define OFFSETNO 5
 #define TIMER_TIPS 15
 
 BlockList::BlockList()
@@ -305,11 +306,20 @@ int BlockList::IsListEnd(std::list<BlockUnit*>::iterator it)
   else
     minitem = ((int)m_winh / height + 1) * m_maxcolumn;
   
+  int count = 1;
   while (minitem--)
   {
     ++it;
+    ++count;
     if (it == m_list.end())
-      return DOWNOFFSETNO;
+    {
+      int row = (count  + m_x.size() - 1)/ m_x.size();
+      float y = m_y.front(); 
+      if (y + row * height < m_winh)
+        return OFFSETNO;
+      else
+        return DOWNOFFSETONE;
+    }
   }
   return DOWNOFFSETSUCCESS;
 }
@@ -317,7 +327,7 @@ int BlockList::IsListEnd(std::list<BlockUnit*>::iterator it)
 int BlockList::IsListBegin(std::list<BlockUnit*>::iterator it)
 {
   if (it == m_list.begin())
-    return UPOFFSETNO;
+    return UPOFFSETONE;
   int column = m_maxcolumn;
   while (column-- && it != m_list.begin())
     --it;
@@ -343,7 +353,7 @@ int BlockList::SetStartOffset(float offset)
   {
     listState = IsListEnd(start);
 
-    if (listState == DOWNOFFSETNO)
+    if (listState == DOWNOFFSETONE)
       m_offsettotal = min(m_offsettotal, minoffset);
     
     if (listState == DOWNOFFSETSUCCESS && m_offsettotal >= height + distance)
@@ -352,12 +362,15 @@ int BlockList::SetStartOffset(float offset)
         ++start;
       m_offsettotal -= (height + distance);
     }
+
+    if (listState == OFFSETNO)
+      m_offsettotal -= offset;
   }
   if (offset < 0)
   {
     listState = IsListBegin(start);
    
-    if (listState == UPOFFSETNO)
+    if (listState == UPOFFSETONE)
       m_offsettotal = max(m_offsettotal, 0);
 
     if (listState == UPOFFSETSUCCESS && m_offsettotal < 0)
@@ -391,10 +404,10 @@ void BlockList::SetYOffset(float offset, int result)
 
   switch (result)
   {
-  case DOWNOFFSETNO:
+  case DOWNOFFSETONE:
     y = max(y, ymin);
     break;
-  case UPOFFSETNO:
+  case UPOFFSETONE:
     y = min(y, distance);
     break;
   case DOWNOFFSETSUCCESS:
@@ -404,6 +417,9 @@ void BlockList::SetYOffset(float offset, int result)
   case UPOFFSETSUCCESS:
     if (y > 0)
       y -= height;
+    break;
+  case OFFSETNO:
+    y = m_y.front();
     break;
   }
 
