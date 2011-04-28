@@ -454,9 +454,12 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
   for (; it != m_end; ++it)
   {
     state = (*it)->OnHittest(pt, blbtndown);
+    
     switch (state)
     {
     case BEHIDE:
+      if ((*unit) == (*it))
+        *unit = 0;
       DeleteBlock(it);
       return state;
     case BEPLAY:
@@ -570,7 +573,7 @@ void BlockListView::HandleLButtonDown(POINT pt, BlockUnit** unit)
   {
     Update(rcclient.right, rcclient.bottom);
     //InvalidateRect(m_hwnd, &rcclient, FALSE);
-    InvalidateRect(m_hwnd, (&(*unit)->GetHittest()), FALSE);
+    InvalidateRect(m_hwnd, &rcclient, FALSE);
   }
 }
 

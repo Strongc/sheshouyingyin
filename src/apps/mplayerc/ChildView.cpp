@@ -814,8 +814,11 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
         m_tip.SetTips(tips.c_str(), TRUE);
 
       RECT rc;
-      rc = m_blockunit->GetHittest();
-      InvalidateRect(&rc);
+      if (m_blockunit)
+      {
+        rc = m_blockunit->GetHittest();
+        InvalidateRect(&rc);
+      }
       return;
     }
 
@@ -839,17 +842,25 @@ BOOL CChildView::OnSetCover(UINT nID)
   CFileDialog filedlg(TRUE, L"jpg", 0, OFN_READONLY, L"JPEG Files (*.jpg)|*.jpg||", this);
   filedlg.DoModal();
 
-  CString orgpath = filedlg.GetPathName();
+  std::wstring filename = filedlg.GetFileName().GetString();
+  std::wstring extra = L"";
+  CString orgpath;
   std::wstring destpath;
-  CSVPToolBox csvptb;
-  csvptb.GetAppDataPath(destpath);
-  destpath += L"\\MC\\";
-  destpath += filedlg.GetFileName().GetString();
+  BOOL bsuccess;
+  do 
+  {
+    orgpath = filedlg.GetPathName();
+    CSVPToolBox csvptb;
+    csvptb.GetAppDataPath(destpath);
+    destpath += L"\\mc\\cover\\";
+    destpath += filename.substr(0, filename.find(L"."));
+    destpath += extra + L".jpg";
+    extra += L"x";
+    bsuccess = ::CopyFile(orgpath, destpath.c_str(), TRUE);
+  } while (!bsuccess);
 
-  BOOL bl = ::CopyFile(orgpath, destpath.c_str(), FALSE);
-
-  if (m_blockunit != 0 && bl)
-    m_blockunit->ChangeLayer(filedlg.GetFileName().GetString());
+  if (m_blockunit != 0 && bsuccess)
+    m_blockunit->ChangeLayer(destpath.substr(destpath.find_last_of(L"\\") + 1));
 
   CRect rc;
   rc = m_blockunit->GetHittest();
