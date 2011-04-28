@@ -9,7 +9,7 @@ extern CriticalSection g_csMediaSQLite;
 
 // Note:
 // this class is used for read and write sqlite media database
-template<typename T1 = int, typename T2 = int, typename T3 = int, typename T4 = int, typename T5 = int >
+template<typename T1 = int, typename T2 = int, typename T3 = int, typename T4 = int, typename T5 = int, typename T6 = int>
 class MediaSQLite
 {
 public:
@@ -18,7 +18,8 @@ public:
                   , T2 *pRet2 = 0
                   , T3 *pRet3 = 0
                   , T4 *pRet4 = 0
-                  , T5 *pRet5 = 0)
+                  , T5 *pRet5 = 0
+                  , T6 *pRet6 = 0)
   {
     g_csMediaSQLite.lock();
 
@@ -61,7 +62,7 @@ public:
           , sqlitepp::into(*pRet4);
         st.exec();
       }
-      else
+      else if (pRet6 == 0)
       {
         st << sql
           , sqlitepp::into(*pRet1)
@@ -69,6 +70,17 @@ public:
           , sqlitepp::into(*pRet3)
           , sqlitepp::into(*pRet4)
           , sqlitepp::into(*pRet5);
+        st.exec();
+      }
+      else
+      {
+        st << sql
+          , sqlitepp::into(*pRet1)
+          , sqlitepp::into(*pRet2)
+          , sqlitepp::into(*pRet3)
+          , sqlitepp::into(*pRet4)
+          , sqlitepp::into(*pRet5)
+          , sqlitepp::into(*pRet6);
         st.exec();
       }
     }
@@ -90,7 +102,8 @@ public:
                   , std::vector<T2 > *pRet2 = 0
                   , std::vector<T3 > *pRet3 = 0
                   , std::vector<T4 > *pRet4 = 0
-                  , std::vector<T5 > *pRet5 = 0)
+                  , std::vector<T5 > *pRet5 = 0
+                  , std::vector<T6 > *pRet6 = 0)
   {
     g_csMediaSQLite.lock();
 
@@ -145,7 +158,7 @@ public:
           pRet4->push_back(t4);
         }
       }
-      else
+      else if (pRet6 == 0)
       {
         T1 t1;
         T2 t2;
@@ -160,6 +173,25 @@ public:
           pRet3->push_back(t3);
           pRet4->push_back(t4);
           pRet5->push_back(t5);
+        }
+      }
+      else
+      {
+        T1 t1;
+        T2 t2;
+        T3 t3;
+        T4 t4;
+        T5 t5;
+        T6 t6;
+        st << sql, sqlitepp::into(t1), sqlitepp::into(t2), sqlitepp::into(t3), sqlitepp::into(t4), sqlitepp::into(t5), sqlitepp::into(t6);
+        while (st.exec())
+        {
+          pRet1->push_back(t1);
+          pRet2->push_back(t2);
+          pRet3->push_back(t3);
+          pRet4->push_back(t4);
+          pRet5->push_back(t5);
+          pRet6->push_back(t6);
         }
       }
     }
@@ -199,7 +231,7 @@ protected:
 
         g_dbMediaSQLite << L"CREATE TABLE IF NOT EXISTS media_data ("
           L"uniqueid integer PRIMARY KEY, path text, filename text,"
-          L"thumbnailpath text, videotime integer)";
+          L"thumbnailpath text, videotime integer, hide integer)";
         g_dbMediaSQLite << L"CREATE TABLE IF NOT EXISTS detect_path (" \
           L"uniqueid integer PRIMARY KEY, path text, merit integer)";
       }

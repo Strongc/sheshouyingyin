@@ -9,6 +9,7 @@
 MediaCenterController::MediaCenterController()
 : m_planestate(FALSE)
 {
+  // add path to media tree
   MediaPaths mps;
   MediaPaths::iterator it;
   m_model.FindAll(mps);
@@ -17,6 +18,32 @@ MediaCenterController::MediaCenterController()
     m_treeModel.addFolder(it->path);
     m_treeModel.initMerit(it->path, it->merit);
   }
+
+  // add files to media tree
+  MediaDatas mds;
+  MediaDatas::iterator itFile;
+  m_model.FindAll(mds);
+  for (itFile = mds.begin(); itFile != mds.end(); ++itFile)
+  {
+    m_treeModel.addFile(itFile->path, itFile->filename);
+    m_treeModel.initHide(itFile->path, itFile->filename, itFile->bHide);
+
+    // add file to media center gui
+    media_tree::model::FileIterator itTreeFile;
+    itTreeFile = m_treeModel.findFile(itFile->path, itFile->filename);
+    AddNewFoundData(itTreeFile);
+
+    // notify this change to main frame window
+    CMPlayerCApp *pApp = AfxGetMyApp();
+    if (pApp)
+    {
+      CWnd *pWnd = pApp->GetMainWnd();
+      if (pWnd)
+        pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
+    }
+  }
+
+  // post message to main frame to add new data
 
   // connect signals and slots
   m_blocklist.m_sigPlayback.connect(boost::bind(&MediaCenterController::HandlePlayback, this, _1));
@@ -62,14 +89,15 @@ void MediaCenterController::SpiderStop()
 {
   m_spider._Stop();
   m_checkDB._Stop();
+  m_cover._Stop();
   m_treeModel.save2DB();
 }
 
-void MediaCenterController::AddNewFoundData(const MediaData &md)
+void MediaCenterController::AddNewFoundData(media_tree::model::FileIterator fileIterator)
 {
   m_csSpiderNewDatas.lock();
 
-  m_vtSpiderNewDatas.push_back(md);
+  m_vtSpiderNewDatas.push_back(fileIterator);
 
   m_csSpiderNewDatas.unlock();
 }
@@ -79,14 +107,18 @@ void MediaCenterController::AddBlock()
   m_csSpiderNewDatas.lock();
   
   // add new found data to gui and then remove them
-  std::vector<MediaData>::iterator it = m_vtSpiderNewDatas.begin();
+  std::vector<media_tree::model::FileIterator>::iterator it = m_vtSpiderNewDatas.begin();
   while (it != m_vtSpiderNewDatas.end())
   {
     // add block units
-    if (!m_blocklist.IsBlockExist(*it))
+    MediaData md;
+    md.path = (*it)->sFileFolder;
+    md.filename = (*it)->sFilename;
+    md.bHide = (*it)->bHide;
+    if (!m_blocklist.IsBlockExist(md))
     {
       BlockUnit* one = new BlockUnit;
-      one->m_data = *it;
+      one->m_data = md;
       m_blocklist.AddBlock(one);
 
       m_cover.SetBlockUnit(one);
@@ -160,5 +192,26 @@ void MediaCenterController::HandlePlayback(const MediaData &md)
         pMainWnd->ShowControlBar(&pMainWnd->m_wndPlaylistBar, FALSE, TRUE);
 
     pMainWnd->OpenCurPlaylistItem();
+  }
+}
+
+void MediaCenterController::HandleDelBlock(const BlockUnit *pBlock)
+{
+  typedef media_tree::model::TreeIterator TreeIterator;
+  TreeIterator it = m_treeModel.findFolder(pBlock->m_data.path);
+  TreeIterator itEnd;
+  if (it != itEnd)
+  {
+    MediaTreeFiles::iterator itFindFile = it->lsFiles.begin();
+    while (itFindFile != it->lsFiles.end())
+    {
+      if (itFindFile->sFilename == pBlock->m_data.filename)
+      {
+        itFindFile->bHide = pBlock->m_data.bHide;
+        break;
+      }
+
+      ++itFindFile;
+    }
   }
 }

@@ -8,7 +8,7 @@
 // MediaData and MediaPath
 struct MediaData
 {
-  MediaData() : uniqueid(0), videotime(0) {}
+  MediaData() : uniqueid(0), videotime(0), bHide(false) {}
 
   long long uniqueid;
   std::wstring path;
@@ -16,6 +16,7 @@ struct MediaData
   std::wstring thumbnailpath;
   std::wstring filmname;
   int videotime;
+  bool bHide;  // is hide this media?
 };
 
 struct MediaPath
@@ -56,13 +57,15 @@ struct root
 
 struct file
 {
-  file() : tFileCreateTime(-1) {}
+  file() : tFileCreateTime(-1), bHide(false) {}
 
+  std::wstring sFileFolder;  // save its folder
   std::wstring sFileHash;
   std::wstring sFilename;
   std::wstring sFileUID;  // unique id
   std::wstring sFileThumbnail;  // thumbnail path
   time_t tFileCreateTime; // -1 indicate invalid
+  bool bHide;  // is hide this media?
 };
 
 struct folder
