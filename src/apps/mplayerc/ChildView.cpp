@@ -50,6 +50,7 @@ m_vrect(0,0,0,0)
 ,m_bMouseDown(FALSE)
 , m_lastLyricColor(0x00dfe7ff)
 , m_blocklistview(0)
+, m_blockunit(0)
 {
 	m_lastlmdowntime = 0;
 	m_lastlmdownpoint.SetPoint(0, 0);
@@ -128,7 +129,7 @@ BOOL CChildView::PreTranslateMessage(MSG* pMsg)
 			  }
 		  }
 */
-		  if((pMsg->message == WM_LBUTTONDOWN || pMsg->message == WM_LBUTTONUP || pMsg->message == WM_MOUSEMOVE)
+      if((pMsg->message == WM_LBUTTONDOWN || pMsg->message == WM_LBUTTONUP || pMsg->message == WM_MOUSEMOVE)
 		  && fInteractiveVideo)
 		  {
 			  if(pMsg->message == WM_MOUSEMOVE)
@@ -276,6 +277,7 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_COMMAND_EX(ID_PLAY_PLAY, OnPlayPlayPauseStop)
 	ON_COMMAND_EX(ID_PLAY_PAUSE, OnPlayPlayPauseStop)
 	ON_COMMAND_EX(ID_PLAY_STOP, OnPlayPlayPauseStop)
+  ON_COMMAND_EX(IDR_MENU_SETCOVER, OnSetCover)
 	ON_WM_SETCURSOR()
 	ON_WM_NCCALCSIZE()
 	ON_WM_NCPAINT()
@@ -285,6 +287,8 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_WM_MOUSEMOVE()
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
+  ON_WM_RBUTTONUP()
+  ON_WM_LBUTTONDBLCLK()
 	ON_WM_NCHITTEST()
 	ON_WM_KEYUP()
   ON_WM_TIMER()
@@ -618,8 +622,11 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
     m_blocklistview->SetFrameHwnd(m_hWnd);
     m_blocklistview->SetScrollSpeed(&m_offsetspeed);
+
+    m_menu.LoadMenu(IDR_MEDIACENTERMENU);
     
-  return 0;
+    SetMenu(&m_menu);
+    return 0;
 }
 
 void CChildView::OnMouseMove(UINT nFlags, CPoint point)
@@ -630,7 +637,7 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
   {
     RECT rc;
     GetClientRect(&rc);
-    m_blocklistview->HandleMouseMove(point, rc);
+    m_blocklistview->HandleMouseMove(point, &m_blockunit);
   }
   else
   {
@@ -683,7 +690,7 @@ void CChildView::OnLButtonDown(UINT nFlags, CPoint point)
   {
     RECT rc;
     GetClientRect(&rc);
-    m_blocklistview->HandleLButtonDown(point, rc);
+    m_blocklistview->HandleLButtonDown(point, &m_blockunit);
     return;
   }
 
@@ -713,7 +720,7 @@ void CChildView::OnLButtonUp(UINT nFlags, CPoint point)
   {
     RECT rc;
     GetClientRect(&rc);
-    m_blocklistview->HandleLButtonUp(point, rc);
+    m_blocklistview->HandleLButtonUp(point, &m_blockunit);
     InvalidateRect(&m_scrollbarrect);
     return;
   }
@@ -730,6 +737,30 @@ void CChildView::OnLButtonUp(UINT nFlags, CPoint point)
 
   m_bMouseDown = FALSE;
   __super::OnLButtonUp(nFlags, point);
+}
+
+BOOL CChildView::OnRButtonUP(UINT nFlags, CPoint point)
+{
+   BOOL bmenutrack = FALSE;
+
+   if (m_mediacenter->GetPlaneState())
+   {
+     CRect rc;
+     GetClientRect(&rc);
+     bmenutrack = m_blocklistview->HandleRButtonUp(point, &m_blockunit, &m_menu);
+   }
+
+   return bmenutrack;
+}
+
+BOOL CChildView::OnLButtonDBCLK(UINT nFlags, CPoint point)
+{
+  BOOL bl = FALSE;
+
+  if (m_mediacenter->GetPlaneState())
+    bl = TRUE;
+
+  return bl;
 }
 
 LRESULT CChildView::OnNcHitTest(CPoint point)
@@ -798,3 +829,25 @@ void CChildView::ShowMediaCenter(BOOL bl)
   m_mediacenter->UpdateBlock(rc);
 }
 
+BOOL CChildView::OnSetCover(UINT nID)
+{
+  CFileDialog filedlg(TRUE, L"jpg", 0, OFN_READONLY, L"JPEG Files (*.jpg)|*.jpg||", this);
+  filedlg.DoModal();
+
+  CString orgpath = filedlg.GetPathName();
+  std::wstring destpath;
+  CSVPToolBox csvptb;
+  csvptb.GetAppDataPath(destpath);
+  destpath += L"\\MC\\";
+  destpath += filedlg.GetFileName().GetString();
+
+  BOOL bl = ::CopyFile(orgpath, destpath.c_str(), FALSE);
+
+  if (m_blockunit != 0 && bl)
+    m_blockunit->ChangeLayer(filedlg.GetFileName().GetString());
+
+  CRect rc;
+  GetClientRect(&rc);
+  InvalidateRect(&rc);
+  return TRUE;
+}

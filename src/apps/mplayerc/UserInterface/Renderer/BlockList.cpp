@@ -418,9 +418,10 @@ BOOL BlockList::OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetspeed, H
     return FALSE;
 }
 
-int BlockList::OnHittest(POINT pt, BOOL blbtndown)
+int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
 {
   int state = 0;
+  
   std::list<BlockUnit*>::iterator it = m_start;
   for (; it != m_end; ++it)
   {
@@ -441,6 +442,7 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown)
         m_tipstring = (*it)->m_data.filename;
       else
         m_tipstring = (*it)->m_data.filmname;
+      *unit = (*it);
       return state;
     }
   }
@@ -514,10 +516,13 @@ void BlockListView::SetScrollSpeed(int* speed)
   m_scrollspeed = speed;
 }
 
-void BlockListView::HandleLButtonDown(POINT pt, RECT rcclient)
+void BlockListView::HandleLButtonDown(POINT pt, BlockUnit** unit)
 {
+  RECT rcclient;
+  GetClientRect(m_hwnd, &rcclient);
+
   BOOL bscroll = OnScrollBarHittest(pt, TRUE, *m_scrollspeed, m_hwnd);
-  int layerstate = OnHittest(pt, TRUE);
+  int layerstate = OnHittest(pt, TRUE, unit);
   
   if (bscroll)
   {
@@ -535,11 +540,13 @@ void BlockListView::HandleLButtonDown(POINT pt, RECT rcclient)
   }
 }
 
-void BlockListView::HandleLButtonUp(POINT pt, RECT rcclient)
+void BlockListView::HandleLButtonUp(POINT pt, BlockUnit** unit)
 {
+  RECT rcclient;
+  GetClientRect(m_hwnd, &rcclient);
 
   BOOL bscroll = OnScrollBarHittest(pt, FALSE, *m_scrollspeed, m_hwnd);
-  int blayer = OnHittest(pt, FALSE);
+  int blayer = OnHittest(pt, FALSE, unit);
 
   if (m_lbtndown)
   {
@@ -556,10 +563,13 @@ void BlockListView::HandleLButtonUp(POINT pt, RECT rcclient)
   }
 }
 
-void BlockListView::HandleMouseMove(POINT pt, RECT rcclient)
+void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
 {
+  RECT rcclient;
+  GetClientRect(m_hwnd, &rcclient);
+
   BOOL bscroll = OnScrollBarHittest(pt, -1, *m_scrollspeed, m_hwnd);
-  int blayer = OnHittest(pt, -1);
+  int blayer = OnHittest(pt, -1, unit);
   if (bscroll)
     ::InvalidateRect(m_hwnd, &rcclient, FALSE);
   if (!bscroll && m_lbtndown)
@@ -570,4 +580,23 @@ void BlockListView::HandleMouseMove(POINT pt, RECT rcclient)
     SetTimer(m_hwnd, TIMER_TIPS, 500, NULL);
     ::InvalidateRect(m_hwnd, &rcclient, FALSE);
   }
+}
+
+BOOL BlockListView::HandleRButtonUp(POINT pt, BlockUnit** unit, CMenu* menu)
+{
+  BOOL bhit = FALSE;
+
+  int blayer = OnHittest(pt, FALSE, unit);
+  
+  if (blayer == BEHITTEST)
+  {
+    RECT rc;
+    GetWindowRect(m_hwnd, &rc);
+    pt.x += rc.left;
+    pt.y += rc.top;
+    menu->GetSubMenu(0)->TrackPopupMenu(TPM_RIGHTBUTTON|TPM_NOANIMATION, pt.x, pt.y, CWnd::FromHandle(m_hwnd));
+    bhit = TRUE;
+  }
+
+  return bhit;
 }

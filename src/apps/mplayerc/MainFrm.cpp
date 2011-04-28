@@ -3437,7 +3437,7 @@ LRESULT CMainFrame::OnResumeFromState(WPARAM wParam, LPARAM lParam)
 BOOL CMainFrame::OnButton(UINT id, UINT nFlags, CPoint point)
 {
   SetFocus();
-
+  
   CRect r;
   m_wndView.GetClientRect(r);
   m_wndView.MapWindowPoints(this, &r);
@@ -3742,7 +3742,9 @@ void CMainFrame::OnUpdateShowColorControlBar(CCmdUI *pCmdUI)
 
 void CMainFrame::OnLButtonDblClk(UINT nFlags, CPoint point)
 {
-  if(!IsSomethingLoaded()){
+  if (!IsSomethingLoaded()){
+    if (m_wndView.OnLButtonDBCLK(nFlags, point))
+      return;
     if( !AfxGetAppSettings().htpcmode)
       SendMessage(WM_COMMAND, ID_VIEW_FULLSCREEN);
     else
@@ -3750,6 +3752,7 @@ void CMainFrame::OnLButtonDblClk(UINT nFlags, CPoint point)
 
     return;
   }
+
   if(s_fLDown)
   {
     SendMessage(WM_LBUTTONDOWN, nFlags, MAKELPARAM(point.x, point.y));
@@ -3790,7 +3793,10 @@ void CMainFrame::OnRButtonDown(UINT nFlags, CPoint point)
 
 void CMainFrame::OnRButtonUp(UINT nFlags, CPoint point)
 {
-  if(!OnButton(HotkeyCmd::RUP, nFlags, point))
+  if (m_iMediaLoadState == MLS_CLOSED)
+    if (m_wndView.OnRButtonUP(nFlags, point))
+      return;
+  if (!OnButton(HotkeyCmd::RUP, nFlags, point))
     __super::OnRButtonUp(nFlags, point);
 }
 
