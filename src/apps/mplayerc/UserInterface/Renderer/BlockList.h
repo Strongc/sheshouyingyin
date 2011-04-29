@@ -1,18 +1,22 @@
-﻿
-#pragma once
+﻿#pragma once
 
 #include <list>
 #include <vector>
 #include "MediaCenterScrollBar.h"
 #include "UILayerBlock.h"
 #include "../../Model/MediaComm.h"
-#include <boost/signals.hpp>
 #include "../../Model/MCBlockModel.h"
+#include "../../Model/MediaTreeModel.h"
+#include <boost/signals.hpp>
+
 /* 
  * Class BlockUnit implements block UI and UnitData
  */
 class BlockUnit
 {
+public:
+  typedef media_tree::model::FileIterator FileIterator;
+
 public:
   BlockUnit();
   ~BlockUnit();
@@ -26,7 +30,7 @@ public:
   RECT GetHittest();
 
 public:
-  MediaData m_data;
+  FileIterator m_itFile;  // file iterator
 
 private:
   UILayerBlock* m_layer;
@@ -37,13 +41,13 @@ private:
 class BlockList
 {
 public:
+  typedef boost::shared_ptr<MCBlockModel::abstract_model<BlockUnit> > ModelPtr;
+
+public:
   BlockList();
   ~BlockList();
 
-  typedef boost::shared_ptr<MCBlockModel::abstract_model<BlockUnit> > ModelPtr;
-  void SetModel(ModelPtr ptr);
-  ModelPtr m_pModel;
-
+  void SetModel(ModelPtr ptr);  // using various model to sort the items in the list
   bool IsBlockExist(const MediaData &md);
   void AddBlock(BlockUnit* unit);  
   void DeleteBlock(std::list<BlockUnit*>::iterator it);
@@ -103,6 +107,7 @@ private:
   int m_listendstate;
   int m_listbeginstate;
 
+  ModelPtr m_pModel;
 };
 
 class BlockListView : public BlockList

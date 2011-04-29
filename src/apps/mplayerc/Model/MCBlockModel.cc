@@ -36,7 +36,7 @@ int added_time_sort_model::insert(BlockUnit *pBlockUnit)
 // *****************************************************************************
 bool _helper_sort_by_filename(BlockUnit *pFirst, BlockUnit *pSecond)
 {
-  return pFirst->m_data.filename < pSecond->m_data.filename;
+  return pFirst->m_itFile->file_data.filename < pSecond->m_itFile->file_data.filename;
 }
 
 void filename_sort_model::set_data(DataPtr ptr, DataIteratorPtr iteratorPtr)
@@ -49,7 +49,7 @@ void filename_sort_model::set_data(DataPtr ptr, DataIteratorPtr iteratorPtr)
 
 bool _helper_find_by_filename(BlockUnit *pCur, BlockUnit *pToCompare)
 {
-  if (pCur->m_data.filename <= pToCompare->m_data.filename)
+  if (pCur->m_itFile->file_data.filename <= pToCompare->m_itFile->file_data.filename)
     return true;
   else
     return false;

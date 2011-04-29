@@ -61,6 +61,12 @@ MediaSpiderFolderTree::~MediaSpiderFolderTree()
 //  }
 //}
 
+bool _helper_sort_iterator_vector(const MediaTreeFolders::pre_order_iterator &first
+                                , const MediaTreeFolders::pre_order_iterator &second)
+{
+  return first->folder_data.merit > second->folder_data.merit;
+}
+
 void MediaSpiderFolderTree::_Thread()
 {
   using namespace boost::lambda;
@@ -86,8 +92,7 @@ void MediaSpiderFolderTree::_Thread()
     }
 
     // sort the path according the merit by descending order
-    std::sort(vtIteratorTree.begin(), vtIteratorTree.end(), 
-              bind(&media_tree::folder::nMerit, *_1) > bind(&media_tree::folder::nMerit, *_2));
+    std::sort(vtIteratorTree.begin(), vtIteratorTree.end(), _helper_sort_iterator_vector);
 
     // search the media files
     TreeIteratorVector::iterator it = vtIteratorTree.begin();
@@ -217,7 +222,7 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
               media_tree::model::FileIterator itFileEnd;
               if (itFile != itFileEnd)
               {
-                md.bHide = itFile->bHide;
+                md.bHide = itFile->file_data.bHide;
 
                 MediaCenterController::GetInstance()->AddNewFoundData(itFile);
 

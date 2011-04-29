@@ -14,7 +14,6 @@ MediaTreeFolders media_tree::model::m_lsFolderTree;
 // properties
 media_tree::model::TreeIterator media_tree::model::findFolder(const std::wstring &sPath, bool bCreateIfNotExist /* = false */)
 {
-  using namespace boost::lambda;
   using std::wstring;
   using std::vector;
   using std::stack;
@@ -30,15 +29,22 @@ media_tree::model::TreeIterator media_tree::model::findFolder(const std::wstring
   while (!skPathParts.empty())
   {
     wstring sCurPart = skPathParts.top();
-    TreeIterator itFind = std::find_if(pCurTree->begin(), pCurTree->end(),
-                          bind(&media_tree::folder::sFolderPath, _1) == sCurPart);
+    TreeIterator itFind = pCurTree->begin();
+    while (itFind != pCurTree->end())
+    {
+      if (itFind->folder_data.path == sCurPart)
+        break;
+
+      ++itFind;
+    }
+
     if (itFind == pCurTree->end())
     {
       // insert new node if allowed, else return an invalid iterator
       if (bCreateIfNotExist)
       {
         media_tree::folder fd;
-        fd.sFolderPath = sCurPart;
+        fd.folder_data.path = sCurPart;
         fd.tFolderCreateTime = ::time(0);
         itFind = pCurTree->insert(fd);
 
@@ -77,7 +83,7 @@ media_tree::model::FileIterator media_tree::model::findFile(const std::wstring &
     FileIterator itFile = itFolder->lsFiles.begin();
     while (itFile != itFolder->lsFiles.end())
     {
-      if (itFile->sFilename == sFilename)
+      if (itFile->file_data.filename == sFilename)
       {
         itResult = itFile;
         break;
@@ -105,7 +111,7 @@ void media_tree::model::addFolder(const std::wstring &sFolder, bool bIncreaseMer
   {
     // modify something about this folder
     if (bIncreaseMerit)
-      ++(itFolder->nMerit);
+      ++(itFolder->folder_data.merit);
   }
   else
   {
@@ -124,13 +130,20 @@ void media_tree::model::addFile(const std::wstring &sFolder, const std::wstring 
     // modify something about this folder's file list
     // insert unique file
     MediaTreeFiles &files = itFolder->lsFiles;
-    MediaTreeFiles::iterator itFiles = std::find_if(files.begin(), files.end(),
-                                       bind(&media_tree::file::sFilename, _1) == sFilename);
+    MediaTreeFiles::iterator itFiles = files.begin();
+    while (itFiles != files.end())
+    {
+      if (itFiles->file_data.filename == sFilename)
+        break;
+
+      ++itFiles;
+    }
+
     if (itFiles == files.end())
     {
       media_tree::file fe;
-      fe.sFilename = sFilename;
-      fe.sFileFolder = fullFolderPath(itFolder.node());
+      fe.file_data.filename = sFilename;
+      fe.file_data.path = fullFolderPath(itFolder.node());
       //      CSVPToolBox toolbox;
       //      std::wstring sThumbnailPath;
       //      toolbox.GetAppDataPath(sThumbnailPath);
@@ -159,7 +172,7 @@ void media_tree::model::save2DB()
 
     MediaPath mp;
     mp.path = sFolderPath;
-    mp.merit = it->nMerit;
+    mp.merit = it->folder_data.merit;
     m_model.Add(mp);
 
     // store file info
@@ -169,9 +182,9 @@ void media_tree::model::save2DB()
     {
       MediaData md;
       md.path = sFolderPath;
-      md.filename = itFile->sFilename;
-      md.thumbnailpath = itFile->sFileThumbnail;
-      md.bHide = itFile->bHide;
+      md.filename = itFile->file_data.filename;
+      md.thumbnailpath = itFile->file_data.thumbnailpath;
+      md.bHide = itFile->file_data.bHide;
       // md.videotime = ;
 
       m_model.Add(md);
@@ -218,7 +231,7 @@ void media_tree::model::initMerit(const std::wstring &sFolder, int nMerit)
   TreeIterator itFolder = findFolder(sFolder, true);
   TreeIterator itEnd;
   if (itFolder != itEnd)
-    itFolder->nMerit = nMerit;
+    itFolder->folder_data.merit = nMerit;
 }
 
 void media_tree::model::initHide(const std::wstring &sFolder, const std::wstring &sFilename, bool bHide)
@@ -226,5 +239,5 @@ void media_tree::model::initHide(const std::wstring &sFolder, const std::wstring
   FileIterator itFile = findFile(sFolder, sFilename);
   FileIterator itEnd;
   if (itFile != itEnd)
-    itFile->bHide = bHide;
+    itFile->file_data.bHide = bHide;
 }
