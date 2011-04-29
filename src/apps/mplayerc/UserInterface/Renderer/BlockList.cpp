@@ -71,11 +71,11 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   rc.bottom = rc.top+20;
 
   std::wstring fmnm;
-  if (m_data.filmname.empty())
-    fmnm = m_data.filename;
+  if (m_itFile->file_data.filmname.empty())
+    fmnm = m_itFile->file_data.filename;
   else
-    fmnm = m_data.filmname;
-  //dc.DrawText(m_data.filename.c_str(), m_data.filename.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+    fmnm = m_itFile->file_data.filmname;
+  //dc.DrawText(m_itFile.filename.c_str(), m_itFile.filename.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
   CPen pen;
   dc.DrawText(fmnm.c_str(), fmnm.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
 }
@@ -191,8 +191,8 @@ bool BlockList::IsBlockExist(const MediaData &md)
   std::list<BlockUnit*>::iterator it = m_list.begin();
   while (it != m_list.end())
   {
-    if (((*it)->m_data.path == md.path) && 
-        ((*it)->m_data.filename == md.filename))
+    if (((*it)->m_itFile->file_data.path == md.path) && 
+        ((*it)->m_itFile->file_data.filename == md.filename))
       return true;
 
     ++it;
@@ -202,8 +202,8 @@ bool BlockList::IsBlockExist(const MediaData &md)
   std::list<BlockUnit*>::iterator itHidden = m_listHide.begin();
   while (itHidden != m_listHide.end())
   {
-    if (((*itHidden)->m_data.path == md.path) && 
-      ((*itHidden)->m_data.filename == md.filename))
+    if (((*itHidden)->m_itFile->file_data.path == md.path) && 
+      ((*itHidden)->m_itFile->file_data.filename == md.filename))
       return true;
 
     ++itHidden;
@@ -218,7 +218,7 @@ void BlockList::AddBlock(BlockUnit* unit)
 
   // using model to insert data, because the model will insert data by an order
   // the model is like a adapter
-  if (unit->m_data.bHide)
+  if (unit->m_itFile->file_data.bHide)
     m_listHide.push_back(unit);
   else
     m_pModel->insert(unit);
@@ -481,7 +481,7 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
     case BEPLAY:
       {
         if (!m_sigPlayback.empty())
-          m_sigPlayback((*it)->m_data); // emit a signal
+          m_sigPlayback((*it)->m_itFile->file_data); // emit a signal
       }
       return state;
     case  BEHIDEHITTEST:
@@ -489,10 +489,10 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
       *unit = (*it);
       return state;
     case BEMARKORDEFHITTEST:
-      if ((*it)->m_data.filmname.empty())
-        m_tipstring = (*it)->m_data.filename;
+      if ((*it)->m_itFile->file_data.filmname.empty())
+        m_tipstring = (*it)->m_itFile->file_data.filename;
       else
-        m_tipstring = (*it)->m_data.filmname;
+        m_tipstring = (*it)->m_itFile->file_data.filmname;
       *unit = (*it);
       return state;
     }
@@ -509,7 +509,7 @@ RECT BlockList::GetScrollBarHittest()
 void BlockList::DeleteBlock(std::list<BlockUnit*>::iterator it)
 {
   // add it into hide list
-  (*it)->m_data.bHide = true;
+  (*it)->m_itFile->file_data.bHide = true;
   m_listHide.push_back(*it);
 
   // tell media center

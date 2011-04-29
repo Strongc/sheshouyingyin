@@ -40,14 +40,14 @@ void CoverDownloadController::_Thread()
    std::list<BlockUnit*>::iterator it = m_list.begin();
    while (it != m_list.end())
    {
-     std::wstring thumbnailpath = (*it)->m_data.thumbnailpath;
+     std::wstring thumbnailpath = (*it)->m_itFile->file_data.thumbnailpath;
      if (!thumbnailpath.empty() &&
         (GetFileAttributes(thumbnailpath.c_str()) != INVALID_FILE_ATTRIBUTES || 
          GetLastError() != ERROR_FILE_NOT_FOUND))
        continue;
          
      refptr<request> req = request::create_instance();
-     std::wstring szFilePath = (*it)->m_data.path + (*it)->m_data.filename; 
+     std::wstring szFilePath = (*it)->m_itFile->file_data.path + (*it)->m_itFile->file_data.filename; 
      std::wstring szFileHash = HashController::GetInstance()->GetSPHash(szFilePath.c_str());
      std::wstring url = requesturl;
      url += szFileHash;
@@ -89,9 +89,9 @@ void CoverDownloadController::_Thread()
         titlestr = title[index]["name"].asString();
     
      if (!titlestr.empty())
-       (*it)->m_data.filmname = Strings::Utf8StringToWString(titlestr);
+       (*it)->m_itFile->file_data.filmname = Strings::Utf8StringToWString(titlestr);
      else
-       (*it)->m_data.filmname.clear();
+       (*it)->m_itFile->file_data.filmname.clear();
      if (!coverstr.empty())
        cover = Strings::Utf8StringToWString(coverstr);
      else
@@ -136,7 +136,7 @@ void CoverDownloadController::_Thread()
      if (req0->get_response_errcode() != 0 )
        return;
     
-     (*it)->m_data.thumbnailpath = cover;
+     (*it)->m_itFile->file_data.thumbnailpath = cover;
      (*it)->ChangeLayer(cover + L".jpg");
      m_list.pop_front();
      it = m_list.begin();
