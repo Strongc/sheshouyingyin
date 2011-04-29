@@ -1,0 +1,24 @@
+#pragma once
+
+#include "UILayer.h"
+
+class UILayerBlock
+{
+public:
+  UILayerBlock();
+  ~UILayerBlock();
+
+  // Interface
+public:
+  BOOL GetUILayer(std::wstring key, UILayer** layer);
+  BOOL AddUILayer(std::wstring key, UILayer* layer);
+  BOOL DelUILayer(std::wstring key);
+  BOOL DoPaint(WTL::CDC& dc);
+  BOOL DeleteAllLayer();
+  BOOL OnHittest(POINT pt, BOOL blbtndown);
+
+private:
+  std::map<std::wstring, UILayer*> m_layers;
+  BOOL m_lastbtnstate;
+
+};
