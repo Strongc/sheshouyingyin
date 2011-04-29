@@ -112,13 +112,14 @@ void MediaCenterController::AddBlock()
   {
     // add block units
     MediaData md;
-    md.path = (*it)->sFileFolder;
-    md.filename = (*it)->sFilename;
-    md.bHide = (*it)->bHide;
+    md.path = (*it)->file_data.path;
+    md.filename = (*it)->file_data.filename;
+    md.bHide = (*it)->file_data.bHide;
     if (!m_blocklist.IsBlockExist(md))
     {
+      media_tree::model::FileIterator itFile = m_treeModel.findFile(md.path, md.filename);
       BlockUnit* one = new BlockUnit;
-      one->m_data = md;
+      one->m_itFile = itFile;
       m_blocklist.AddBlock(one);
 
       m_cover.SetBlockUnit(one);
@@ -198,16 +199,16 @@ void MediaCenterController::HandlePlayback(const MediaData &md)
 void MediaCenterController::HandleDelBlock(const BlockUnit *pBlock)
 {
   typedef media_tree::model::TreeIterator TreeIterator;
-  TreeIterator it = m_treeModel.findFolder(pBlock->m_data.path);
+  TreeIterator it = m_treeModel.findFolder(pBlock->m_itFile->file_data.path);
   TreeIterator itEnd;
   if (it != itEnd)
   {
     MediaTreeFiles::iterator itFindFile = it->lsFiles.begin();
     while (itFindFile != it->lsFiles.end())
     {
-      if (itFindFile->sFilename == pBlock->m_data.filename)
+      if (itFindFile->file_data.filename == pBlock->m_itFile->file_data.filename)
       {
-        itFindFile->bHide = pBlock->m_data.bHide;
+        itFindFile->file_data.bHide = pBlock->m_itFile->file_data.bHide;
         break;
       }
 
