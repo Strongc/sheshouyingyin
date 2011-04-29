@@ -8,6 +8,7 @@
 MediaCenterScrollBar::MediaCenterScrollBar(void):
  m_lastlbtstate(FALSE)
 ,m_preoffset(0)
+,m_binitialize(FALSE)
 {
   m_prepos.x = 0;
   m_prepos.y = 0;
@@ -153,3 +154,4 @@ RECT  MediaCenterScrollBar::GetHittest()
 {
   return m_hittest;
 }
+

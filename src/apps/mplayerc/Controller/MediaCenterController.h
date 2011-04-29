@@ -33,6 +33,8 @@ public:
 
    BlockListView& GetBlockListView();
 
+   HRGN CalculateUpdateRgn(WTL::CRect& rc);
+
 // slots
 public:
   void HandlePlayback(const MediaData &md);

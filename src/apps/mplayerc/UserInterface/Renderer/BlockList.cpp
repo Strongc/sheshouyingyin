@@ -62,6 +62,9 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
 
   m_layer->DoPaint(dc);
 
+  CRect rcc;
+  layer->GetTextureRect(rcc);
+  
   dc.SetBkMode(TRANSPARENT);
 
   RECT rc;
@@ -119,7 +122,8 @@ RECT BlockUnit::GetHittest()
 #define  ScrollBarHit   22
 #define  NoScrollBarHit 23
 
-BlockList::BlockList()
+BlockList::BlockList():
+ m_scrollbarinitialize(FALSE)
 {
   m_blockw = 102;
   m_blockh = 115;
@@ -169,6 +173,11 @@ void BlockList::DoPaint(WTL::CDC& dc)
   float height = m_blockh + m_top;
   BOOL bScrollShow = (m_list.size() + m_maxcolumn - 1) / m_maxcolumn * height > m_winh? TRUE:FALSE; 
   m_scrollbar->SetDisPlay(bScrollShow);
+  if (m_scrollbar->GetDisPlay() && !m_scrollbar->GetInitializeFlag())
+  {
+    SetScrollBarInitializeFlag(TRUE);
+    m_scrollbar->SetInitializeFlag(TRUE);
+  }
   m_scrollbar->DoPaint(dc);
 
   std::list<BlockUnit*>::iterator it = m_start;
@@ -553,6 +562,27 @@ BOOL BlockList::ContiniuPaint()
   for (; it != m_end; ++it)
     ++count;
   return count <= m_y.size() * m_x.size()? TRUE:FALSE;
+}
+
+void BlockList::GetLastBlockPosition(RECT& rc)
+{
+  if (m_start == m_list.end())
+  {
+    RECT r = {-m_blockw, 0, 0, m_blockh};
+    rc = r;  
+  }
+  else
+    rc = (*(--m_end))->GetHittest();
+}
+
+void BlockList::SetScrollBarInitializeFlag(BOOL bl)
+{
+  m_scrollbarinitialize = bl;
+}
+
+BOOL BlockList::GetScrollBarInitializeFlag()
+{
+  return m_scrollbarinitialize;
 }
 
 //BlockListView

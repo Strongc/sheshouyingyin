@@ -71,6 +71,30 @@ void MediaCenterController::Playback(std::wstring file)
 void MediaCenterController::SetFrame(HWND hwnd)
 {
   m_hwnd = hwnd;
+  m_cover.SetFrameHwnd(hwnd);
+}
+
+HRGN MediaCenterController::CalculateUpdateRgn(WTL::CRect& rc)
+{
+  WTL::CRect clientrc;
+  GetClientRect(m_hwnd, &clientrc);
+  
+  int left1 = min(rc.right, clientrc.Width());
+  int top1 = rc.top;
+  int right1 = left1 == clientrc.Width()? 0:clientrc.Width();
+  int bottom1 = left1 == clientrc.Width()? 0:clientrc.Height();
+  HRGN hrgn1 = CreateRectRgn(left1, top1, right1, bottom1);
+  
+  int left2 = 0;
+  int top2 = min(rc.bottom, clientrc.Height());
+  int right2 = top2 == clientrc.Height()? 0:clientrc.Width();
+  int bottom2 = top2 == clientrc.Height()? 0:clientrc.Height();
+  HRGN hrgn2 = CreateRectRgn(left2, top2, right2, bottom2);
+  
+  HRGN hrgntotal = CreateRectRgn(0, 0, 0, 0);
+  CombineRgn(hrgntotal, hrgn1, hrgn2, RGN_OR);
+  return hrgntotal;
+
 }
 
 
@@ -117,17 +141,27 @@ void MediaCenterController::AddBlock()
     md.bHide = (*it)->bHide;
     if (!m_blocklist.IsBlockExist(md))
     {
+      WTL::CRect rc;
+      m_blocklist.GetLastBlockPosition(rc);
+
       BlockUnit* one = new BlockUnit;
       one->m_data = md;
       m_blocklist.AddBlock(one);
 
       m_cover.SetBlockUnit(one);
       
-      RECT rc;
+      HRGN rgn = CalculateUpdateRgn(rc);
+      
       GetClientRect(m_hwnd, &rc);
       m_blocklist.Update(rc.right - rc.left, rc.bottom - rc.top);
       if (m_blocklist.ContiniuPaint())
-        InvalidateRect(m_hwnd, 0, FALSE);
+        if (m_blocklist.GetScrollBarInitializeFlag())
+        {
+          InvalidateRect(m_hwnd, 0, FALSE);
+          m_blocklist.SetScrollBarInitializeFlag(FALSE);
+        }
+        else
+          InvalidateRgn(m_hwnd, rgn, FALSE);
     }
 
     ++it;

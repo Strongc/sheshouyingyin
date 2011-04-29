@@ -138,8 +138,17 @@ void CoverDownloadController::_Thread()
     
      (*it)->m_data.thumbnailpath = cover;
      (*it)->ChangeLayer(cover + L".jpg");
+     RECT rc = (*it)->GetHittest();
+     InvalidateRect(m_hwnd, &rc, FALSE);
+
      m_list.pop_front();
      it = m_list.begin();
    }
 }
+
+void CoverDownloadController::SetFrameHwnd(HWND hwnd)
+{
+  m_hwnd = hwnd;
+}
+
 

@@ -14,9 +14,11 @@ public:
   ~CoverDownloadController();
 
   void SetBlockUnit(BlockUnit* unit);
+  void SetFrameHwnd(HWND hwnd);
   void _Thread();
   void _Thread_old();
 
 private:
   std::list<BlockUnit*> m_list;
+  HWND m_hwnd;
 };

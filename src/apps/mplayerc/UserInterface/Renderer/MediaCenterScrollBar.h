@@ -18,6 +18,8 @@ public:
   POINT GetPosition();
   float GetOffset();
   RECT  GetHittest();
+  void  SetInitializeFlag(BOOL bl);
+  BOOL  GetInitializeFlag();
 
 private:
   WTL::CBitmap m_hbitmap;
@@ -31,4 +33,5 @@ private:
   float   m_offset;
   float   m_winh;
   int     m_preoffset;
+  BOOL    m_binitialize;
 };

@@ -68,6 +68,9 @@ public:
   void UpdateScrollBar(POINT pt);
   RECT GetScrollBarHittest();
   BOOL ContiniuPaint();
+  void GetLastBlockPosition(RECT& rc);
+  void SetScrollBarInitializeFlag(BOOL bl);
+  BOOL GetScrollBarInitializeFlag();
   
 // signals
 public:
@@ -102,6 +105,8 @@ private:
 
   int m_listendstate;
   int m_listbeginstate;
+
+  BOOL m_scrollbarinitialize;
 
 };
 
