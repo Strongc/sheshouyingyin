@@ -73,7 +73,7 @@ BOOL MediaCenterScrollBar::DoPaint(WTL::CDC& dc)
   return TRUE;
 }
 
-BOOL MediaCenterScrollBar::OnHittest(POINT pt, BOOL bLbtdown, int& offsetspeed, HWND hwnd)
+int MediaCenterScrollBar::OnHittest(POINT pt, BOOL bLbtdown, int& offsetspeed, HWND hwnd)
 {
   BOOL bhit = FALSE;
   if (bLbtdown == 1)
@@ -109,13 +109,15 @@ BOOL MediaCenterScrollBar::OnHittest(POINT pt, BOOL bLbtdown, int& offsetspeed, 
     
     bhit = TRUE;
   }
-  else
+  else if (PtInRect(&m_hittest, pt))
   { 
     KillTimer(hwnd, TIMER_OFFSET);
     KillTimer(hwnd, TIMER_SLOWOFFSET);
     m_pos = m_prepos;
     bhit = FALSE; 
   }
+  else
+    bhit = TRUE;
 
   UpdataHittest(m_pos);
 

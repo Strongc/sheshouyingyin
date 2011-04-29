@@ -11,7 +11,7 @@ public:
   void  SetDisPlay(BOOL dp);
   void  SetScrollBarRange(float winh);
   BOOL  DoPaint(WTL::CDC& dc);
-  BOOL  OnHittest(POINT pt, BOOL bLbtdown, int& offsetspeed, HWND hwnd);
+  int  OnHittest(POINT pt, int bLbtdown, int& offsetspeed, HWND hwnd);
   void  UpdataHittest(POINT pt);
   RECT  GetRect();
   POINT GetPosition();

@@ -5,6 +5,10 @@
 #define  TIMER_OFFSET 11
 #define  TIMER_SLOWOFFSET 12
 
+#define  ScrollBarClick 21
+#define  ScrollBarHit   22
+#define  NoScrollBarHit 23
+
 MediaCenterScrollBar::MediaCenterScrollBar(void):
  m_lastlbtstate(FALSE)
 ,m_preoffset(0)
@@ -78,9 +82,9 @@ BOOL MediaCenterScrollBar::DoPaint(WTL::CDC& dc)
   return TRUE;
 }
 
-BOOL MediaCenterScrollBar::OnHittest(POINT pt, BOOL bLbtdown, int& offsetspeed, HWND hwnd)
+BOOL MediaCenterScrollBar::OnHittest(POINT pt, int bLbtdown, int& offsetspeed, HWND hwnd)
 {
-  BOOL bhit = FALSE;
+  int bhit = 0;
   if (bLbtdown == 1)
     m_prelbtpos = pt;
     
@@ -112,15 +116,17 @@ BOOL MediaCenterScrollBar::OnHittest(POINT pt, BOOL bLbtdown, int& offsetspeed, 
     else
       SetTimer(hwnd, TIMER_OFFSET, timer, NULL);
     
-    bhit = TRUE;
+    bhit = ScrollBarClick;
   }
-  else
+  else if (PtInRect(&m_hittest, pt) && ((m_pos.x != m_prepos.x) || (m_pos.y != m_prepos.y)))
   { 
     KillTimer(hwnd, TIMER_OFFSET);
     KillTimer(hwnd, TIMER_SLOWOFFSET);
     m_pos = m_prepos;
-    bhit = FALSE; 
+    bhit = ScrollBarHit; 
   }
+  else
+    bhit = NoScrollBarHit;
 
   UpdataHittest(m_pos);
 

@@ -115,6 +115,10 @@ RECT BlockUnit::GetHittest()
 #define OFFSETNO 5
 #define TIMER_TIPS 15
 
+#define  ScrollBarClick 21
+#define  ScrollBarHit   22
+#define  NoScrollBarHit 23
+
 BlockList::BlockList()
 {
   m_blockw = 102;
@@ -580,10 +584,10 @@ void BlockListView::HandleLButtonDown(POINT pt, BlockUnit** unit)
   RECT rcclient;
   GetClientRect(m_hwnd, &rcclient);
 
-  BOOL bscroll = OnScrollBarHittest(pt, TRUE, *m_scrollspeed, m_hwnd);
+  int bscroll = OnScrollBarHittest(pt, TRUE, *m_scrollspeed, m_hwnd);
   int layerstate = OnHittest(pt, TRUE, unit);
   
-  if (bscroll)
+  if (bscroll == ScrollBarClick)
   {
     ::SetCapture(m_hwnd);
     m_lbtndown = TRUE;
@@ -596,6 +600,8 @@ void BlockListView::HandleLButtonDown(POINT pt, BlockUnit** unit)
   {
     Update(rcclient.right, rcclient.bottom);
     InvalidateRect(m_hwnd, &rcclient, FALSE);
+    RECT rc = {0, 0, 0, 0};
+    m_prehittest = rc;
     //InvalidateRect(m_hwnd, (&(*unit)->GetHittest()), FALSE);
   }
 }
@@ -605,7 +611,7 @@ void BlockListView::HandleLButtonUp(POINT pt, BlockUnit** unit)
   RECT rcclient;
   GetClientRect(m_hwnd, &rcclient);
 
-  BOOL bscroll = OnScrollBarHittest(pt, FALSE, *m_scrollspeed, m_hwnd);
+  int bscroll = OnScrollBarHittest(pt, FALSE, *m_scrollspeed, m_hwnd);
   int blayer = OnHittest(pt, FALSE, unit);
 
   if (m_lbtndown)
@@ -613,8 +619,8 @@ void BlockListView::HandleLButtonUp(POINT pt, BlockUnit** unit)
     ::ReleaseCapture();
     m_lbtndown = FALSE;
   }
-  
-  if (!bscroll)
+   
+  if (bscroll == ScrollBarHit)
   {
     RECT rc = GetScrollBarHittest();
     rc.top = 0;
@@ -628,11 +634,11 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
   RECT rcclient;
   GetClientRect(m_hwnd, &rcclient);
 
-  BOOL bscroll = OnScrollBarHittest(pt, -1, *m_scrollspeed, m_hwnd);
+  int bscroll = OnScrollBarHittest(pt, -1, *m_scrollspeed, m_hwnd);
   int blayer = OnHittest(pt, -1, unit);
-  if (bscroll)
+  if (bscroll == ScrollBarClick)
     ::InvalidateRect(m_hwnd, &rcclient, FALSE);
-  if (!bscroll && m_lbtndown)
+  if (bscroll == ScrollBarHit && m_lbtndown)
     PostMessage(m_hwnd, WM_LBUTTONUP, 0, 0);
 
   if (blayer == BEPLAYHITTEST || blayer == BEHIDEHITTEST)
