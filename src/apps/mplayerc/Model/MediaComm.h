@@ -131,16 +131,18 @@ inline std::wstring makePathPreferred(const std::wstring &sPath)
   else
     sPathResult = sPath;
 
+  // remove the filename in the end or add backslash if the path is a directory
+  if (!is_directory(sPrefix + sPathResult))
+    sPathResult = regex_replace(sPathResult, wregex(L"\\\\[^\\\\]+$"), std::wstring(L"\\"));
+  else
+    sPathResult = regex_replace(sPathResult, wregex(L"\\\\*$"), std::wstring(L"\\"));
+
   // modify the path, let it to be normalized
   // replace all '/' to '\'
   sPathResult = regex_replace(sPathResult, wregex(L"/"), std::wstring(L"\\"));
 
   // replace multi '\' to single '\'
   sPathResult = regex_replace(sPathResult, wregex(L"\\\\+"), std::wstring(L"\\"));
-
-  // remove the filename in the end
-  if (!is_directory(sPathResult))
-    sPathResult = regex_replace(sPathResult, wregex(L"\\\\[^\\\\]+$"), std::wstring(L"\\"));
 
   // append slash to the end if the path
   // after this, the path looks like this: "c:\cjbw1234\test\"

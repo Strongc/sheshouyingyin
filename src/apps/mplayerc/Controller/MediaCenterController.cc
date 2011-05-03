@@ -84,6 +84,14 @@ void MediaCenterController::SpiderStart()
 
   m_spider._Start();
   m_checkDB._Start();  // check the media.db, clean invalid records
+
+  CMPlayerCApp *pApp = AfxGetMyApp();
+  if (pApp)
+  {
+    CWnd *pWnd = pApp->GetMainWnd();
+    if (pWnd)
+      pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
+  }
 }
 
 void MediaCenterController::SpiderStop()
@@ -116,25 +124,17 @@ void MediaCenterController::AddBlock()
   while (it != m_vtSpiderNewDatas.end())
   {
     // add block units
-    MediaData md;
-    md.path = (*it)->file_data.path;
-    md.filename = (*it)->file_data.filename;
-    md.bHide = (*it)->file_data.bHide;
-    if (!m_blocklist.IsBlockExist(md))
-    {
-      media_tree::model::tagFileInfo fileInfo = m_treeModel.findFile(md.path, md.filename);
-      BlockUnit* one = new BlockUnit;
-      one->m_itFile = fileInfo.itFile;
-      m_blocklist.AddBlock(one);
+    BlockUnit* one = new BlockUnit;
+    one->m_itFile = *it;
+    m_blocklist.AddBlock(one);
 
-      m_cover.SetBlockUnit(one);
-      
-      RECT rc;
-      GetClientRect(m_hwnd, &rc);
-      m_blocklist.Update(rc.right - rc.left, rc.bottom - rc.top);
-      if (m_blocklist.ContiniuPaint())
-        InvalidateRect(m_hwnd, 0, FALSE);
-    }
+    m_cover.SetBlockUnit(one);
+    
+    RECT rc;
+    GetClientRect(m_hwnd, &rc);
+    m_blocklist.Update(rc.right - rc.left, rc.bottom - rc.top);
+    if (m_blocklist.ContiniuPaint())
+      InvalidateRect(m_hwnd, 0, FALSE);
 
     ++it;
   }

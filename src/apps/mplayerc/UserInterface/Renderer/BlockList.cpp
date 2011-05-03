@@ -189,33 +189,6 @@ void BlockList::DoPaint(WTL::CDC& dc)
   } 
 }
 
-bool BlockList::IsBlockExist(const MediaData &md)
-{
-  // search normal files
-  std::list<BlockUnit*>::iterator it = m_list.begin();
-  while (it != m_list.end())
-  {
-    if (((*it)->m_itFile->file_data.path == md.path) && 
-        ((*it)->m_itFile->file_data.filename == md.filename))
-      return true;
-
-    ++it;
-  }
-
-  // search hidden files
-  std::list<BlockUnit*>::iterator itHidden = m_listHide.begin();
-  while (itHidden != m_listHide.end())
-  {
-    if (((*itHidden)->m_itFile->file_data.path == md.path) && 
-      ((*itHidden)->m_itFile->file_data.filename == md.filename))
-      return true;
-
-    ++itHidden;
-  }
-  
-  return false;
-}
-
 void BlockList::AddBlock(BlockUnit* unit)
 {
   unit->DefLayer();
