@@ -20,8 +20,6 @@ public:
 
   BOOL OnHittest(POINT pt, BOOL blbtndown, int extent);
 
-  void ChangeLayer(std::wstring bmppath);
-
 private:
   WTL::CBitmap   m_texture;
   POINT          m_texturepos;
