@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "BlockList.h"
 #include "..\..\Controller\MediaCenterController.h"
+#include "ResLoader.h"
 
 // BlockOne
 
@@ -60,6 +61,19 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   POINT hidept = {hide_fixpt.x+pt.x, hide_fixpt.y+pt.y};
   hide->SetTexturePos(hidept);
 
+  if (!m_itFile->file_data.thumbnailpath.empty())
+  {
+    std::wstring thumbnailpath = m_itFile->file_data.thumbnailpath;
+    if (GetFileAttributes(thumbnailpath.c_str()) != INVALID_FILE_ATTRIBUTES || 
+        GetLastError() != ERROR_FILE_NOT_FOUND)
+    {
+      ResLoader resLoad;
+      HBITMAP hbmp = resLoad.LoadBitmapFromAppData(thumbnailpath);
+      if (hbmp)
+        def->SetTexture(hbmp);
+    }
+  }
+
   m_layer->DoPaint(dc);
 
   dc.SetBkMode(TRANSPARENT);
@@ -88,13 +102,6 @@ void BlockUnit::DeleteLayer()
 int BlockUnit::OnHittest(POINT pt, BOOL blbtndown)
 {
   return m_layer->OnHittest(pt, blbtndown);
-}
-
-void BlockUnit::ChangeLayer(std::wstring bmppath)
-{
-  UILayer* def = NULL;
-  m_layer->GetUILayer(L"def", &def);
-  def->ChangeLayer(bmppath);
 }
 
 RECT BlockUnit::GetHittest()

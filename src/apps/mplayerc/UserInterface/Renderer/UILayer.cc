@@ -123,11 +123,3 @@ BOOL UILayer::OnHittest(POINT pt, BOOL blbtndown, int extent)
     SetDisplay(FALSE);
   return bl;
 }
-
-void UILayer::ChangeLayer(std::wstring bmppath)
-{
-  Logging(L"-----------changelayer:%s", bmppath.c_str());
-  ResLoader resLoad;
-  HBITMAP hbmp = resLoad.LoadBitmapFromAppData(bmppath);
-  SetTexture(hbmp);
-}

@@ -109,5 +109,6 @@ public:
   afx_msg BOOL OnSetCover(UINT nID);
   
   void ShowMediaCenter(BOOL bl);
+  std::wstring GetSystemTimeString();
 
 };
