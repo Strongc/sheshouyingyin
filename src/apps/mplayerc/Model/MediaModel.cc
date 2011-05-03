@@ -33,14 +33,14 @@ void MediaModel::Add(MediaPath& mdData)
   std::wstringstream ss;
 
   ss << L"SELECT uniqueid FROM detect_path WHERE path='"
-     << mdData.path << L"'";
+     << EscapeSQL(mdData.path) << L"'";
   MediaDB<int>::exec(ss.str(), &uniqueid);
 
   if (uniqueid)
   {
     ss.str(L"");
     ss << L"UPDATE detect_path set merit = " << mdData.merit
-      << L" WHERE path = '" << mdData.path << L"'";
+      << L" WHERE path = '" << EscapeSQL(mdData.path) << L"'";
     MediaDB<>::exec(ss.str());
     mdData.uniqueid = uniqueid;
   }
@@ -48,7 +48,7 @@ void MediaModel::Add(MediaPath& mdData)
   {
     ss.str(L"");
     ss << L"INSERT INTO detect_path(path, merit)"
-       << L" VALUES('" << mdData.path << L"', " << mdData.merit << L")";
+       << L" VALUES('" << EscapeSQL(mdData.path) << L"', " << mdData.merit << L")";
 
     MediaDB<>::exec(ss.str());
     MediaDB<>::last_insert_rowid(mdData.uniqueid);
@@ -76,7 +76,7 @@ void MediaModel::Add(MediaData& mdData)
   std::wstringstream ss;
 
   ss << L"SELECT count(*) FROM media_data WHERE path='"
-    << mdData.path << L"' and filename='" << mdData.filename << L"'";
+    << EscapeSQL(mdData.path) << L"' and filename='" << EscapeSQL(mdData.filename) << L"'";
   MediaDB<int>::exec(ss.str(), &nRecordCount);
 
   if (nRecordCount == 0)
@@ -84,8 +84,8 @@ void MediaModel::Add(MediaData& mdData)
     // insert new record
     ss.str(L"");
     ss << L"INSERT INTO media_data(path, filename, thumbnailpath, videotime, hide)"
-       << L" VALUES('" << mdData.path << L"', '" << mdData.filename << L"', '"
-       << mdData.thumbnailpath << L"', " << mdData.videotime << L", " << mdData.bHide << L")";
+       << L" VALUES('" << EscapeSQL(mdData.path) << L"', '" << EscapeSQL(mdData.filename) << L"', '"
+       << EscapeSQL(mdData.thumbnailpath) << L"', " << mdData.videotime << L", " << mdData.bHide << L")";
 
     MediaDB<>::exec(ss.str());
     MediaDB<>::last_insert_rowid(mdData.uniqueid);
@@ -94,8 +94,10 @@ void MediaModel::Add(MediaData& mdData)
   {
     // update exist record
     ss.str(L"");
-    ss << L"UPDATE media_data SET thumbnailpath='" << mdData.thumbnailpath << L"', videotime=" << mdData.videotime 
-      << L", hide=" << (int)mdData.bHide << L" WHERE path='" << mdData.path << L"' and filename='" << mdData.filename << L"'";
+    ss << L"UPDATE media_data SET thumbnailpath='" << EscapeSQL(mdData.thumbnailpath)
+       << L"', videotime=" << mdData.videotime 
+      << L", hide=" << (int)mdData.bHide << L" WHERE path='"
+      << EscapeSQL(mdData.path) << L"' and filename='" << EscapeSQL(mdData.filename) << L"'";
 
     MediaDB<>::exec(ss.str());
     MediaDB<>::last_insert_rowid(mdData.uniqueid);
@@ -320,7 +322,7 @@ void MediaModel::Delete(const MediaFindCondition& condition)
   if (!condition.filename.empty())
   {
     std::wstringstream ss;
-    ss << L"delete from media_data where filename = '" << condition.filename << L"'";
+    ss << L"delete from media_data where filename = '" << EscapeSQL(condition.filename) << L"'";
     MediaDB<>::exec(ss.str());
 
     return;
@@ -332,4 +334,11 @@ void MediaModel::DeleteAll()
   std::wstringstream ss;
   ss << L"delete from media_data";
   MediaDB<>::exec(ss.str());
+}
+
+std::wstring MediaModel::EscapeSQL(std::wstring sSQL)
+{
+  using namespace boost;
+
+  return regex_replace(sSQL, wregex(L"'"), L"''");
 }

@@ -6,8 +6,6 @@
 #include "../mplayerc.h"
 #include "MediaCenterController.h"
 #include <boost/filesystem.hpp>
-#include <boost/lambda/lambda.hpp>
-#include <boost/lambda/bind.hpp>
 #include <boost/regex.hpp>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -34,6 +32,8 @@ MediaSpiderFolderTree::MediaSpiderFolderTree()
   SetExcludePath(L"c:\\Windows\\");
   SetExcludePath(L"C:\\Program Files\\");
   SetExcludePath(L"C:\\Program Files (x86)\\");
+
+  SetFilteredItem(L"private");
 }
 
 MediaSpiderFolderTree::~MediaSpiderFolderTree()
@@ -69,15 +69,13 @@ bool _helper_sort_iterator_vector(const MediaTreeFolders::pre_order_iterator &fi
 
 void MediaSpiderFolderTree::_Thread()
 {
-  using namespace boost::lambda;
   using std::wstring;
   using std::vector;
 
   while (true)
   {
     // see if need to be stop
-    if (_Exit_state(0))
-      return;
+    SleepOrExit();
 
     // 只能先保存节点指针到vector里再排序了
     MediaTreeFolders &mediaTree = m_treeModel.mediaTree();
@@ -100,8 +98,7 @@ void MediaSpiderFolderTree::_Thread()
     while (it != vtIteratorTree.end())
     {
       // see if need to be stop
-      if (_Exit_state(0))
-        return;
+      SleepOrExit();
 
       // search the path for media files
       std::wstring sFullPath = fullFolderPath(it->node());
@@ -114,7 +111,7 @@ void MediaSpiderFolderTree::_Thread()
     }
 
     // sleep for a moment
-    ::Sleep(300);
+    SleepOrExit(300);
   }
 }
 
@@ -127,132 +124,83 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
   using namespace boost::filesystem;
 
   // ---------------------------------------------------------------------------
-  // Note:search current folder and its parent's sub folders
+  // Note:search cur folder and its parent's sub folders(cur's brother folder)
   // ---------------------------------------------------------------------------
 
-  // if the folder is not exist or the folder is been exclude, then return
-  if (!is_directory(sFolder) || IsExcludePath(sFolder))
-    return;
-
-  // search the folder
-  wpath folder(sFolder);
-  if (exists(folder))
+  // First, we analysis all the path we will search and store them into vector
+  vector<wpath> vtAllPath;  // all paths need to search
+  try
   {
-    directory_iterator itCur(folder);
+    wpath ptCur(regex_replace(sFolder, wregex(L"\\\\*$"), L""));  // must remove the back slash
+    wpath ptParent(ptCur.parent_path());
+
+    directory_iterator it(ptParent);
     directory_iterator itEnd;
-    while (itCur != itEnd)
+    while (it != itEnd)
     {
-      // see if need to be stop
-      if (_Exit_state(0))
-        return;
+      SleepOrExit();
 
-      if (!is_directory(itCur->path()) && !isHiddenPath(itCur->path().wstring()) && IsSupportExtension(itCur->path().wstring()))
-      {
-        // add it to the folder tree
-        m_treeModel.addFile(sFolder, itCur->path().filename().wstring());
+      if (is_directory(it->path())
+       && !isHiddenPath(it->path().wstring()))
+        vtAllPath.push_back(it->path());
 
-        // add it to the media center for appending
-        media_tree::model::FileIterator itFile = m_treeModel.findFile(sFolder, itCur->path().filename().wstring());
-        media_tree::model::FileIterator itFileEnd;
-        if (itFile != itFileEnd)
-        {
-          MediaCenterController::GetInstance()->AddNewFoundData(itFile);
-
-          // notify this change to main frame window
-          CMPlayerCApp *pApp = AfxGetMyApp();
-          if (pApp)
-          {
-            CWnd *pWnd = pApp->GetMainWnd();
-            if (pWnd)
-              pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
-          }
-        }
-      }
-
-      ++itCur;
-
-      // sleep for a moment
-      ::Sleep(50);
+      ++it;
     }
   }
-
-  // search the current folder's parent's sub folders(current folder's brother)
-  folder = regex_replace(folder.wstring(), wregex(L"\\\\*$"), L"");
-  wpath ptParent(folder.parent_path());
-  if (exists(ptParent))
+  catch (const filesystem_error &err)
   {
-    directory_iterator itParentCur(ptParent);
-    directory_iterator itParentEnd;
-    while (itParentCur != itParentEnd)
+  	Logging(err.what());
+    return;
+  }
+
+  // Second, we search the media in the path we find in above step
+  vector<wpath>::iterator itPath = vtAllPath.begin();
+  while (itPath != vtAllPath.end())
+  {
+    SleepOrExit(80);
+
+    try
     {
-      // see if need to be stop
-      if (_Exit_state(0))
-        return;  
+      directory_iterator it(*itPath);
+      directory_iterator itEnd;
 
-      if (is_directory(itParentCur->path()) &&
-          !::isHiddenPath(itParentCur->path().wstring()) &&
-          (itParentCur->path() != folder) &&
-          (itParentCur->path().wstring() != sFolder))
+      while (it != itEnd)
       {
-        try
+        SleepOrExit(80);
+
+        if (!is_directory(it->path())
+         && !isHiddenPath(it->path().wstring())
+         && IsSupportExtension(it->path().wstring())
+         && !IsFilteredItem(it->path().wstring()))
         {
-          directory_iterator itSubCur(itParentCur->path());
-          directory_iterator itSubEnd;
-          while (itSubCur != itSubEnd)
+          // add it to the folder tree
+          m_treeModel.addFile(sFolder, it->path().filename().wstring());
+
+          // add it to the media center for appending
+          media_tree::model::tagFileInfo fileInfo = m_treeModel.findFile(sFolder, it->path().filename().wstring());
+          if (fileInfo.isValid())
           {
-            // see if need to be stop
-            if (_Exit_state(0))
-              return;
-            
-            if (!is_directory(itSubCur->path()) &&
-                !::isHiddenPath(itSubCur->path().wstring()) &&
-                IsSupportExtension(itSubCur->path().wstring()))
+            MediaCenterController::GetInstance()->AddNewFoundData(fileInfo.itFile);
+
+            // notify this change to main frame window
+            CMPlayerCApp *pApp = AfxGetMyApp();
+            if (pApp)
             {
-              // Note: do not add it to the folder tree
-              // add it to the folder tree
-              MediaData md;
-              md.path = itSubCur->path().parent_path().wstring();
-              md.path = regex_replace(md.path, wregex(L"\\\\*$"), L"\\\\");
-              md.filename = itSubCur->path().filename().wstring();
-
-              m_treeModel.addFile(md.path, md.filename);
-
-              // add it to the media center for appending
-              media_tree::model::FileIterator itFile = m_treeModel.findFile(md.path, md.filename);
-              media_tree::model::FileIterator itFileEnd;
-              if (itFile != itFileEnd)
-              {
-                md.bHide = itFile->file_data.bHide;
-
-                MediaCenterController::GetInstance()->AddNewFoundData(itFile);
-
-                // notify this change to main frame window
-                CMPlayerCApp *pApp = AfxGetMyApp();
-                if (pApp)
-                {
-                  CWnd *pWnd = pApp->GetMainWnd();
-                  if (pWnd)
-                    pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
-                }
-              }
+              CWnd *pWnd = pApp->GetMainWnd();
+              if (::IsWindow(pWnd->m_hWnd))
+                pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
             }
-
-            ++itSubCur;
-
-            // sleep for a moment
-            ::Sleep(50);
           }
         }
-        catch (const filesystem_error &err)
-        {
 
-        }
+        ++it;
       }
-
-      // sleep for a moment
-      ::Sleep(50);
-
-      ++itParentCur;
     }
+    catch (const filesystem_error &err)
+    {
+      Logging(err.what());
+    }
+
+    ++itPath;
   }
 }

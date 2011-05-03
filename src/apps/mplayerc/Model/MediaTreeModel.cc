@@ -71,9 +71,9 @@ media_tree::model::TreeIterator media_tree::model::findFolder(const std::wstring
   return itResult;
 }
 
-media_tree::model::FileIterator media_tree::model::findFile(const std::wstring &sPath, const std::wstring &sFilename)
+media_tree::model::tagFileInfo media_tree::model::findFile(const std::wstring &sPath, const std::wstring &sFilename)
 {
-  FileIterator itResult;  // return FileIterator() is fails, otherwise return the real iterator
+  tagFileInfo fileResult;
 
   TreeIterator itFolder = findFolder(sPath);
   TreeIterator itEnd;
@@ -85,7 +85,8 @@ media_tree::model::FileIterator media_tree::model::findFile(const std::wstring &
     {
       if (itFile->file_data.filename == sFilename)
       {
-        itResult = itFile;
+        fileResult.itFile = itFile;
+        fileResult.pFileList = &(itFolder->lsFiles);
         break;
       }
 
@@ -93,7 +94,7 @@ media_tree::model::FileIterator media_tree::model::findFile(const std::wstring &
     }
   }
 
-  return itResult;
+  return fileResult;
 }
 
 MediaTreeFolders& media_tree::model::mediaTree()
@@ -236,8 +237,7 @@ void media_tree::model::initMerit(const std::wstring &sFolder, int nMerit)
 
 void media_tree::model::initHide(const std::wstring &sFolder, const std::wstring &sFilename, bool bHide)
 {
-  FileIterator itFile = findFile(sFolder, sFilename);
-  FileIterator itEnd;
-  if (itFile != itEnd)
-    itFile->file_data.bHide = bHide;
+  tagFileInfo fileInfo = findFile(sFolder, sFilename);
+  if (fileInfo.isValid())
+    fileInfo.itFile->file_data.bHide = bHide;
 }

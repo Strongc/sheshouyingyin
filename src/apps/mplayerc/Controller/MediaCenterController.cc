@@ -29,18 +29,19 @@ MediaCenterController::MediaCenterController()
     m_treeModel.initHide(itFile->path, itFile->filename, itFile->bHide);
 
     // add file to media center gui
-    media_tree::model::FileIterator itTreeFile;
-    itTreeFile = m_treeModel.findFile(itFile->path, itFile->filename);
-    AddNewFoundData(itTreeFile);
+    media_tree::model::tagFileInfo fileInfo;
+    fileInfo = m_treeModel.findFile(itFile->path, itFile->filename);
+    AddNewFoundData(fileInfo.itFile);
 
-    // notify this change to main frame window
-    CMPlayerCApp *pApp = AfxGetMyApp();
-    if (pApp)
-    {
-      CWnd *pWnd = pApp->GetMainWnd();
-      if (pWnd)
-        pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
-    }
+    // do not notify this change to main frame window
+    // because the main window is not created now
+    //CMPlayerCApp *pApp = AfxGetMyApp();
+    //if (pApp)
+    //{
+    //  CWnd *pWnd = pApp->GetMainWnd();
+    //  if (pWnd)
+    //    pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
+    //}
   }
 
   // post message to main frame to add new data
@@ -91,6 +92,10 @@ void MediaCenterController::SpiderStop()
   m_checkDB._Stop();
   m_cover._Stop();
   m_treeModel.save2DB();
+
+  m_csSpiderNewDatas.lock();
+  m_vtSpiderNewDatas.clear();
+  m_csSpiderNewDatas.unlock();
 }
 
 void MediaCenterController::AddNewFoundData(media_tree::model::FileIterator fileIterator)
@@ -117,9 +122,9 @@ void MediaCenterController::AddBlock()
     md.bHide = (*it)->file_data.bHide;
     if (!m_blocklist.IsBlockExist(md))
     {
-      media_tree::model::FileIterator itFile = m_treeModel.findFile(md.path, md.filename);
+      media_tree::model::tagFileInfo fileInfo = m_treeModel.findFile(md.path, md.filename);
       BlockUnit* one = new BlockUnit;
-      one->m_itFile = itFile;
+      one->m_itFile = fileInfo.itFile;
       m_blocklist.AddBlock(one);
 
       m_cover.SetBlockUnit(one);
@@ -134,8 +139,18 @@ void MediaCenterController::AddBlock()
     ++it;
   }
 
-  m_cover._Start();
+  if (!m_vtSpiderNewDatas.empty())
+    m_cover._Start();
  
+  m_vtSpiderNewDatas.clear();
+
+  m_csSpiderNewDatas.unlock();
+}
+
+void MediaCenterController::DelNotAddedBlock()
+{
+  m_csSpiderNewDatas.lock();
+
   m_vtSpiderNewDatas.clear();
 
   m_csSpiderNewDatas.unlock();

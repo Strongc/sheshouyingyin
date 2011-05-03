@@ -46,6 +46,7 @@ public:
 
   void AddNewFoundData(media_tree::model::FileIterator fileIterator);
   void AddBlock();
+  void DelNotAddedBlock();   // delete new datas when the app exit
 
 private:
   // GUI
