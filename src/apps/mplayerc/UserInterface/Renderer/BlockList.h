@@ -48,7 +48,6 @@ public:
   ~BlockList();
 
   void SetModel(ModelPtr ptr);  // using various model to sort the items in the list
-  bool IsBlockExist(const MediaData &md);
   void AddBlock(BlockUnit* unit);  
   void DeleteBlock(std::list<BlockUnit*>::iterator it);
   void DeleteBlock(int i);

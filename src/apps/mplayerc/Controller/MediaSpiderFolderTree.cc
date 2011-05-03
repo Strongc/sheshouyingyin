@@ -168,27 +168,36 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
       {
         SleepOrExit(80);
 
-        if (!is_directory(it->path())
+        if (IsSupportExtension(it->path().wstring())
+         && !is_directory(it->path())
          && !isHiddenPath(it->path().wstring())
-         && IsSupportExtension(it->path().wstring())
          && !IsFilteredItem(it->path().wstring()))
         {
-          // add it to the folder tree
-          m_treeModel.addFile(sFolder, it->path().filename().wstring());
-
-          // add it to the media center for appending
-          media_tree::model::tagFileInfo fileInfo = m_treeModel.findFile(sFolder, it->path().filename().wstring());
-          if (fileInfo.isValid())
+          // check to see if the file is already exist in the tree
+          media_tree::model::tagFileInfo fileInfo = m_treeModel.findFile(itPath->wstring(), it->path().filename().wstring());
+          if (!fileInfo.isValid())
           {
-            MediaCenterController::GetInstance()->AddNewFoundData(fileInfo.itFile);
+            // add it to the folder tree
+            m_treeModel.addFile(itPath->wstring(), it->path().filename().wstring());
 
-            // notify this change to main frame window
-            CMPlayerCApp *pApp = AfxGetMyApp();
-            if (pApp)
+            // add it to the media center for appending
+            media_tree::model::tagFileInfo fileInfo = m_treeModel.findFile(itPath->wstring(), it->path().filename().wstring());
+            if (fileInfo.isValid())
             {
-              CWnd *pWnd = pApp->GetMainWnd();
-              if (::IsWindow(pWnd->m_hWnd))
-                pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
+              MediaCenterController::GetInstance()->AddNewFoundData(fileInfo.itFile);
+
+              // notify this change to main frame window
+              CMPlayerCApp *pApp = AfxGetMyApp();
+              if (pApp)
+              {
+                CWnd *pWnd = pApp->GetMainWnd();
+                if (::IsWindow(pWnd->m_hWnd))
+                  pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
+              }
+            }
+            else
+            {
+              Logging(L"find file in spider fail(should never go fail)");
             }
           }
         }
