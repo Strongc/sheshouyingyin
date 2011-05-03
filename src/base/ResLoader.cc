@@ -96,7 +96,7 @@ HBITMAP ResLoader::LoadBitmapFromAppData(const std::wstring& sBitmapPath)
   std::wstring sFullPath;
   CSVPToolBox csvptb;
   csvptb.GetAppDataPath(sFullPath);
-  sFullPath += L"\\mc\\cover\\" + sBitmapPath;
+  sFullPath += L"\\" + sBitmapPath;
 
   CImage igImage;
   igImage.Load(sFullPath.c_str());
