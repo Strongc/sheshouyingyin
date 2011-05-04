@@ -857,7 +857,10 @@ BOOL CChildView::OnSetCover(UINT nID)
   bsuccess = ::CopyFile(orgpath, destpath.c_str(), TRUE);
 
   if (m_blockunit != 0 && bsuccess)
+  {
     m_blockunit->m_itFile->file_data.thumbnailpath = destpath.substr(destpath.find(L"mc"));
+    m_blockunit->ResetCover();
+  }
     
   CRect rc;
   rc = m_blockunit->GetHittest();

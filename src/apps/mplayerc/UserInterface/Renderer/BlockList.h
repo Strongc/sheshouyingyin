@@ -27,6 +27,7 @@ public:
   void DoPaint(WTL::CDC& dc, POINT& pt);
   BOOL OnHittest(POINT pt, BOOL blbtndown);
   RECT GetHittest();
+  void ResetCover();
 
 public:
   FileIterator m_itFile;  // file iterator
@@ -34,6 +35,7 @@ public:
 private:
   UILayerBlock* m_layer;
   POINT m_pt;
+  HBITMAP m_cove;
 };
 
 

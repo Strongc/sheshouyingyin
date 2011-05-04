@@ -13,6 +13,7 @@
 
 BlockUnit::BlockUnit() :
   m_layer(new UILayerBlock)
+, m_cove(0)
 {
 }
 
@@ -61,16 +62,16 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   POINT hidept = {hide_fixpt.x+pt.x, hide_fixpt.y+pt.y};
   hide->SetTexturePos(hidept);
 
-  if (!m_itFile->file_data.thumbnailpath.empty())
+  if (!m_itFile->file_data.thumbnailpath.empty() && !m_cove)
   {
     std::wstring thumbnailpath = m_itFile->file_data.thumbnailpath;
     if (GetFileAttributes(thumbnailpath.c_str()) != INVALID_FILE_ATTRIBUTES || 
         GetLastError() != ERROR_FILE_NOT_FOUND)
     {
       ResLoader resLoad;
-      HBITMAP hbmp = resLoad.LoadBitmapFromAppData(thumbnailpath);
-      if (hbmp)
-        def->SetTexture(hbmp);
+      m_cove = resLoad.LoadBitmapFromAppData(thumbnailpath);
+      if (m_cove)
+        def->SetTexture(m_cove);
     }
   }
 
@@ -114,6 +115,11 @@ RECT BlockUnit::GetHittest()
   m_layer->GetUILayer(L"mark", &mark);
   mark->GetTextureRect(rc);
   return rc;
+}
+
+void BlockUnit::ResetCover()
+{
+  m_cove = NULL;
 }
 
 // BlockList

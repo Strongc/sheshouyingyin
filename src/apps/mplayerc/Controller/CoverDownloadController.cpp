@@ -75,6 +75,7 @@ void CoverDownloadController::_Thread()
      // Change cover
      cover = coverdownloadpath.substr(coverdownloadpath.find(L"mc"));
      (*it)->m_itFile->file_data.thumbnailpath = cover;
+     (*it)->ResetCover();
      InvalidateRect(m_hwnd, &((*it)->GetHittest()), FALSE);
      
      m_list.pop_front();
