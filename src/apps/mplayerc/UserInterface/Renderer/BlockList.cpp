@@ -647,7 +647,7 @@ void BlockListView::HandleLButtonUp(POINT pt, BlockUnit** unit)
     RECT rc = GetScrollBarHittest();
     rc.top = 0;
     rc.bottom = rcclient.bottom;
-    InvalidateRect(m_hwnd, &rcclient, FALSE);
+    InvalidateRect(m_hwnd, &rc, FALSE);
   }
 }
 
@@ -662,6 +662,13 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
     ::InvalidateRect(m_hwnd, &rcclient, FALSE);
   if (bscroll == ScrollBarHit && m_lbtndown)
     PostMessage(m_hwnd, WM_LBUTTONUP, 0, 0);
+  if (bscroll == NoScrollBarHit)
+  {
+    RECT rc = GetScrollBarHittest();
+    rc.top = 0;
+    rc.bottom = rcclient.bottom;
+    InvalidateRect(m_hwnd, &rc, FALSE);
+  }
 
   if (blayer == BEPLAYHITTEST || blayer == BEHIDEHITTEST)
   {
