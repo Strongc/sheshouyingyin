@@ -28,7 +28,7 @@ MediaCenterController::MediaCenterController()
   MediaDatas::iterator itFile = mds.begin();
   while (itFile != mds.end())
   {
-    m_treeModel.addFile(itFile->path, itFile->filename);
+    m_treeModel.addFile(*itFile);
     m_treeModel.initHide(itFile->path, itFile->filename, itFile->bHide);
 
     // add file to media center gui
@@ -62,7 +62,12 @@ void MediaCenterController::Playback(std::wstring file)
   MediaData mdc;
   m_model.FindOne(mdc, mc);
   if (mdc.uniqueid == 0)
-    m_treeModel.addFile(file, name);
+  {
+    MediaData md;
+    md.path = file;
+    md.filename = name;
+    m_treeModel.addFile(md);
+  }
 }
 
 void MediaCenterController::SetFrame(HWND hwnd)

@@ -178,7 +178,10 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
           if (!fileInfo.isValid())
           {
             // add it to the folder tree
-            m_treeModel.addFile(itPath->wstring(), it->path().filename().wstring());
+            MediaData md;
+            md.path = itPath->wstring();
+            md.filename = it->path().filename().wstring();
+            m_treeModel.addFile(md);
 
             // add it to the media center for appending
             media_tree::model::tagFileInfo fileInfo = m_treeModel.findFile(itPath->wstring(), it->path().filename().wstring());
