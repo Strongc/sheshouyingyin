@@ -92,7 +92,8 @@ BOOL MediaCenterScrollBar::OnHittest(POINT pt, int bLbtdown, int& offsetspeed, H
   if (bLbtdown == -1)
     bLbtdown = m_lastlbtstate;
   else
-    m_lastlbtstate = bLbtdown;
+    if (PtInRect(&m_hittest, pt))
+      m_lastlbtstate = bLbtdown;
 
   if (bLbtdown && PtInRect(&m_hittest, pt))
   {

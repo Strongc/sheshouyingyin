@@ -1168,10 +1168,11 @@ static int m_nomorefloatbarforawhile = 0;
 void CMainFrame::OnMouseMove(UINT nFlags, CPoint point)
 {
   BOOL bSomethingChanged = false;
+  BOOL bMedianCenterState = FALSE;
 
   m_wndSeekBar.CloseToolTips();
   if( m_iMediaLoadState == MLS_CLOSED )
-    m_wndView.OnMouseMove(nFlags,point);
+    bMedianCenterState = m_wndView.OnMouseMove(nFlags,point);
   
   CRect CVideoRect = m_wndView.GetVideoRect();
   if(m_iPlaybackMode == PM_DVD)
@@ -1203,7 +1204,7 @@ void CMainFrame::OnMouseMove(UINT nFlags, CPoint point)
 
   int iDistance = sqrt( pow( (double)abs(point.x - m_pLastClickPoint.x) , 2)  + pow( (double)abs( point.y - m_pLastClickPoint.y ) , 2) );
   int idisplacement = sqrt(pow((double)abs(point.x - m_pDragFuncStartPoint.x), 2) + pow((double)abs( point.y - m_pDragFuncStartPoint.y ) , 2));
-  if( ( iDistance > 30 || s_mDragFucOn) && bMouseMoved && s_mDragFuc){
+  if( ( iDistance > 30 || s_mDragFucOn) && bMouseMoved && s_mDragFuc && !bMedianCenterState){
     if(!s_mDragFucOn){
       m_pDragFuncStartPoint = point;
       SetAlwaysOnTop(s.iOnTop , FALSE);

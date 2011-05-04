@@ -657,11 +657,14 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
   GetClientRect(m_hwnd, &rcclient);
 
   int bscroll = OnScrollBarHittest(pt, -1, *m_scrollspeed, m_hwnd);
-  int blayer = OnHittest(pt, -1, unit);
+  int blayer = OnHittest(pt, FALSE, unit);
+
   if (bscroll == ScrollBarClick)
     ::InvalidateRect(m_hwnd, &rcclient, FALSE);
+
   if (bscroll == ScrollBarHit && m_lbtndown)
     PostMessage(m_hwnd, WM_LBUTTONUP, 0, 0);
+
   if (bscroll == NoScrollBarHit)
   {
     RECT rc = GetScrollBarHittest();
