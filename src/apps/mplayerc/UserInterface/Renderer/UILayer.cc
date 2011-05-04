@@ -100,8 +100,11 @@ BOOL UILayer::DoPaint(WTL::CDC& dc)
     dc.AlphaBlend(m_texturerect.left, m_texturerect.top, m_texturerect.Width(), m_texturerect.Height(),
                   texturedc, 0, 0, m_bm.bmWidth, m_bm.bmHeight, bf);
   else
+  {
+    dc.SetStretchBltMode(HALFTONE);
     dc.StretchBlt(m_texturerect.left, m_texturerect.top, m_texturerect.Width(), m_texturerect.Height(),
                   texturedc, 0, 0, m_bm.bmWidth, m_bm.bmHeight, SRCCOPY);
+  }
   
   texturedc.SelectBitmap(hold_texture);
   texturedc.DeleteDC();
