@@ -852,7 +852,6 @@ BOOL CChildView::OnSetCover(UINT nID)
   CSVPToolBox csvptb;
   csvptb.GetAppDataPath(destpath);
   destpath += L"\\mc\\cover\\";
-  destpath += filename.substr(0, filename.find(L"."));
   destpath += GetSystemTimeString() + L".jpg";
   bsuccess = ::CopyFile(orgpath, destpath.c_str(), TRUE);
 
@@ -874,7 +873,7 @@ std::wstring CChildView::GetSystemTimeString()
   GetSystemTime(&time);
 
   wchar_t* buff = new wchar_t[1024];
-  wsprintf(buff, L"-%d-%d-%d-%d-%d-%d-%d", time.wYear, time.wMonth, time.wDay, time.wHour,
+  wsprintf(buff, L"%d%d%d%d%d%d%d", time.wYear, time.wMonth, time.wDay, time.wHour,
     time.wMinute, time.wSecond, time.wMilliseconds);
   
   std::wstring timestr = buff;
