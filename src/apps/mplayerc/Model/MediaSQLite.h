@@ -227,7 +227,7 @@ protected:
         std::wstring sPath;
         CSVPToolBox toolbox;
         toolbox.GetAppDataPath(sPath);
-        g_dbMediaSQLite.open(sPath + L"\\media.db");
+        g_dbMediaSQLite.open(sPath + L"\\mc\\media.db");
 
         g_dbMediaSQLite << L"CREATE TABLE IF NOT EXISTS media_data ("
           L"uniqueid integer PRIMARY KEY, path text, filename text,"

@@ -57,33 +57,28 @@ struct root
 
 struct file
 {
-  file() : tFileCreateTime(-1), bHide(false) {}
+  file() : tFileCreateTime(-1) {}
 
-  std::wstring sFileFolder;  // save its folder
-  std::wstring sFileHash;
-  std::wstring sFilename;
-  std::wstring sFileUID;  // unique id
-  std::wstring sFileThumbnail;  // thumbnail path
+  MediaData file_data;
   time_t tFileCreateTime; // -1 indicate invalid
-  bool bHide;  // is hide this media?
+  //std::wstring sFileHash;  unused now
 };
 
 struct folder
 {
-  folder() : tFolderCreateTime(-1), tNextSpiderInterval(3), nMerit(0) {}
+  folder() : tFolderCreateTime(-1), tNextSpiderInterval(3) {}
 
-  std::wstring sFolderPath;  // dir's name, not include backslash
-  std::wstring sFolderHash;
+  MediaPath folder_data;
   time_t tFolderCreateTime;  // -1 indicate invalid
   time_t tNextSpiderInterval;  // 0 indicate spider can start next loop immediate
-  int nMerit;  // 0 is the start value, spider can find this folder earlier than others
+  //std::wstring sFolderHash;  unused now
 
   std::list<media_tree::file> lsFiles;
 };
 
 inline bool operator<(const folder &left, const folder &right)
 {
-  return left.sFolderPath < right.sFolderPath;
+  return left.folder_data.path < right.folder_data.path;
 }
 
 } // namespace
@@ -107,7 +102,7 @@ inline std::wstring fullFolderPath(const MediaTreeFolders *pFolder)
   const MediaTreeFolders *pCur = pFolder;
   while (pCur && pCur->parent())
   {
-    sCurFolderPath = pCur->get()->sFolderPath + L"\\" + sCurFolderPath;
+    sCurFolderPath = pCur->get()->folder_data.path + L"\\" + sCurFolderPath;
 
     pCur = pCur->parent();
   }
@@ -136,16 +131,18 @@ inline std::wstring makePathPreferred(const std::wstring &sPath)
   else
     sPathResult = sPath;
 
+  // remove the filename in the end or add backslash if the path is a directory
+  if (!is_directory(sPrefix + sPathResult))
+    sPathResult = regex_replace(sPathResult, wregex(L"\\\\[^\\\\]+$"), std::wstring(L"\\"));
+  else
+    sPathResult = regex_replace(sPathResult, wregex(L"\\\\*$"), std::wstring(L"\\"));
+
   // modify the path, let it to be normalized
   // replace all '/' to '\'
   sPathResult = regex_replace(sPathResult, wregex(L"/"), std::wstring(L"\\"));
 
   // replace multi '\' to single '\'
   sPathResult = regex_replace(sPathResult, wregex(L"\\\\+"), std::wstring(L"\\"));
-
-  // remove the filename in the end
-  if (!is_directory(sPathResult))
-    sPathResult = regex_replace(sPathResult, wregex(L"\\\\[^\\\\]+$"), std::wstring(L"\\"));
 
   // append slash to the end if the path
   // after this, the path looks like this: "c:\cjbw1234\test\"

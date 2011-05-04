@@ -12,7 +12,16 @@ public:
   typedef MediaTreeFiles::iterator FileIterator;
 
 public:
-  FileIterator findFile(const std::wstring &sPath, const std::wstring &sFilename);
+  struct tagFileInfo
+  {
+    tagFileInfo() : pFileList(0) {}
+    bool isValid() { return pFileList && (itFile != pFileList->end()); }
+    FileIterator itFile;
+    MediaTreeFiles *pFileList;
+  };
+
+public:
+  tagFileInfo findFile(const std::wstring &sPath, const std::wstring &sFilename);
   TreeIterator findFolder(const std::wstring &sPath, bool bCreateIfNotExist = false);
   MediaTreeFolders& mediaTree();
 

@@ -1,18 +1,22 @@
-﻿
-#pragma once
+﻿#pragma once
 
 #include <list>
 #include <vector>
 #include "MediaCenterScrollBar.h"
 #include "UILayerBlock.h"
 #include "../../Model/MediaComm.h"
-#include <boost/signals.hpp>
 #include "../../Model/MCBlockModel.h"
+#include "../../Model/MediaTreeModel.h"
+#include <boost/signals.hpp>
+
 /* 
  * Class BlockUnit implements block UI and UnitData
  */
 class BlockUnit
 {
+public:
+  typedef media_tree::model::FileIterator FileIterator;
+
 public:
   BlockUnit();
   ~BlockUnit();
@@ -22,11 +26,10 @@ public:
   void DeleteLayer();
   void DoPaint(WTL::CDC& dc, POINT& pt);
   BOOL OnHittest(POINT pt, BOOL blbtndown);
-  void ChangeLayer(std::wstring bmppath);
   RECT GetHittest();
 
 public:
-  MediaData m_data;
+  FileIterator m_itFile;  // file iterator
 
 private:
   UILayerBlock* m_layer;
@@ -37,14 +40,13 @@ private:
 class BlockList
 {
 public:
+  typedef boost::shared_ptr<MCBlockModel::abstract_model<BlockUnit> > ModelPtr;
+
+public:
   BlockList();
   ~BlockList();
 
-  typedef boost::shared_ptr<MCBlockModel::abstract_model<BlockUnit> > ModelPtr;
-  void SetModel(ModelPtr ptr);
-  ModelPtr m_pModel;
-
-  bool IsBlockExist(const MediaData &md);
+  void SetModel(ModelPtr ptr);  // using various model to sort the items in the list
   void AddBlock(BlockUnit* unit);  
   void DeleteBlock(std::list<BlockUnit*>::iterator it);
   void DeleteBlock(int i);
@@ -69,9 +71,10 @@ public:
   RECT GetScrollBarHittest();
   BOOL ContiniuPaint();
   void GetLastBlockPosition(RECT& rc);
+  int  GetEnableShowAmount();
   void SetScrollBarInitializeFlag(BOOL bl);
   BOOL GetScrollBarInitializeFlag();
-  
+
 // signals
 public:
   boost::signal<void (const MediaData &md)> m_sigPlayback;
@@ -95,7 +98,7 @@ private:
 
   std::list<BlockUnit*>::iterator m_start;
   std::list<BlockUnit*>::iterator m_end;
-
+  
   std::vector<float> m_x;
   std::vector<float> m_y;
   std::list<BlockUnit*> m_list;
@@ -108,6 +111,7 @@ private:
 
   BOOL m_scrollbarinitialize;
 
+  ModelPtr m_pModel;
 };
 
 class BlockListView : public BlockList

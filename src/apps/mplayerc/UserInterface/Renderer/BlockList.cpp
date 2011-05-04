@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "BlockList.h"
 #include "..\..\Controller\MediaCenterController.h"
+#include "ResLoader.h"
 
 // BlockOne
 
@@ -60,6 +61,19 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   POINT hidept = {hide_fixpt.x+pt.x, hide_fixpt.y+pt.y};
   hide->SetTexturePos(hidept);
 
+  if (!m_itFile->file_data.thumbnailpath.empty())
+  {
+    std::wstring thumbnailpath = m_itFile->file_data.thumbnailpath;
+    if (GetFileAttributes(thumbnailpath.c_str()) != INVALID_FILE_ATTRIBUTES || 
+        GetLastError() != ERROR_FILE_NOT_FOUND)
+    {
+      ResLoader resLoad;
+      HBITMAP hbmp = resLoad.LoadBitmapFromAppData(thumbnailpath);
+      if (hbmp)
+        def->SetTexture(hbmp);
+    }
+  }
+
   m_layer->DoPaint(dc);
 
   CRect rcc;
@@ -74,11 +88,11 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   rc.bottom = rc.top+20;
 
   std::wstring fmnm;
-  if (m_data.filmname.empty())
-    fmnm = m_data.filename;
+  if (m_itFile->file_data.filmname.empty())
+    fmnm = m_itFile->file_data.filename;
   else
-    fmnm = m_data.filmname;
-  //dc.DrawText(m_data.filename.c_str(), m_data.filename.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+    fmnm = m_itFile->file_data.filmname;
+  //dc.DrawText(m_itFile.filename.c_str(), m_itFile.filename.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
   CPen pen;
   dc.DrawText(fmnm.c_str(), fmnm.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
 }
@@ -91,13 +105,6 @@ void BlockUnit::DeleteLayer()
 int BlockUnit::OnHittest(POINT pt, BOOL blbtndown)
 {
   return m_layer->OnHittest(pt, blbtndown);
-}
-
-void BlockUnit::ChangeLayer(std::wstring bmppath)
-{
-  UILayer* def = NULL;
-  m_layer->GetUILayer(L"def", &def);
-  def->ChangeLayer(bmppath);
 }
 
 RECT BlockUnit::GetHittest()
@@ -170,9 +177,6 @@ void BlockList::DoPaint(WTL::CDC& dc)
   int rows = 0;
   float y = .0f;
 
-  float height = m_blockh + m_top;
-  BOOL bScrollShow = (m_list.size() + m_maxcolumn - 1) / m_maxcolumn * height > m_winh? TRUE:FALSE; 
-  m_scrollbar->SetDisPlay(bScrollShow);
   if (m_scrollbar->GetDisPlay() && !m_scrollbar->GetInitializeFlag())
   {
     SetScrollBarInitializeFlag(TRUE);
@@ -198,40 +202,13 @@ void BlockList::DoPaint(WTL::CDC& dc)
   } 
 }
 
-bool BlockList::IsBlockExist(const MediaData &md)
-{
-  // search normal files
-  std::list<BlockUnit*>::iterator it = m_list.begin();
-  while (it != m_list.end())
-  {
-    if (((*it)->m_data.path == md.path) && 
-        ((*it)->m_data.filename == md.filename))
-      return true;
-
-    ++it;
-  }
-
-  // search hidden files
-  std::list<BlockUnit*>::iterator itHidden = m_listHide.begin();
-  while (itHidden != m_listHide.end())
-  {
-    if (((*itHidden)->m_data.path == md.path) && 
-      ((*itHidden)->m_data.filename == md.filename))
-      return true;
-
-    ++itHidden;
-  }
-  
-  return false;
-}
-
 void BlockList::AddBlock(BlockUnit* unit)
 {
   unit->DefLayer();
 
   // using model to insert data, because the model will insert data by an order
   // the model is like a adapter
-  if (unit->m_data.bHide)
+  if (unit->m_itFile->file_data.bHide)
     m_listHide.push_back(unit);
   else
     m_pModel->insert(unit);
@@ -319,6 +296,10 @@ void BlockList::AlignScrollBar()
     m_scrollbar->SetPosition(pt);
     m_scrollbar->SetScrollBarRange(m_winh);
   }
+
+  float height = m_blockh + m_top;
+  BOOL bScrollShow = (m_list.size() + m_maxcolumn - 1) / m_maxcolumn * height > m_winh? TRUE:FALSE; 
+  m_scrollbar->SetDisPlay(bScrollShow);
 }
 
 void BlockList::Update(float winw, float winh)
@@ -494,7 +475,7 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
     case BEPLAY:
       {
         if (!m_sigPlayback.empty())
-          m_sigPlayback((*it)->m_data); // emit a signal
+          m_sigPlayback((*it)->m_itFile->file_data); // emit a signal
       }
       return state;
     case  BEHIDEHITTEST:
@@ -502,10 +483,10 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
       *unit = (*it);
       return state;
     case BEMARKORDEFHITTEST:
-      if ((*it)->m_data.filmname.empty())
-        m_tipstring = (*it)->m_data.filename;
+      if ((*it)->m_itFile->file_data.filmname.empty())
+        m_tipstring = (*it)->m_itFile->file_data.filename;
       else
-        m_tipstring = (*it)->m_data.filmname;
+        m_tipstring = (*it)->m_itFile->file_data.filmname;
       *unit = (*it);
       return state;
     }
@@ -522,7 +503,7 @@ RECT BlockList::GetScrollBarHittest()
 void BlockList::DeleteBlock(std::list<BlockUnit*>::iterator it)
 {
   // add it into hide list
-  (*it)->m_data.bHide = true;
+  (*it)->m_itFile->file_data.bHide = true;
   m_listHide.push_back(*it);
 
   // tell media center
@@ -562,6 +543,11 @@ BOOL BlockList::ContiniuPaint()
   for (; it != m_end; ++it)
     ++count;
   return count <= m_y.size() * m_x.size()? TRUE:FALSE;
+}
+
+int  BlockList::GetEnableShowAmount()
+{
+  return m_x.size() * m_y.size();
 }
 
 void BlockList::GetLastBlockPosition(RECT& rc)
