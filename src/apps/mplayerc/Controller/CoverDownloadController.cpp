@@ -1,21 +1,16 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "CoverDownloadController.h"
 #include "HashController.h"
 #include "SVPToolBox.h"
 #include "Strings.h"
 #include "json\json.h"
 #include "logging.h"
+#include "MediaCenterController.h"
 
 CoverDownloadController::CoverDownloadController()
 {
   // create folder if MC folder is not existed
-  std::wstring coverdownloadpath;
-  CSVPToolBox csvptb;
-  csvptb.GetAppDataPath(coverdownloadpath);
-  coverdownloadpath += L"\\mc";
-  ::CreateDirectory(coverdownloadpath.c_str(), NULL);
-  coverdownloadpath += L"\\cover\\";
-  ::CreateDirectory(coverdownloadpath.c_str(), NULL);
+  MediaCenterController::CreateMCFolder();
 }
 
 CoverDownloadController::~CoverDownloadController()

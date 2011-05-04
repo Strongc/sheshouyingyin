@@ -12,19 +12,21 @@ MediaCenterController::MediaCenterController()
 {
   // add path to media tree
   MediaPaths mps;
-  MediaPaths::iterator it;
   m_model.FindAll(mps);
-  for (it = mps.begin(); it != mps.end(); ++it)
+  MediaPaths::iterator it = mps.begin();
+  while (it != mps.end())
   {
     m_treeModel.addFolder(it->path);
     m_treeModel.initMerit(it->path, it->merit);
+
+    ++it;
   }
 
   // add files to media tree
   MediaDatas mds;
-  MediaDatas::iterator itFile;
   m_model.FindAll(mds);
-  for (itFile = mds.begin(); itFile != mds.end(); ++itFile)
+  MediaDatas::iterator itFile = mds.begin();
+  while (itFile != mds.end())
   {
     m_treeModel.addFile(itFile->path, itFile->filename);
     m_treeModel.initHide(itFile->path, itFile->filename, itFile->bHide);
@@ -36,16 +38,9 @@ MediaCenterController::MediaCenterController()
 
     // do not notify this change to main frame window
     // because the main window is not created now
-    //CMPlayerCApp *pApp = AfxGetMyApp();
-    //if (pApp)
-    //{
-    //  CWnd *pWnd = pApp->GetMainWnd();
-    //  if (pWnd)
-    //    pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
-    //}
-  }
 
-  // post message to main frame to add new data
+    ++itFile;
+  }
 
   // connect signals and slots
   m_blocklist.m_sigPlayback.connect(boost::bind(&MediaCenterController::HandlePlayback, this, _1));
@@ -97,6 +92,28 @@ HRGN MediaCenterController::CalculateUpdateRgn(WTL::CRect& rc)
   CombineRgn(hrgntotal, hrgn1, hrgn2, RGN_OR);
   return hrgntotal;
 
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Maintenance for MC folder
+bool MediaCenterController::IsMCFolderExist()
+{
+  using namespace boost::filesystem;
+
+  CSVPToolBox toolbox;
+  std::wstring sPath;
+  toolbox.GetAppDataPath(sPath);
+  return exists(sPath + L"\\mc\\cover");
+}
+
+void MediaCenterController::CreateMCFolder()
+{
+  using namespace boost::filesystem;
+
+  CSVPToolBox toolbox;
+  std::wstring sPath;
+  toolbox.GetAppDataPath(sPath);
+  create_directories(sPath + L"\\mc\\cover");
 }
 
 

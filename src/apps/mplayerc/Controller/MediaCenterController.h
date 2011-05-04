@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "LazyInstance.h"
 #include "../Model/MediaComm.h"
@@ -16,6 +16,11 @@ class MediaCenterController:
 public:
   MediaCenterController();
   ~MediaCenterController();
+
+public:
+  // Maintenance for MC folder
+  static bool IsMCFolderExist();
+  static void CreateMCFolder();
 
 public:
   // Gui control, should not for other use
