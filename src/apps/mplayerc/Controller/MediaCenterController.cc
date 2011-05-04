@@ -8,6 +8,7 @@
 // normal part
 MediaCenterController::MediaCenterController()
 : m_planestate(FALSE)
+ ,m_initiablocklist(FALSE)
 {
   // add path to media tree
   MediaPaths mps;
@@ -29,18 +30,19 @@ MediaCenterController::MediaCenterController()
     m_treeModel.initHide(itFile->path, itFile->filename, itFile->bHide);
 
     // add file to media center gui
-    media_tree::model::FileIterator itTreeFile;
-    itTreeFile = m_treeModel.findFile(itFile->path, itFile->filename);
-    AddNewFoundData(itTreeFile);
+    media_tree::model::tagFileInfo fileInfo;
+    fileInfo = m_treeModel.findFile(itFile->path, itFile->filename);
+    AddNewFoundData(fileInfo.itFile);
 
-    // notify this change to main frame window
-    CMPlayerCApp *pApp = AfxGetMyApp();
-    if (pApp)
-    {
-      CWnd *pWnd = pApp->GetMainWnd();
-      if (pWnd)
-        pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
-    }
+    // do not notify this change to main frame window
+    // because the main window is not created now
+    //CMPlayerCApp *pApp = AfxGetMyApp();
+    //if (pApp)
+    //{
+    //  CWnd *pWnd = pApp->GetMainWnd();
+    //  if (pWnd)
+    //    pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
+    //}
   }
 
   // post message to main frame to add new data
@@ -71,7 +73,7 @@ void MediaCenterController::Playback(std::wstring file)
 void MediaCenterController::SetFrame(HWND hwnd)
 {
   m_hwnd = hwnd;
-  m_cover.SetFrameHwnd(hwnd);
+  m_cover.SetFrame(hwnd);
 }
 
 HRGN MediaCenterController::CalculateUpdateRgn(WTL::CRect& rc)
@@ -107,6 +109,14 @@ void MediaCenterController::SpiderStart()
 
   m_spider._Start();
   m_checkDB._Start();  // check the media.db, clean invalid records
+
+  CMPlayerCApp *pApp = AfxGetMyApp();
+  if (pApp)
+  {
+    CWnd *pWnd = pApp->GetMainWnd();
+    if (pWnd)
+      pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
+  }
 }
 
 void MediaCenterController::SpiderStop()
@@ -115,6 +125,10 @@ void MediaCenterController::SpiderStop()
   m_checkDB._Stop();
   m_cover._Stop();
   m_treeModel.save2DB();
+
+  m_csSpiderNewDatas.lock();
+  m_vtSpiderNewDatas.clear();
+  m_csSpiderNewDatas.unlock();
 }
 
 void MediaCenterController::AddNewFoundData(media_tree::model::FileIterator fileIterator)
@@ -131,44 +145,64 @@ void MediaCenterController::AddBlock()
   m_csSpiderNewDatas.lock();
   
   // add new found data to gui and then remove them
+  int count = 1;
+  WTL::CRect rc;
+  m_blocklist.GetLastBlockPosition(rc);
+  HRGN rgn = CalculateUpdateRgn(rc);
+
   std::vector<media_tree::model::FileIterator>::iterator it = m_vtSpiderNewDatas.begin();
   while (it != m_vtSpiderNewDatas.end())
   {
     // add block units
-    MediaData md;
-    md.path = (*it)->sFileFolder;
-    md.filename = (*it)->sFilename;
-    md.bHide = (*it)->bHide;
-    if (!m_blocklist.IsBlockExist(md))
+    
+    BlockUnit* one = new BlockUnit;
+    one->m_itFile = *it;
+    m_blocklist.AddBlock(one);
+
+    m_cover.SetBlockUnit(one);
+    
+    GetClientRect(m_hwnd, &rc);
+    m_blocklist.Update(rc.right - rc.left, rc.bottom - rc.top);
+
+    if (!m_initiablocklist)
     {
-      WTL::CRect rc;
-      m_blocklist.GetLastBlockPosition(rc);
-
-      BlockUnit* one = new BlockUnit;
-      one->m_data = md;
-      m_blocklist.AddBlock(one);
-
-      m_cover.SetBlockUnit(one);
+      int size = m_vtSpiderNewDatas.size() > m_blocklist.GetEnableShowAmount()? \
+        m_blocklist.GetEnableShowAmount() : m_vtSpiderNewDatas.size();
       
-      HRGN rgn = CalculateUpdateRgn(rc);
-      
-      GetClientRect(m_hwnd, &rc);
-      m_blocklist.Update(rc.right - rc.left, rc.bottom - rc.top);
-      if (m_blocklist.ContiniuPaint())
-        if (m_blocklist.GetScrollBarInitializeFlag())
-        {
-          InvalidateRect(m_hwnd, 0, FALSE);
-          m_blocklist.SetScrollBarInitializeFlag(FALSE);
-        }
-        else
-          InvalidateRgn(m_hwnd, rgn, FALSE);
+      if (count == size)
+      {
+        m_initiablocklist = TRUE;
+        InvalidateRect(m_hwnd, 0, FALSE);
+        UpdateWindow(m_hwnd);
+      }
+
+      ++count;
     }
-
+    
     ++it;
   }
 
-  m_cover._Start();
+  if (m_initiablocklist && m_blocklist.ContiniuPaint())
+    if (m_blocklist.GetScrollBarInitializeFlag())
+    {
+      InvalidateRect(m_hwnd, 0, FALSE);
+      m_blocklist.SetScrollBarInitializeFlag(FALSE);
+    }
+    else
+      InvalidateRgn(m_hwnd, rgn, FALSE);
+
+  if (!m_vtSpiderNewDatas.empty())
+    m_cover._Start();
  
+  m_vtSpiderNewDatas.clear();
+
+  m_csSpiderNewDatas.unlock();
+}
+
+void MediaCenterController::DelNotAddedBlock()
+{
+  m_csSpiderNewDatas.lock();
+
   m_vtSpiderNewDatas.clear();
 
   m_csSpiderNewDatas.unlock();
@@ -232,16 +266,16 @@ void MediaCenterController::HandlePlayback(const MediaData &md)
 void MediaCenterController::HandleDelBlock(const BlockUnit *pBlock)
 {
   typedef media_tree::model::TreeIterator TreeIterator;
-  TreeIterator it = m_treeModel.findFolder(pBlock->m_data.path);
+  TreeIterator it = m_treeModel.findFolder(pBlock->m_itFile->file_data.path);
   TreeIterator itEnd;
   if (it != itEnd)
   {
     MediaTreeFiles::iterator itFindFile = it->lsFiles.begin();
     while (itFindFile != it->lsFiles.end())
     {
-      if (itFindFile->sFilename == pBlock->m_data.filename)
+      if (itFindFile->file_data.filename == pBlock->m_itFile->file_data.filename)
       {
-        itFindFile->bHide = pBlock->m_data.bHide;
+        itFindFile->file_data.bHide = pBlock->m_itFile->file_data.bHide;
         break;
       }
 

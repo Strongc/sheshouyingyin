@@ -18,8 +18,8 @@ public:
   POINT GetPosition();
   float GetOffset();
   RECT  GetHittest();
-  void  SetInitializeFlag(BOOL bl);
-  BOOL  GetInitializeFlag();
+  void SetInitializeFlag(BOOL bl);
+  BOOL GetInitializeFlag();
 
 private:
   WTL::CBitmap m_hbitmap;

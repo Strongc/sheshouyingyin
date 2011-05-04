@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <threadhelper.h>
 #include "NetworkControlerImpl.h"
@@ -14,9 +14,16 @@ public:
   ~CoverDownloadController();
 
   void SetBlockUnit(BlockUnit* unit);
-  void SetFrameHwnd(HWND hwnd);
+  void SetFrame(HWND hwnd);
+
   void _Thread();
-  void _Thread_old();
+  BOOL HttpGetResponse(std::wstring szFilePath, std::wstring requesturl, std::string& responsestr);
+  BOOL ParseRespondString(std::string& parsestr, std::wstring& title, std::wstring& cover);
+  BOOL HttpDownloadCover(std::wstring downloadurl, std::wstring& downloadpath,
+                         std::wstring cover);
+  BOOL ChangeLayer();
+
+  std::wstring GetSystemTimeString();
 
 private:
   std::list<BlockUnit*> m_list;

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "LazyInstance.h"
 #include "../Model/MediaComm.h"
@@ -48,6 +48,7 @@ public:
 
   void AddNewFoundData(media_tree::model::FileIterator fileIterator);
   void AddBlock();
+  void DelNotAddedBlock();   // delete new datas when the app exit
 
 private:
   // GUI
@@ -56,6 +57,7 @@ private:
   MediaDatas m_mediadata;
   BlockListView m_blocklist;
   CoverDownloadController m_cover;
+  BOOL m_initiablocklist;
   
   // Data
   MediaModel            m_model;

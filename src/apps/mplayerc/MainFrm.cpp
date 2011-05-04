@@ -1147,7 +1147,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
     s.skinname = L"";
     LoadRes(s.skinid, s.skinname);
   }
-
+  
   return 0;
 }
 
@@ -1729,7 +1729,8 @@ void CMainFrame::OnResetSetting(){
 }
 void CMainFrame::OnDestroy()
 {
-   MediaCenterController::GetInstance()->SpiderStop();
+  MediaCenterController::GetInstance()->DelNotAddedBlock();
+  MediaCenterController::GetInstance()->SpiderStop();
 
   //AfxMessageBox(_T("2"));
   ShowTrayIcon(false);
@@ -17494,6 +17495,7 @@ void CMainFrame::OnSpiderNewFileFound()
 {
   // let the media center to add new file to the media gui
   MediaCenterController::GetInstance()->AddBlock();
+  ::Sleep(20); // sleep for a moment
 }
 
 void CMainFrame::OnSkinSelection(UINT nID)

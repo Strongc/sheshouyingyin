@@ -54,6 +54,7 @@ public:
   void AlignScrollBar();
   void UpdateScrollBar(POINT pt);
   RECT GetScrollBarHittest();
+  int  GetEnableShowAmount();
 
 private:
   float m_spacing;

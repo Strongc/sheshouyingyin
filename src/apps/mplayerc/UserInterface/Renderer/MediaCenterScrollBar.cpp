@@ -164,12 +164,12 @@ RECT  MediaCenterScrollBar::GetHittest()
   return m_hittest;
 }
 
-void  MediaCenterScrollBar::SetInitializeFlag(BOOL bl)
+void MediaCenterScrollBar::SetInitializeFlag(BOOL bl)
 {
   m_binitialize = bl;
 }
 
-BOOL  MediaCenterScrollBar::GetInitializeFlag()
+BOOL MediaCenterScrollBar::GetInitializeFlag()
 {
   return m_binitialize;
 }
