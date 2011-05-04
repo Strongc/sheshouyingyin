@@ -120,11 +120,11 @@ void media_tree::model::addFolder(const std::wstring &sFolder, bool bIncreaseMer
   }
 }
 
-void media_tree::model::addFile(const std::wstring &sFolder, const std::wstring &sFilename)
+void media_tree::model::addFile(const MediaData &md)
 {
   using namespace boost::lambda;
 
-  TreeIterator itFolder = findFolder(sFolder, true);
+  TreeIterator itFolder = findFolder(md.path, true);
   TreeIterator itEnd;
   if (itFolder != itEnd)
   {
@@ -134,7 +134,7 @@ void media_tree::model::addFile(const std::wstring &sFolder, const std::wstring 
     MediaTreeFiles::iterator itFiles = files.begin();
     while (itFiles != files.end())
     {
-      if (itFiles->file_data.filename == sFilename)
+      if (itFiles->file_data.filename == md.filename)
         break;
 
       ++itFiles;
@@ -143,13 +143,9 @@ void media_tree::model::addFile(const std::wstring &sFolder, const std::wstring 
     if (itFiles == files.end())
     {
       media_tree::file fe;
-      fe.file_data.filename = sFilename;
+      fe.file_data.filename = md.filename;
       fe.file_data.path = fullFolderPath(itFolder.node());
-      //      CSVPToolBox toolbox;
-      //      std::wstring sThumbnailPath;
-      //      toolbox.GetAppDataPath(sThumbnailPath);
-      //      sThumbnailPath += L"\\" + SPlayerGUID::RandMakeGUID() + L".jpg";
-      //fe.sFileThumbnail = sThumbnailPath;
+      fe.file_data.thumbnailpath = md.thumbnailpath;
       //fe.sFileHash = ;
       //fe.sFileUID = ;
       fe.tFileCreateTime = ::time(0);
