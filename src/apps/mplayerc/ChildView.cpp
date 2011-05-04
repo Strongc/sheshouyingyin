@@ -284,7 +284,7 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_WM_SETFOCUS()
 	//}}AFX_MSG_MAP
 	ON_WM_CREATE()
-	ON_WM_MOUSEMOVE()
+	//ON_WM_MOUSEMOVE()
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
   ON_WM_RBUTTONUP()
@@ -629,7 +629,7 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
     return 0;
 }
 
-void CChildView::OnMouseMove(UINT nFlags, CPoint point)
+BOOL CChildView::OnMouseMove(UINT nFlags, CPoint point)
 {
 	// TODO: Add your message handler code here and/or call default
 
@@ -638,29 +638,28 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
     RECT rc;
     GetClientRect(&rc);
     m_blocklistview->HandleMouseMove(point, &m_blockunit);
+    return TRUE;
   }
-  else
-  {
-    CSize diff = m_lastMouseMove - point;
-	  BOOL bMouseMoved =  diff.cx || diff.cy ;
-	  m_lastMouseMove = point;
 
-	  CRect rc;
-	  CMainFrame* pFrame = ((CMainFrame*)GetParentFrame());
-	  GetWindowRect(&rc);
-	  point += rc.TopLeft() ;
+  CSize diff = m_lastMouseMove - point;
+	BOOL bMouseMoved =  diff.cx || diff.cy ;
+	m_lastMouseMove = point;
 
-    if(bMouseMoved){
+	CRect rc;
+	CMainFrame* pFrame = ((CMainFrame*)GetParentFrame());
+	GetWindowRect(&rc);
+	point += rc.TopLeft() ;
 
-      UINT ret = m_btnList.OnHitTest(point,rc,-1);
-		  m_nItemToTrack = ret;
+  if (bMouseMoved){
+
+    UINT ret = m_btnList.OnHitTest(point,rc,-1);
+		m_nItemToTrack = ret;
 		
-   
-			  if( m_btnList.HTRedrawRequired ){
-				  Invalidate();
-			  }
-    }
+    if ( m_btnList.HTRedrawRequired ){
+		  Invalidate();
+	  }
   }
+
 
   if (::GetKeyState(VK_LBUTTON) & 0x8000)
   {
@@ -675,6 +674,7 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
   }
   
   CWnd::OnMouseMove(nFlags, point);
+  return FALSE;
 }
 void CChildView::OnLButtonDown(UINT nFlags, CPoint point)
 {
