@@ -158,7 +158,7 @@ BOOL CoverDownloadController::HttpDownloadCover(std::wstring downloadurl, std::w
   CSVPToolBox csvptb;
   csvptb.GetAppDataPath(downloadpath);
   downloadpath += L"\\mc\\cover\\";
-  downloadpath += cover + GetSystemTimeString() + L".jpg";
+  downloadpath += GetSystemTimeString() + L".jpg";
 
   req->set_request_url(url.c_str());
   req->set_request_method(REQ_GET);
@@ -188,7 +188,7 @@ std::wstring CoverDownloadController::GetSystemTimeString()
   GetSystemTime(&time);
 
   wchar_t* buff = new wchar_t[1024];
-  wsprintf(buff, L"-%d-%d-%d-%d-%d-%d-%d", time.wYear, time.wMonth, time.wDay, time.wHour,
+  wsprintf(buff, L"%d%d%d%d%d%d%d", time.wYear, time.wMonth, time.wDay, time.wHour,
     time.wMinute, time.wSecond, time.wMilliseconds);
 
   std::wstring timestr = buff;
