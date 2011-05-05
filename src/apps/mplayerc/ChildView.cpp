@@ -842,41 +842,8 @@ BOOL CChildView::OnSetCover(UINT nID)
   CFileDialog filedlg(TRUE, L"jpg", 0, OFN_READONLY, L"JPEG Files (*.jpg)|*.jpg||", this);
   filedlg.DoModal();
 
-  std::wstring filename = filedlg.GetFileName().GetString();
-  std::wstring extra = L"";
-  CString orgpath;
-  std::wstring destpath;
-  BOOL bsuccess;
- 
-  orgpath = filedlg.GetPathName();
-  CSVPToolBox csvptb;
-  csvptb.GetAppDataPath(destpath);
-  destpath += L"\\mc\\cover\\";
-  destpath += GetSystemTimeString() + L".jpg";
-  bsuccess = ::CopyFile(orgpath, destpath.c_str(), TRUE);
+  std::wstring orgpath = filedlg.GetPathName().GetString();
+  m_mediacenter->SetCover(m_blockunit, orgpath);
 
-  if (m_blockunit != 0 && bsuccess)
-  {
-    m_blockunit->m_itFile->file_data.thumbnailpath = destpath.substr(destpath.find(L"mc"));
-    m_blockunit->ResetCover();
-  }
-    
-  CRect rc;
-  rc = m_blockunit->GetHittest();
-  InvalidateRect(&rc);
   return TRUE;
-}
-
-std::wstring CChildView::GetSystemTimeString()
-{
-  SYSTEMTIME time;
-  GetSystemTime(&time);
-
-  wchar_t* buff = new wchar_t[1024];
-  wsprintf(buff, L"%d%d%d%d%d%d%d", time.wYear, time.wMonth, time.wDay, time.wHour,
-    time.wMinute, time.wSecond, time.wMilliseconds);
-  
-  std::wstring timestr = buff;
-  delete[] buff;
-  return timestr;
 }

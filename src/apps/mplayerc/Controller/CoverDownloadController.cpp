@@ -33,10 +33,7 @@ void CoverDownloadController::_Thread()
    // sinet
    std::wstring requesturl = L"http://m.shooter.cn/api/medias/getinfoBysphash/sphash:";
    std::wstring downloadurl = L"http://img.shooter.cn/";
-   refptr<pool> pool = pool::create_instance();
-   refptr<task> task = task::create_instance();
-   refptr<config> cfg = config::create_instance();
-   task->use_config(cfg);
+   
    std::list<BlockUnit*>::iterator it = m_list.begin();
    while (it != m_list.end())
    {
