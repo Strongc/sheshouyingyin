@@ -9,6 +9,7 @@
 #include <map>
 #include "..\UserInterface\Renderer\BlockList.h"
 #include "CoverDownloadController.h"
+#include "CoverUploadController.h"
 
 class MediaCenterController:
   public LazyInstanceImpl<MediaCenterController>
@@ -40,6 +41,8 @@ public:
 
    HRGN CalculateUpdateRgn(WTL::CRect& rc);
 
+   void SetCover(BlockUnit* unit, std::wstring orgpath);
+
 // slots
 public:
   void HandlePlayback(const MediaData &md);
@@ -61,7 +64,8 @@ private:
   BOOL m_planestate;
   MediaDatas m_mediadata;
   BlockListView m_blocklist;
-  CoverDownloadController m_cover;
+  CoverDownloadController m_coverdown;
+  CoverUploadController m_coverup;
   BOOL m_initiablocklist;
   
   // Data

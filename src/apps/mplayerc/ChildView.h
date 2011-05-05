@@ -33,8 +33,8 @@ class CChildView : public CWnd
   BlockListView* m_blocklistview;
 	DWORD m_lastlmdowntime;
 	CPoint m_lastlmdownpoint;
-
-	CCritSec m_csLogo;
+  
+  CCritSec m_csLogo;
 	CPngImage m_logo;
 	CBitmap m_logo_bitmap;
 
@@ -109,6 +109,5 @@ public:
   afx_msg BOOL OnSetCover(UINT nID);
   
   void ShowMediaCenter(BOOL bl);
-  std::wstring GetSystemTimeString();
 
 };

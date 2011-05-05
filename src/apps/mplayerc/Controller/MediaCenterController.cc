@@ -73,7 +73,7 @@ void MediaCenterController::Playback(std::wstring file)
 void MediaCenterController::SetFrame(HWND hwnd)
 {
   m_hwnd = hwnd;
-  m_cover.SetFrame(hwnd);
+  m_coverdown.SetFrame(hwnd);
 }
 
 HRGN MediaCenterController::CalculateUpdateRgn(WTL::CRect& rc)
@@ -145,7 +145,7 @@ void MediaCenterController::SpiderStop()
 {
   m_spider._Stop();
   m_checkDB._Stop();
-  m_cover._Stop();
+  m_coverdown._Stop();
   m_treeModel.save2DB();
 
   m_csSpiderNewDatas.lock();
@@ -181,7 +181,7 @@ void MediaCenterController::AddBlock()
     one->m_itFile = *it;
     m_blocklist.AddBlock(one);
 
-    m_cover.SetBlockUnit(one);
+    m_coverdown.SetBlockUnit(one);
     
     GetClientRect(m_hwnd, &rc);
     m_blocklist.Update(rc.right - rc.left, rc.bottom - rc.top);
@@ -214,7 +214,7 @@ void MediaCenterController::AddBlock()
       InvalidateRgn(m_hwnd, rgn, FALSE);
 
   if (!m_vtSpiderNewDatas.empty())
-    m_cover._Start();
+    m_coverdown._Start();
  
   m_vtSpiderNewDatas.clear();
 
@@ -259,6 +259,15 @@ void MediaCenterController::DelBlock(int index)
 {
   m_blocklist.DeleteBlock(index);
   ::InvalidateRect(m_hwnd, 0, FALSE);
+}
+
+void MediaCenterController::SetCover(BlockUnit* unit, std::wstring orgpath)
+{
+  m_coverup.SetCover(unit, orgpath);
+
+  CRect rc;
+  rc = unit->GetHittest();
+  InvalidateRect(m_hwnd, &rc, FALSE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
