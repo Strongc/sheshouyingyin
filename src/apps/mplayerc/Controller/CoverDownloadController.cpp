@@ -40,6 +40,10 @@ void CoverDownloadController::_Thread()
    std::list<BlockUnit*>::iterator it = m_list.begin();
    while (it != m_list.end())
    {
+     // see if need to be stop
+     if (_Exit_state(0))
+       return;
+
      std::wstring thumbnailpath = (*it)->m_itFile->file_data.thumbnailpath;
      if (!thumbnailpath.empty() &&
         (GetFileAttributes(thumbnailpath.c_str()) != INVALID_FILE_ATTRIBUTES || 

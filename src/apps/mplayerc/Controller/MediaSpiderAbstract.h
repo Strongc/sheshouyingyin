@@ -89,16 +89,6 @@ public:
     m_filtered_items.push_back(str);
   }
 
-  void SleepOrExit(int nSleepTime = 0)  // time is millisecond
-  {
-    // if need exit then exit
-    if (_Exit_state(0))
-      return;
-
-    // sleep for a moment in other condition
-    ::Sleep(nSleepTime);
-  }
-
 private:
   std::vector<std::wstring> m_supportexts;
   std::vector<std::wstring> m_exincludepaths;
