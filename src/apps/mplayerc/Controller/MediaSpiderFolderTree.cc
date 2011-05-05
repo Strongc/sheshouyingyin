@@ -75,7 +75,8 @@ void MediaSpiderFolderTree::_Thread()
   while (true)
   {
     // see if need to be stop
-    SleepOrExit();
+    if (_Exit_state(0))
+      return;
 
     // 只能先保存节点指针到vector里再排序了
     MediaTreeFolders &mediaTree = m_treeModel.mediaTree();
@@ -98,7 +99,8 @@ void MediaSpiderFolderTree::_Thread()
     while (it != vtIteratorTree.end())
     {
       // see if need to be stop
-      SleepOrExit();
+      if (_Exit_state(0))
+        return;
 
       // search the path for media files
       std::wstring sFullPath = fullFolderPath(it->node());
@@ -111,7 +113,7 @@ void MediaSpiderFolderTree::_Thread()
     }
 
     // sleep for a moment
-    SleepOrExit(300);
+    ::Sleep(300);
   }
 }
 
@@ -138,7 +140,8 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
     directory_iterator itEnd;
     while (it != itEnd)
     {
-      SleepOrExit();
+      if (_Exit_state(0))
+        return;
 
       if (is_directory(it->path())
        && !isHiddenPath(it->path().wstring()))
@@ -157,7 +160,8 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
   vector<wpath>::iterator itPath = vtAllPath.begin();
   while (itPath != vtAllPath.end())
   {
-    SleepOrExit(80);
+    if (_Exit_state(0))
+      return;
 
     try
     {
@@ -166,7 +170,8 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
 
       while (it != itEnd)
       {
-        SleepOrExit(80);
+        if (_Exit_state(0))
+          return;
 
         if (IsSupportExtension(it->path().wstring())
          && !is_directory(it->path())
@@ -206,6 +211,7 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
         }
 
         ++it;
+        ::Sleep(80);
       }
     }
     catch (const filesystem_error &err)
@@ -214,5 +220,6 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
     }
 
     ++itPath;
+    ::Sleep(80);
   }
 }
