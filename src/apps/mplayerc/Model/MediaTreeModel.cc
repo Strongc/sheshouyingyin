@@ -169,7 +169,7 @@ void media_tree::model::save2DB()
 
     MediaPath mp;
     mp.path = sFolderPath;
-    mp.merit = it->folder_data.merit;
+    mp.valid_type = VALID_PATH_FILENAME;
     m_model.Add(mp);
 
     // store file info
@@ -180,9 +180,7 @@ void media_tree::model::save2DB()
       MediaData md;
       md.path = sFolderPath;
       md.filename = itFile->file_data.filename;
-      md.thumbnailpath = itFile->file_data.thumbnailpath;
-      md.bHide = itFile->file_data.bHide;
-      // md.videotime = ;
+      md.valid_type = VALID_PATH_FILENAME;
 
       m_model.Add(md);
 
@@ -192,6 +190,11 @@ void media_tree::model::save2DB()
     ++it;
   }
   MediaSQLite<>::exec(L"end transaction");
+}
+
+void media_tree::model::delTree()
+{
+  m_lsFolderTree.clear();
 }
 
 void media_tree::model::splitPath(const std::wstring &sPath, std::stack<std::wstring> &skResult)

@@ -38,20 +38,35 @@ void MediaModel::Add(MediaPath& mdData)
 
   if (uniqueid)
   {
-    ss.str(L"");
-    ss << L"UPDATE detect_path set merit = " << mdData.merit
-      << L" WHERE path = '" << EscapeSQL(mdData.path) << L"'";
-    MediaDB<>::exec(ss.str());
-    mdData.uniqueid = uniqueid;
+    if (mdData.valid_type == VALID_ALL)
+    {
+      ss.str(L"");
+      ss << L"UPDATE detect_path set merit = " << mdData.merit
+        << L" WHERE path = '" << EscapeSQL(mdData.path) << L"'";
+      MediaDB<>::exec(ss.str());
+      mdData.uniqueid = uniqueid;
+    }
   }
   else
   {
-    ss.str(L"");
-    ss << L"INSERT INTO detect_path(path, merit)"
-       << L" VALUES('" << EscapeSQL(mdData.path) << L"', " << mdData.merit << L")";
+    if (mdData.valid_type == VALID_PATH_FILENAME)
+    {
+      ss.str(L"");
+      ss << L"INSERT INTO detect_path(path)"
+        << L" VALUES('" << EscapeSQL(mdData.path) << L"')";
 
-    MediaDB<>::exec(ss.str());
-    MediaDB<>::last_insert_rowid(mdData.uniqueid);
+      MediaDB<>::exec(ss.str());
+      MediaDB<>::last_insert_rowid(mdData.uniqueid);
+    } 
+    else
+    {
+      ss.str(L"");
+      ss << L"INSERT INTO detect_path(path, merit)"
+        << L" VALUES('" << EscapeSQL(mdData.path) << L"', " << mdData.merit << L")";
+
+      MediaDB<>::exec(ss.str());
+      MediaDB<>::last_insert_rowid(mdData.uniqueid);
+    }
   }
 }
 
@@ -82,25 +97,40 @@ void MediaModel::Add(MediaData& mdData)
   if (nRecordCount == 0)
   {
     // insert new record
-    ss.str(L"");
-    ss << L"INSERT INTO media_data(path, filename, thumbnailpath, videotime, hide)"
-       << L" VALUES('" << EscapeSQL(mdData.path) << L"', '" << EscapeSQL(mdData.filename) << L"', '"
-       << EscapeSQL(mdData.thumbnailpath) << L"', " << mdData.videotime << L", " << mdData.bHide << L")";
+    if (mdData.valid_type == VALID_PATH_FILENAME)
+    {
+      ss.str(L"");
+      ss << L"INSERT INTO media_data(path, filename)"
+        << L" VALUES('" << EscapeSQL(mdData.path) << L"', '" << EscapeSQL(mdData.filename) << L"')";
 
-    MediaDB<>::exec(ss.str());
-    MediaDB<>::last_insert_rowid(mdData.uniqueid);
+      MediaDB<>::exec(ss.str());
+      MediaDB<>::last_insert_rowid(mdData.uniqueid);
+    } 
+    else
+    {
+      ss.str(L"");
+      ss << L"INSERT INTO media_data(path, filename, thumbnailpath, videotime, hide)"
+        << L" VALUES('" << EscapeSQL(mdData.path) << L"', '" << EscapeSQL(mdData.filename) << L"', '"
+        << EscapeSQL(mdData.thumbnailpath) << L"', " << mdData.videotime << L", " << mdData.bHide << L")";
+
+      MediaDB<>::exec(ss.str());
+      MediaDB<>::last_insert_rowid(mdData.uniqueid);
+    }
   }
   else
   {
     // update exist record
     ss.str(L"");
-    ss << L"UPDATE media_data SET thumbnailpath='" << EscapeSQL(mdData.thumbnailpath)
-       << L"', videotime=" << mdData.videotime 
-      << L", hide=" << (int)mdData.bHide << L" WHERE path='"
-      << EscapeSQL(mdData.path) << L"' and filename='" << EscapeSQL(mdData.filename) << L"'";
+    if (mdData.valid_type == VALID_ALL)
+    {
+      ss << L"UPDATE media_data SET thumbnailpath='" << EscapeSQL(mdData.thumbnailpath)
+        << L"', videotime=" << mdData.videotime 
+        << L", hide=" << (int)mdData.bHide << L" WHERE path='"
+        << EscapeSQL(mdData.path) << L"' and filename='" << EscapeSQL(mdData.filename) << L"'";
 
-    MediaDB<>::exec(ss.str());
-    MediaDB<>::last_insert_rowid(mdData.uniqueid);
+      MediaDB<>::exec(ss.str());
+      MediaDB<>::last_insert_rowid(mdData.uniqueid);
+    }
   }
 }
 

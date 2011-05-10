@@ -14,6 +14,8 @@ public:
   void Search(const std::wstring &sFolder);
 
 private:
-  std::wstring m_sLastSearchPath;
   media_tree::model m_treeModel;
+
+  time_t m_tSleep;  // loop time, unit is second
+  int m_nSpideInterval;  // record spide interval
 };

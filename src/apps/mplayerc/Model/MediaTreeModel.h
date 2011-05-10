@@ -31,6 +31,7 @@ public:
   void addFolder(const std::wstring &sFolder, bool bIncreaseMerit = false);
   void addFile(const MediaData &md);
   void save2DB();
+  void delTree();
   void splitPath(const std::wstring &sPath, std::stack<std::wstring> &skResult);
 
 private:

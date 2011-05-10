@@ -71,7 +71,7 @@ void MediaCheckDB::CheckDetectPath()
       if (!it->empty() && !::PathFileExists(it->c_str()))
       {
         std::wstringstream ss;
-        ss << L"DELETE FROM detect_path WHERE path='" << EscapeSQL(it->c_str()) << L"'";
+        ss << L"DELETE FROM detect_path WHERE path='" << MediaModel::EscapeSQL(it->c_str()) << L"'";
         MediaDB<>::exec(ss.str());
       }
 
@@ -120,7 +120,7 @@ void MediaCheckDB::CheckMediaData()
       {
         std::wstringstream ss;
         ss << L"DELETE FROM media_data WHERE path='"
-          << EscapeSQL(*itPath) << L"' and filename='" << EscapeSQL(*itFilename) << L"'";
+          << MediaModel::EscapeSQL(*itPath) << L"' and filename='" << MediaModel::EscapeSQL(*itFilename) << L"'";
         MediaDB<>::exec(ss.str());
       }
 
@@ -135,11 +135,4 @@ void MediaCheckDB::CheckMediaData()
   {
     Logging(err.what());
   }
-}
-
-std::wstring MediaCheckDB::EscapeSQL(std::wstring sSQL)
-{
-  using namespace boost;
-
-  return regex_replace(sSQL, wregex(L"'"), L"''");
 }

@@ -16,8 +16,8 @@ MediaCenterController::MediaCenterController()
   MediaPaths::iterator it = mps.begin();
   while (it != mps.end())
   {
-    m_treeModel.addFolder(it->path);
-    m_treeModel.initMerit(it->path, it->merit);
+    //m_treeModel.addFolder(it->path);
+    //m_treeModel.initMerit(it->path, it->merit);
 
     ++it;
   }
@@ -28,12 +28,12 @@ MediaCenterController::MediaCenterController()
   MediaDatas::iterator itFile = mds.begin();
   while (itFile != mds.end())
   {
-    m_treeModel.addFile(*itFile);
-    m_treeModel.initHide(itFile->path, itFile->filename, itFile->bHide);
+    //m_treeModel.addFile(*itFile);
+    //m_treeModel.initHide(itFile->path, itFile->filename, itFile->bHide);
 
     // add file to media center gui
     media_tree::model::tagFileInfo fileInfo;
-    fileInfo = m_treeModel.findFile(itFile->path, itFile->filename);
+    //fileInfo = m_treeModel.findFile(itFile->path, itFile->filename);
     AddNewFoundData(fileInfo.itFile);
 
     // do not notify this change to main frame window
@@ -66,7 +66,7 @@ void MediaCenterController::Playback(std::wstring file)
     MediaData md;
     md.path = file;
     md.filename = name;
-    m_treeModel.addFile(md);
+    //m_treeModel.addFile(md);
   }
 }
 
@@ -127,10 +127,10 @@ void MediaCenterController::CreateMCFolder()
 void MediaCenterController::SpiderStart()
 {
   m_spider._Stop();
-  m_checkDB._Stop();
+  //m_checkDB._Stop();
 
   m_spider._Start();
-  m_checkDB._Start();  // check the media.db, clean invalid records
+  //m_checkDB._Start();  // check the media.db, clean invalid records
 
   CMPlayerCApp *pApp = AfxGetMyApp();
   if (pApp)
@@ -144,9 +144,9 @@ void MediaCenterController::SpiderStart()
 void MediaCenterController::SpiderStop()
 {
   m_spider._Stop();
-  m_checkDB._Stop();
+  //m_checkDB._Stop();
   m_coverdown._Stop();
-  m_treeModel.save2DB();
+  //m_treeModel.save2DB();
 
   m_csSpiderNewDatas.lock();
   m_vtSpiderNewDatas.clear();
@@ -166,57 +166,57 @@ void MediaCenterController::AddBlock()
 {
   m_csSpiderNewDatas.lock();
   
-  // add new found data to gui and then remove them
-  int count = 1;
-  WTL::CRect rc;
-  m_blocklist.GetLastBlockPosition(rc);
-  HRGN rgn = CalculateUpdateRgn(rc);
+  //// add new found data to gui and then remove them
+  //int count = 1;
+  //WTL::CRect rc;
+  //m_blocklist.GetLastBlockPosition(rc);
+  //HRGN rgn = CalculateUpdateRgn(rc);
 
-  std::vector<media_tree::model::FileIterator>::iterator it = m_vtSpiderNewDatas.begin();
-  while (it != m_vtSpiderNewDatas.end())
-  {
-    // add block units
-    
-    BlockUnit* one = new BlockUnit;
-    one->m_itFile = *it;
-    m_blocklist.AddBlock(one);
+  //std::vector<media_tree::model::FileIterator>::iterator it = m_vtSpiderNewDatas.begin();
+  //while (it != m_vtSpiderNewDatas.end())
+  //{
+  //  // add block units
+  //  
+  //  BlockUnit* one = new BlockUnit;
+  //  one->m_itFile = *it;
+  //  m_blocklist.AddBlock(one);
 
-    m_coverdown.SetBlockUnit(one);
-    
-    GetClientRect(m_hwnd, &rc);
-    m_blocklist.Update(rc.right - rc.left, rc.bottom - rc.top);
+  //  m_coverdown.SetBlockUnit(one);
+  //  
+  //  GetClientRect(m_hwnd, &rc);
+  //  m_blocklist.Update(rc.right - rc.left, rc.bottom - rc.top);
 
-    if (!m_initiablocklist)
-    {
-      int size = m_vtSpiderNewDatas.size() > m_blocklist.GetEnableShowAmount()? \
-        m_blocklist.GetEnableShowAmount() : m_vtSpiderNewDatas.size();
-      
-      if (count == size)
-      {
-        m_initiablocklist = TRUE;
-        InvalidateRect(m_hwnd, 0, FALSE);
-        UpdateWindow(m_hwnd);
-      }
+  //  if (!m_initiablocklist)
+  //  {
+  //    int size = m_vtSpiderNewDatas.size() > m_blocklist.GetEnableShowAmount()? \
+  //      m_blocklist.GetEnableShowAmount() : m_vtSpiderNewDatas.size();
+  //    
+  //    if (count == size)
+  //    {
+  //      m_initiablocklist = TRUE;
+  //      InvalidateRect(m_hwnd, 0, FALSE);
+  //      UpdateWindow(m_hwnd);
+  //    }
 
-      ++count;
-    }
-    
-    ++it;
-  }
+  //    ++count;
+  //  }
+  //  
+  //  ++it;
+  //}
 
-  if (m_initiablocklist && m_blocklist.ContiniuPaint())
-    if (m_blocklist.GetScrollBarInitializeFlag())
-    {
-      InvalidateRect(m_hwnd, 0, FALSE);
-      m_blocklist.SetScrollBarInitializeFlag(FALSE);
-    }
-    else
-      InvalidateRgn(m_hwnd, rgn, FALSE);
+  //if (m_initiablocklist && m_blocklist.ContiniuPaint())
+  //  if (m_blocklist.GetScrollBarInitializeFlag())
+  //  {
+  //    InvalidateRect(m_hwnd, 0, FALSE);
+  //    m_blocklist.SetScrollBarInitializeFlag(FALSE);
+  //  }
+  //  else
+  //    InvalidateRgn(m_hwnd, rgn, FALSE);
 
-  if (!m_vtSpiderNewDatas.empty())
-    m_coverdown._Start();
+  //if (!m_vtSpiderNewDatas.empty())
+  //  m_coverdown._Start();
  
-  m_vtSpiderNewDatas.clear();
+  //m_vtSpiderNewDatas.clear();
 
   m_csSpiderNewDatas.unlock();
 }
@@ -296,21 +296,21 @@ void MediaCenterController::HandlePlayback(const MediaData &md)
 
 void MediaCenterController::HandleDelBlock(const BlockUnit *pBlock)
 {
-  typedef media_tree::model::TreeIterator TreeIterator;
-  TreeIterator it = m_treeModel.findFolder(pBlock->m_itFile->file_data.path);
-  TreeIterator itEnd;
-  if (it != itEnd)
-  {
-    MediaTreeFiles::iterator itFindFile = it->lsFiles.begin();
-    while (itFindFile != it->lsFiles.end())
-    {
-      if (itFindFile->file_data.filename == pBlock->m_itFile->file_data.filename)
-      {
-        itFindFile->file_data.bHide = pBlock->m_itFile->file_data.bHide;
-        break;
-      }
+  //typedef media_tree::model::TreeIterator TreeIterator;
+  //TreeIterator it = m_treeModel.findFolder(pBlock->m_itFile->file_data.path);
+  //TreeIterator itEnd;
+  //if (it != itEnd)
+  //{
+  //  MediaTreeFiles::iterator itFindFile = it->lsFiles.begin();
+  //  while (itFindFile != it->lsFiles.end())
+  //  {
+  //    if (itFindFile->file_data.filename == pBlock->m_itFile->file_data.filename)
+  //    {
+  //      itFindFile->file_data.bHide = pBlock->m_itFile->file_data.bHide;
+  //      break;
+  //    }
 
-      ++itFindFile;
-    }
-  }
+  //    ++itFindFile;
+  //  }
+  //}
 }

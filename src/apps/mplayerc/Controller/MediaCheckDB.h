@@ -16,7 +16,4 @@ protected:
   bool ShouldExit();
   void CheckDetectPath();
   void CheckMediaData();
-
-private:
-  std::wstring EscapeSQL(std::wstring sSQL);
 };
