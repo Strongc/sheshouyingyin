@@ -62,7 +62,7 @@ private:
   // GUI
   HWND m_hwnd;
   BOOL m_planestate;
-  MediaDatas m_mediadata;
+  //MediaDatas m_mediadata;
   BlockListView m_blocklist;
   CoverDownloadController m_coverdown;
   CoverUploadController m_coverup;

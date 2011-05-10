@@ -6,9 +6,20 @@
 
 // *****************************************************************************
 // MediaData and MediaPath
+enum MEDIA_VALID
+{
+  VALID_ALL,
+  VALID_PATH_FILENAME,
+  VALID_THUMBNAILPATH,
+  VALID_FILMNAME,
+  VALID_VIDEOTIME,
+  VALID_HIDE,
+  VALID_MERIT
+};
+
 struct MediaData
 {
-  MediaData() : uniqueid(0), videotime(0), bHide(false) {}
+  MediaData() : uniqueid(0), videotime(0), bHide(false), valid_type(VALID_ALL) {}
 
   long long uniqueid;
   std::wstring path;
@@ -17,15 +28,19 @@ struct MediaData
   std::wstring filmname;
   int videotime;
   bool bHide;  // is hide this media?
+
+  MEDIA_VALID valid_type;
 };
 
 struct MediaPath
 {
-  MediaPath() : uniqueid(0), merit(0) {}
+  MediaPath() : uniqueid(0), merit(0), valid_type(VALID_ALL) {}
 
   long long uniqueid;
   std::wstring path;
   int merit;
+
+  MEDIA_VALID valid_type;
 };
 
 typedef std::vector<MediaData> MediaDatas;
