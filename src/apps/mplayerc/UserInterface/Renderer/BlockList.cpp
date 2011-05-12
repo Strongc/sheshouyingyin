@@ -563,12 +563,12 @@ void BlockList::SetYOffset(float offset, int result)
   m_y.front() = y;
 }
 
-BOOL BlockList::OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetspeed, HWND hwnd)
+int BlockList::OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetspeed, HWND hwnd)
 {
   if (m_scrollbar->GetDisPlay())
     return m_scrollbar->OnHittest(pt, blbtndown, offsetspeed, hwnd);
   else
-    return FALSE;
+    return 0;
 }
 
 int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
@@ -922,13 +922,14 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
   if (bscroll == ScrollBarHit && m_lbtndown)
     PostMessage(m_hwnd, WM_LBUTTONUP, 0, 0);
 
-//   if (bscroll == NoScrollBarHit)
-//   {
-//     RECT rc = GetScrollBarHittest();
-//     rc.top = 0;
-//     rc.bottom = rcclient.bottom;
-//     InvalidateRect(m_hwnd, &rc, FALSE);
-//   }
+  if (bscroll == NoScrollBarHit && m_lbtndown)
+  {
+    RECT rc = GetScrollBarHittest();
+    rc.top = 0;
+    rc.bottom = rcclient.bottom;
+    InvalidateRect(m_hwnd, &rc, FALSE);
+    m_lbtndown = FALSE;
+  }
 
   if (blayer == BEPLAYHITTEST || blayer == BEHIDEHITTEST)
   {
