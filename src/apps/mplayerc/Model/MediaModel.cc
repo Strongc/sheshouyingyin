@@ -1,4 +1,4 @@
-﻿#include "StdAfx.h"
+#include "StdAfx.h"
 #include "MediaModel.h"
 #include <logging.h>
 #include "MediaDB.h"
@@ -6,9 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Normal part
 
-MediaModel::MediaModel():
-  m_limitstart(0)
-, m_limitend(0)
+MediaModel::MediaModel()
 {
 }
 
@@ -309,7 +307,7 @@ void MediaModel::Find(MediaDatas& data, const MediaFindCondition& condition,
   }
 }
 
-int MediaModel::Find(MediaDatas& data, int capacity, int amount, int remain, int dirction)
+void MediaModel::Find(int limit_start, int limit_end, MediaDatas& data)
 {
   std::vector<long long> vtUniqueID;
   std::vector<std::wstring > vtPath;
@@ -318,36 +316,8 @@ int MediaModel::Find(MediaDatas& data, int capacity, int amount, int remain, int
   std::vector<int> vtVideoTime;
   std::vector<bool> vtHide;
   
-  if (dirction == 0)
-    return 0;
-
-  if (dirction > 0)
-  {
-    if (m_limitend >= GetCount())
-      return 0;
-    if (m_limitend != 0)
-      m_limitstart = m_limitend - remain - capacity;
-    
-    if (m_limitstart + amount > GetCount())
-      amount = GetCount() - m_limitstart + 1;
-    
-  }
-  
-  if (dirction < 0)
-  {
-    if (m_limitstart == 0)
-      return 0;
-    m_limitstart = m_limitstart + capacity + remain - amount;
-    
-    if (m_limitstart < 0)
-    {
-      amount += m_limitstart;
-      m_limitstart = 0;
-    }
-  }
-  
   std::wstringstream ss;
-  ss << L" limit " << m_limitstart << L"," << amount;
+  ss << L" limit " << limit_start << L"," << limit_end;
   
   typedef MediaDB<long long, std::wstring, std::wstring, std::wstring, int, bool> tpdMediaDBDB;
   tpdMediaDBDB::exec(L"SELECT uniqueid, path, filename, thumbnailpath, videotime, hide FROM media_data" + ss.str()
@@ -365,10 +335,6 @@ int MediaModel::Find(MediaDatas& data, int capacity, int amount, int remain, int
 
     data.push_back(md);
   }
-
-  m_limitend = m_limitstart + amount;
-
-  return amount;
 }
 
 void MediaModel::Delete(const MediaFindCondition& condition)

@@ -1,7 +1,9 @@
 #include "stdafx.h"
 #include "LoadMediaDataFromDB.h"
 
-LoadMediaDataFromDB::LoadMediaDataFromDB(void)
+LoadMediaDataFromDB::LoadMediaDataFromDB(void):
+ m_limitstart(0)
+,m_limitend(0)
 {
 }
 
@@ -35,7 +37,44 @@ void LoadMediaDataFromDB::_Thread()
 
 void LoadMediaDataFromDB::LoadMediadatasFromDB()
 {
-  m_model.Find(m_mediadatas, m_windowcapacity, m_amount, m_remain, m_direction);
+  if (CalculateStartAndEnd())
+    m_model.Find(m_limitstart, m_amount, m_mediadatas);
+}
+
+BOOL LoadMediaDataFromDB::CalculateStartAndEnd()
+{
+  if (m_direction == 0)
+    return FALSE;
+   
+  if (m_direction > 0)
+  {
+    if (m_limitend >= m_model.GetCount())
+      return FALSE;
+    if (m_limitend != 0)
+      m_limitstart = m_limitend - m_remain - m_windowcapacity;
+  }
+     
+  if (m_direction < 0)
+  {
+    if (m_limitstart == 0)
+      return FALSE;
+    m_limitstart = m_limitstart + m_windowcapacity + m_remain - m_amount;
+   
+       
+    if (m_limitstart < 0)
+    {
+      m_amount += m_limitstart;
+      m_limitstart = 0;
+    }
+  }
+
+
+  if (m_limitstart + m_amount > m_model.GetCount())
+    m_amount = m_model.GetCount() - m_limitstart;
+
+  m_limitend = m_limitstart + m_amount;
+
+  return TRUE;
 }
 
 void LoadMediaDataFromDB::AddDataToList()
