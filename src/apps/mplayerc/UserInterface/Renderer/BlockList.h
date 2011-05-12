@@ -8,6 +8,9 @@
 #include "../../Model/MCBlockModel.h"
 #include "../../Model/MediaTreeModel.h"
 #include <boost/signals.hpp>
+#include <boost/shared_ptr.hpp>
+
+
 
 /* 
  * Class BlockUnit implements block UI and UnitData
@@ -31,6 +34,7 @@ public:
 
 public:
   FileIterator m_itFile;  // file iterator
+  MediaData m_mediadata;
 
 private:
   UILayerBlock* m_layer;
@@ -42,8 +46,8 @@ private:
 class BlockList
 {
 public:
-  typedef boost::shared_ptr<MCBlockModel::abstract_model<BlockUnit> > ModelPtr;
-
+  typedef boost::shared_ptr<MCBlockModel::abstract_model<BlockUnit*> > ModelPtr;
+  
 public:
   BlockList();
   ~BlockList();
@@ -76,12 +80,24 @@ public:
   int  GetEnableShowAmount();
   void SetScrollBarInitializeFlag(BOOL bl);
   BOOL GetScrollBarInitializeFlag();
+  void SetScrollBarDragDirection(int offset);
+  BOOL BeDirectionChange();
+  std::list<BlockUnit*>* GetEmptyList();
+  std::list<BlockUnit*>* GetIdleList();
+  void SwapListBuff(std::list<BlockUnit*>::iterator& it, BOOL upordown);
+  void ClearList(std::list<BlockUnit*>* list);
+  void NewStartIterator();
+  void CalculateViewCapacity();
+  void CalculateLogicalListEnd();
+  int GetViewCapacity();
+  int GetListRemainItem();
+  int GetListCapacity();
 
 // signals
 public:
   boost::signal<void (const MediaData &md)> m_sigPlayback;
   std::wstring m_tipstring;
-
+  int m_viewcapacity;
 private:
   float m_spacing;
   float m_top;
@@ -96,17 +112,27 @@ private:
   float m_offsettotal;
 
   int m_maxrow;
+  int m_maxcolumnpre;
   int m_maxcolumn;
 
   std::list<BlockUnit*>::iterator m_start;
   std::list<BlockUnit*>::iterator m_end;
-  
+  std::list<BlockUnit*>::iterator m_logicalbegin;
+  std::list<BlockUnit*>::iterator m_logicalend;
+  int m_remainitem;
+
   std::vector<float> m_x;
   std::vector<float> m_y;
-  std::list<BlockUnit*> m_list;
+  std::list<BlockUnit*>* m_list;
   std::list<BlockUnit*> m_listHide;  // store hidden items
+  // dual buff
+  std::list<BlockUnit*> m_list1;
+  std::list<BlockUnit*> m_list2;
+  int m_listsize;
 
   MediaCenterScrollBar* m_scrollbar;
+  int m_scrollbardirection;
+  int m_scrollbardirectionpre;
 
   int m_listendstate;
   int m_listbeginstate;
@@ -114,6 +140,7 @@ private:
   BOOL m_scrollbarinitialize;
 
   ModelPtr m_pModel;
+
 };
 
 class BlockListView : public BlockList

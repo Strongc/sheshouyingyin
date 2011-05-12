@@ -17495,8 +17495,9 @@ void CMainFrame::OnOpenShooterMedia()
 void CMainFrame::OnSpiderNewFileFound()
 {
   // let the media center to add new file to the media gui
-  MediaCenterController::GetInstance()->AddBlock();
-  ::Sleep(20); // sleep for a moment
+//   if (MediaCenterController::GetInstance()->AddNewFoundData(TRUE))
+//     MediaCenterController::GetInstance()->AddBlock();
+//   ::Sleep(20); // sleep for a moment
 }
 
 void CMainFrame::OnSkinSelection(UINT nID)

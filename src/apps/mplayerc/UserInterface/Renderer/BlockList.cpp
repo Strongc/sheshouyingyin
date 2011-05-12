@@ -62,18 +62,18 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   POINT hidept = {hide_fixpt.x+pt.x, hide_fixpt.y+pt.y};
   hide->SetTexturePos(hidept);
 
-  if (!m_itFile->file_data.thumbnailpath.empty() && !m_cove)
-  {
-    std::wstring thumbnailpath = m_itFile->file_data.thumbnailpath;
-    if (GetFileAttributes(thumbnailpath.c_str()) != INVALID_FILE_ATTRIBUTES || 
-        GetLastError() != ERROR_FILE_NOT_FOUND)
-    {
-      ResLoader resLoad;
-      m_cove = resLoad.LoadBitmapFromAppData(thumbnailpath);
-      if (m_cove)
-        def->SetTexture(m_cove);
-    }
-  }
+//   if (!m_itFile->file_data.thumbnailpath.empty() && !m_cove)
+//   {
+//     std::wstring thumbnailpath = m_itFile->file_data.thumbnailpath;
+//     if (GetFileAttributes(thumbnailpath.c_str()) != INVALID_FILE_ATTRIBUTES || 
+//         GetLastError() != ERROR_FILE_NOT_FOUND)
+//     {
+//       ResLoader resLoad;
+//       m_cove = resLoad.LoadBitmapFromAppData(thumbnailpath);
+//       if (m_cove)
+//         def->SetTexture(m_cove);
+//     }
+//   }
 
   m_layer->DoPaint(dc);
 
@@ -89,10 +89,15 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   rc.bottom = rc.top+20;
 
   std::wstring fmnm;
-  if (m_itFile->file_data.filmname.empty())
-    fmnm = m_itFile->file_data.filename;
+//   if (m_itFile->file_data.filmname.empty())
+//     fmnm = m_itFile->file_data.filename;
+//   else
+//     fmnm = m_itFile->file_data.filmname;
+
+  if (m_mediadata.filmname.empty())
+    fmnm = m_mediadata.filename;
   else
-    fmnm = m_itFile->file_data.filmname;
+    fmnm = m_mediadata.filmname;
   //dc.DrawText(m_itFile.filename.c_str(), m_itFile.filename.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
   CPen pen;
   dc.DrawText(fmnm.c_str(), fmnm.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
@@ -101,6 +106,7 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
 void BlockUnit::DeleteLayer()
 {
   m_layer->DeleteAllLayer();
+  delete m_layer;
 }
 
 int BlockUnit::OnHittest(POINT pt, BOOL blbtndown)
@@ -143,28 +149,40 @@ BlockList::BlockList():
   m_spacing = 10;
   m_scrollbarwidth = 20;
   m_top = 25;
-  m_start = m_list.begin();
-  m_end = m_list.begin();
+  m_list = &m_list1;
+  m_start = m_list->begin();
+  m_end = m_list->begin();
+  m_logicalbegin = m_list->begin();
+  m_logicalend = m_list->end();
+  m_remainitem = 0;
   m_x.clear();
   m_y.clear();
   m_offsettotal = 0;
   m_scrollbar = 0;
+  m_scrollbardirection = 0;
+  m_scrollbardirectionpre = 0;
+  m_listsize = 50;
+  m_maxcolumn = 0;
+  m_maxcolumnpre = 0;
+  m_maxrow = 0;
   AddScrollBar();
 
-  ModelPtr ptr(new MCBlockModel::added_time_sort_model);
+  //ModelPtr ptr(new MCBlockModel::added_time_sort_model);
   //ModelPtr ptr(new MCBlockModel::filename_sort_model);
-  SetModel(ptr); // using added time model to sort the files for default
+  //SetModel(ptr); // using added time model to sort the files for default
 }
 
 BlockList::~BlockList()
 {
-
+  delete m_scrollbar;
+  ClearList(&m_list1);
+  ClearList(&m_list2);
 }
 
 void BlockList::SetModel(ModelPtr ptr)
 {
-  m_pModel = ptr;
-  m_pModel->set_data(&m_list, &m_start);
+  //m_pModel = ptr;
+  //m_pModel->set_data(m_list, &m_start);
 }
 
 void BlockList::DoPaint(HDC hdc, RECT rcclient)
@@ -173,21 +191,22 @@ void BlockList::DoPaint(HDC hdc, RECT rcclient)
   HBRUSH hbrush = ::CreateSolidBrush(COLORREF(0x313131));
   dc.FillRect(&rcclient, hbrush);
   DoPaint(dc);
+  DeleteObject(hbrush);
 }
 
 void BlockList::DoPaint(WTL::CDC& dc)
 {
   if (m_x.empty() || m_y.empty())
     return;
-
+  
   int rows = 0;
   float y = .0f;
 
-  if (m_scrollbar->GetDisPlay() && !m_scrollbar->GetInitializeFlag())
-  {
-    SetScrollBarInitializeFlag(TRUE);
-    m_scrollbar->SetInitializeFlag(TRUE);
-  }
+//   if (m_scrollbar->GetDisPlay() && !m_scrollbar->GetInitializeFlag())
+//   {
+//     SetScrollBarInitializeFlag(TRUE);
+//     m_scrollbar->SetInitializeFlag(TRUE);
+//   }
   m_scrollbar->DoPaint(dc);
 
   std::list<BlockUnit*>::iterator it = m_start;
@@ -214,10 +233,15 @@ void BlockList::AddBlock(BlockUnit* unit)
 
   // using model to insert data, because the model will insert data by an order
   // the model is like a adapter
-  if (unit->m_itFile->file_data.bHide)
-    m_listHide.push_back(unit);
-  else
-    m_pModel->insert(unit);
+//   if (unit->m_itFile->file_data.bHide)
+//     m_listHide.push_back(unit);
+//   else
+//     m_pModel->insert(unit);
+
+  std::list<BlockUnit*>* list = GetEmptyList();
+  if (list)
+    list->push_back(unit);
+
 }
 
 BOOL BlockList::AddScrollBar()
@@ -234,16 +258,78 @@ void BlockList::BlockRanges()
 {
   int maxitems = m_maxcolumn * m_maxrow;
   int column = m_maxcolumn;
-  if (m_start == m_list.end())
-    m_start = m_list.begin();
+  if (m_start == m_list->end())
+    m_start = m_list->begin();
+
+  // change start if the window size had changed
+  if (m_maxcolumnpre != m_maxcolumn && m_maxcolumnpre != 0)
+  {
+    NewStartIterator();
+    m_maxcolumnpre = m_maxcolumn;
+  }
 
   m_end = m_start;
-  while(maxitems-- && (m_end != m_list.end()))
+  
+  while(maxitems-- && (m_end != m_list->end()))
+  {
     ++m_end;
+  }
+}
+
+void BlockList::NewStartIterator()
+{
+  int count1 = 1;
+  int count2 = 0;
+  int row = 0;
+  int items = 0;
+  BOOL bl = FALSE;
+  
+  std::list<BlockUnit*>::iterator it = m_start;
+  while (it != m_list->begin())
+  {
+    --it;
+    ++count1;
+  }
+  it = m_start;
+  while (it != m_list->end())
+  {
+    ++it;
+    ++count2;
+  }
+
+  bl = count1 > count2 ? FALSE : TRUE;
+  int count = count1 > count2 ? count2 : count1;
+  row = count / m_maxcolumnpre;
+  items = row * m_maxcolumn;
+  int remain = m_list->size() % m_maxcolumn;
+  
+  if (bl)
+  {
+    m_start = m_list->begin();
+    while (items--)
+    {
+      ++m_start;
+    }
+  }
+  else
+  {
+    m_start = m_list->end();
+
+    while (remain--)
+    {
+      --m_start;
+    }
+   
+    while (items--)
+    {
+      --m_start;
+    }
+  }
 }
 
 void BlockList::AlignColumnBlocks()
 {
+  m_maxcolumnpre = m_maxcolumn;
   m_x.clear();
   float x = m_spacing;
   
@@ -263,7 +349,7 @@ void BlockList::AlignColumnBlocks()
     m_x.push_back(x);
     x += m_blockw + spacing;
   }
-
+  
   m_maxcolumn = m_x.size();
   
 }
@@ -272,7 +358,7 @@ void BlockList::AlignRowBlocks()
 {
   float y;
   if (m_y.empty())
-    y = m_top;
+    y = 0;
   else
     y = m_y.front();
   m_y.clear();
@@ -304,8 +390,14 @@ void BlockList::AlignScrollBar()
   }
 
   float height = m_blockh + m_top;
-  BOOL bScrollShow = (m_list.size() + m_maxcolumn - 1) / m_maxcolumn * height > m_winh? TRUE:FALSE; 
+  
+  BOOL bScrollShow = (m_list->size() + m_maxcolumn - 1) / m_maxcolumn * height > m_winh? TRUE:FALSE; 
   m_scrollbar->SetDisPlay(bScrollShow);
+  if (bScrollShow && !m_scrollbarinitialize)
+  {
+    AlignColumnBlocks();
+    m_scrollbarinitialize = TRUE;
+  }
 }
 
 void BlockList::Update(float winw, float winh)
@@ -316,6 +408,8 @@ void BlockList::Update(float winw, float winh)
   AlignColumnBlocks();
   AlignRowBlocks();
   AlignScrollBar();
+  CalculateViewCapacity();
+  CalculateLogicalListEnd();
   BlockRanges();
 }
 
@@ -339,8 +433,11 @@ int BlockList::IsListEnd(std::list<BlockUnit*>::iterator it)
   {
     ++it;
     ++count;
-    if (it == m_list.end())
+    if (it == m_logicalend)//m_list->end())
     {
+      if (!GetIdleList()->empty())
+        break;
+
       int row = (count  + m_x.size() - 1)/ m_x.size();
       float y = m_y.front(); 
       if (y + row * height < m_winh)
@@ -354,11 +451,11 @@ int BlockList::IsListEnd(std::list<BlockUnit*>::iterator it)
 
 int BlockList::IsListBegin(std::list<BlockUnit*>::iterator it)
 {
-  if (it == m_list.begin())
+  if (it == m_list->begin() && GetIdleList()->empty())
     return UPOFFSETONE;
-  int column = m_maxcolumn;
-  while (column-- && it != m_list.begin())
-    --it;
+//   int column = m_maxcolumn;
+//   while (column-- && it != m_list->begin())
+//     --it;
   return UPOFFSETSUCCESS;
 }
 
@@ -369,9 +466,9 @@ int BlockList::SetStartOffset(float offset)
   int height = (int)m_blockh + (int)m_top;
   int column = m_maxcolumn;
   int distance;
-  if (m_start == m_list.begin())
-    distance = m_top;
-  else
+//   if (m_start == m_list->begin())
+//     distance = m_top;
+//   else
     distance = 0;
   
   int minoffset = (int)(m_winh - distance) % height == 0? 0:height - (int)(m_winh - distance) % height; 
@@ -388,6 +485,7 @@ int BlockList::SetStartOffset(float offset)
     { 
       while (column--)
         ++start;
+      SwapListBuff(start, TRUE);
       m_offsettotal -= (height + distance);
     }
 
@@ -400,18 +498,23 @@ int BlockList::SetStartOffset(float offset)
    
     if (listState == UPOFFSETONE)
       m_offsettotal = max(m_offsettotal, 0);
-
+    
     if (listState == UPOFFSETSUCCESS && m_offsettotal < 0)
     {
+       SwapListBuff(start, FALSE);
        while (column--)
          --start;
+       
        m_offsettotal += height; 
-       if (start == m_list.begin())
-         distance = m_top;
-       else
+//        if (start == m_list->begin())
+//          distance = m_top;
+//        else
          distance = 0;
        m_offsettotal += distance;
     }
+
+//     if (listState == UPOFFSETSUCCESS && start == m_list->begin())
+//       SwapListBuff(start, FALSE);
   }
 
   m_start = start;
@@ -423,9 +526,9 @@ void BlockList::SetYOffset(float offset, int result)
   float y = m_y.front();
   int height = (int)m_blockh + (int)m_top;
   int distance;
-  if (m_start == m_list.begin())
-    distance = m_top;
-  else
+//   if (m_start == m_list->begin())
+//     distance = m_top;
+//   else
     distance = 0;
   int ymin =  ((int)(m_winh - distance) % height == 0? 0 : (int)(m_winh - distance) % height - height);
   y = y - offset;
@@ -480,8 +583,8 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
       return state;
     case BEPLAY:
       {
-        if (!m_sigPlayback.empty())
-          m_sigPlayback((*it)->m_itFile->file_data); // emit a signal
+//         if (!m_sigPlayback.empty())
+//           m_sigPlayback((*it)->m_itFile->file_data); // emit a signal
       }
       return state;
     case  BEHIDEHITTEST:
@@ -489,10 +592,10 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
       *unit = (*it);
       return state;
     case BEMARKORDEFHITTEST:
-      if ((*it)->m_itFile->file_data.filmname.empty())
-        m_tipstring = (*it)->m_itFile->file_data.filename;
-      else
-        m_tipstring = (*it)->m_itFile->file_data.filmname;
+//       if ((*it)->m_itFile->file_data.filmname.empty())
+//         m_tipstring = (*it)->m_itFile->file_data.filename;
+//       else
+//         m_tipstring = (*it)->m_itFile->file_data.filmname;
       *unit = (*it);
       return state;
     }
@@ -519,19 +622,19 @@ void BlockList::DeleteBlock(std::list<BlockUnit*>::iterator it)
 
   if (it == m_start)
   {
-    if (m_start == m_list.begin())
+    if (m_start == m_list->begin())
     {
-      m_list.erase(it);
-      m_start = m_list.begin();
+      m_list->erase(it);
+      m_start = m_list->begin();
     }
     else
     {
       --m_start;
-      m_list.erase(it);
+      m_list->erase(it);
     }
   }
   else
-    m_list.erase(it);
+    m_list->erase(it);
 }
 
 void BlockList::DeleteBlock(int index)
@@ -558,7 +661,7 @@ int  BlockList::GetEnableShowAmount()
 
 void BlockList::GetLastBlockPosition(RECT& rc)
 {
-  if (m_start == m_list.end())
+  if (m_start == m_list->end())
   {
     RECT r = {-m_blockw, 0, 0, m_blockh};
     rc = r;  
@@ -575,6 +678,154 @@ void BlockList::SetScrollBarInitializeFlag(BOOL bl)
 BOOL BlockList::GetScrollBarInitializeFlag()
 {
   return m_scrollbarinitialize;
+}
+
+std::list<BlockUnit*>* BlockList::GetEmptyList()
+{
+  if (m_list1.empty())
+    return &m_list1;
+
+  if (m_list2.empty())
+    return &m_list2;
+
+  return 0;
+}
+
+std::list<BlockUnit*>* BlockList::GetIdleList()
+{
+  return m_list == &m_list1 ? &m_list2 : &m_list1;
+}
+
+void BlockList::SetScrollBarDragDirection(int offset)
+{
+  m_scrollbardirectionpre = m_scrollbardirection;
+
+  if (offset > 0)
+    m_scrollbardirection = 1;
+  else if (offset < 0)
+    m_scrollbardirection = -1;
+  else
+    m_scrollbardirection = 0;
+}
+
+BOOL BlockList::BeDirectionChange()
+{
+  return m_scrollbardirection != m_scrollbardirectionpre;
+}
+
+void BlockList::SwapListBuff(std::list<BlockUnit*>::iterator& it, BOOL upordown)
+{
+  if (GetIdleList()->empty())
+    return;
+
+  int count = 0;
+//   int height = (int)m_blockh + (int)m_top;
+//   int capacity = ((int)m_winh + height - 1) / height * m_x.size();
+  
+  std::list<BlockUnit*>::iterator ittmp;
+  if (upordown)
+  {
+    ittmp = it;
+    while (ittmp != m_logicalend)
+    {
+      ++count;
+      ++ittmp;
+    }
+    
+    if (count <= m_viewcapacity) 
+    {
+      m_list = GetIdleList();
+      it = m_list->begin();
+      //GetIdleList()->clear();
+      ClearList(GetIdleList());
+    }
+  }
+  else
+  {
+    if (it != m_list->begin())
+      return;
+    
+    ittmp = it;
+    while (ittmp != m_end)
+    {
+      ++ittmp;
+      ++count;
+    }
+    
+    if (count <= m_viewcapacity)
+    {
+      m_list = GetIdleList();
+      int maxsize = m_viewcapacity + m_remainitem;
+      ittmp = m_list->end();
+      while (maxsize--)
+        --ittmp;
+      it = ittmp;
+      //GetIdleList()->clear();
+      ClearList(GetIdleList());
+    }
+  }
+}
+
+void BlockList::ClearList(std::list<BlockUnit*>* list)
+{
+  std::list<BlockUnit*>::iterator it = list->begin();
+  while (it != list->end())
+  {
+    (*it)->DeleteLayer();
+    delete *it;
+    ++it;
+  }
+
+  list->clear();
+}
+
+void BlockList::CalculateViewCapacity()
+{
+  int height = (int)m_blockh + (int)m_top;
+  m_viewcapacity = ((int)m_winh + height - 1) / height * m_x.size();
+}
+
+void BlockList::CalculateLogicalListEnd()
+{ 
+  if (m_list->empty())
+    return;
+
+  if (m_list->size() < m_listsize)
+  {
+    m_logicalend = m_list->end();
+    return;
+  }
+
+  m_remainitem = m_list->size() % m_viewcapacity;
+
+  std::list<BlockUnit*>::iterator it = m_list->end();
+  int remain = m_remainitem;
+
+  while (remain-- && it != m_list->begin())
+    --it;
+
+  if (it == m_list->begin())
+  {
+    it = m_list->end();
+    m_remainitem = 0;
+  }
+
+  m_logicalend = it;
+}
+
+int BlockList::GetViewCapacity()
+{
+  return m_viewcapacity;
+}
+
+int BlockList::GetListRemainItem()
+{
+  return m_remainitem;
+}
+
+int BlockList::GetListCapacity()
+{
+  return m_listsize;
 }
 
 //BlockListView

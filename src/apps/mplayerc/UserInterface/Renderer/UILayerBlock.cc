@@ -72,6 +72,7 @@ BOOL UILayerBlock::DeleteAllLayer()
   std::map<std::wstring, UILayer*>::iterator it;
   for (it = m_layers.begin(); it != m_layers.end(); it++)
   {
+    it->second->DeleteTexture();
     delete (it->second);
   }
 

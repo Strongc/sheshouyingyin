@@ -293,6 +293,7 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			ConfigurationType="1"
 			InheritedPropertySheets="..\..\common.vsprops;..\..\debug.vsprops;.\wtl_integration.vsprops;$(SolutionDir)src\apps\mplayerc\atlserver_integration.vsprops;$(SolutionDir)Thirdparty\sinet.vsprops;$(SolutionDir)Thirdparty\unrar_dll.vsprops;$(SolutionDir)Thirdparty\sphash.vsprops;..\..\..\Thirdparty\json.vsprops"
 			UseOfMFC="1"
@@ -1833,6 +1834,14 @@
 			</File>
 			<File
 				RelativePath=".\Controller\LazyInstance.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Controller\LoadMediaDataFromDB.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Controller\LoadMediaDataFromDB.h"
 				>
 			</File>
 			<File

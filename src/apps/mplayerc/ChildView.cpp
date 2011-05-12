@@ -51,6 +51,8 @@ m_vrect(0,0,0,0)
 , m_lastLyricColor(0x00dfe7ff)
 , m_blocklistview(0)
 , m_blockunit(0)
+, m_offsetspeed(0)
+, m_preoffsetspeed(0)
 {
 	m_lastlmdowntime = 0;
 	m_lastlmdownpoint.SetPoint(0, 0);
@@ -278,7 +280,7 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_COMMAND_EX(ID_PLAY_PAUSE, OnPlayPlayPauseStop)
 	ON_COMMAND_EX(ID_PLAY_STOP, OnPlayPlayPauseStop)
   ON_COMMAND_EX(IDR_MENU_SETCOVER, OnSetCover)
-	ON_WM_SETCURSOR()
+  ON_WM_SETCURSOR()
 	ON_WM_NCCALCSIZE()
 	ON_WM_NCPAINT()
 	ON_WM_SETFOCUS()
@@ -532,10 +534,10 @@ void CChildView::OnSize(UINT nType, int cx, int cy)
 
   if (m_mediacenter->GetPlaneState())
   {
-  RECT rc;
-  GetClientRect(&rc);
-  m_blocklistview->Update(rc.right - rc.left, rc.bottom - rc.top);
-  Invalidate();
+    RECT rc;
+    GetClientRect(&rc);
+    m_blocklistview->Update(rc.right - rc.left, rc.bottom - rc.top);
+    Invalidate();
   }
 }
 
@@ -781,7 +783,7 @@ void CChildView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 	}
 	CWnd::OnKeyUp(nChar, nRepCnt, nFlags);
 }
-
+static BOOL bl = FALSE;
 void CChildView::OnTimer(UINT_PTR nIDEvent)
 {
     // TODO: Add your message handler code here and/or call default
@@ -794,15 +796,36 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
     if (nIDEvent == TIMER_OFFSET)
     {
       m_preoffsetspeed = m_offsetspeed;
+
+      if (m_offsetspeed == 0)
+        return;
+
+      m_blocklistview->SetScrollBarDragDirection(m_offsetspeed);
+      std::list<BlockUnit*>* list = m_blocklistview->GetEmptyList();
+      if (list && !m_mediacenter->LoadMediaDataAlive())
+        m_mediacenter->LoadMediaData(m_offsetspeed, list, m_blocklistview->GetViewCapacity(),
+                                     m_blocklistview->GetListCapacity(),
+                                     m_blocklistview->GetListRemainItem());
+      else
+      {
+        if (m_blocklistview->BeDirectionChange())
+        {
+          list = m_blocklistview->GetIdleList();
+          m_mediacenter->LoadMediaData(m_offsetspeed, list, m_blocklistview->GetViewCapacity(),
+                                       m_blocklistview->GetListCapacity(),
+                                       m_blocklistview->GetListRemainItem(), 2);
+        }
+      }
+      
       m_blocklistview->SetOffset(m_offsetspeed);
     }
 
-    if (nIDEvent == TIMER_SLOWOFFSET)
-    {
-      m_blocklistview->SetOffset(m_offsetspeed);
-      if (m_preoffsetspeed == m_offsetspeed)
-        KillTimer(TIMER_SLOWOFFSET);
-    }
+//     if (nIDEvent == TIMER_SLOWOFFSET)
+//     {
+//       m_blocklistview->SetOffset(m_offsetspeed);
+//       if (m_preoffsetspeed == m_offsetspeed)
+//         KillTimer(TIMER_SLOWOFFSET);
+//     }
 
     if (nIDEvent == TIMER_TIPS)
     {
@@ -832,9 +855,29 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
 void CChildView::ShowMediaCenter(BOOL bl)
 {
   m_mediacenter->SetPlaneState(bl);
+
+  if (!bl)
+    return;
+
   RECT rc;
   GetClientRect(&rc);
   m_mediacenter->UpdateBlock(rc);
+  std::list<BlockUnit*>* list = m_blocklistview->GetEmptyList();
+  if (list)
+    m_mediacenter->LoadMediaData(1, list, m_blocklistview->GetViewCapacity(), 
+                                 m_blocklistview->GetListCapacity(), 0);
+  
+  SetCursor(::LoadCursor(NULL, IDC_WAIT));
+  while (m_mediacenter->LoadMediaDataAlive())
+  {
+    
+  }
+  
+  SetCursor(::LoadCursor(NULL, IDC_HAND));
+  
+  m_mediacenter->UpdateBlock(rc);
+  
+  InvalidateRect(0, FALSE);
 }
 
 BOOL CChildView::OnSetCover(UINT nID)

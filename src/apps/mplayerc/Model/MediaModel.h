@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "MediaComm.h"
 #include "SourceModel.h"
@@ -29,8 +29,12 @@ public:
                 const MediaFindCondition& condition,
                 int limit_start, int limit_end);
 
+    int  Find(MediaDatas& data, int capacity, int amount, int remain, int dirction);
+
     void Delete(const MediaFindCondition& condition);
     void DeleteAll();
 
     static std::wstring EscapeSQL(std::wstring sSQL);
+  int m_limitstart;
+  int m_limitend;
 };
