@@ -160,6 +160,8 @@ void media_tree::model::addFile(const MediaData &md)
 
 void media_tree::model::save2DB()
 {
+  using namespace boost::filesystem;
+
   MediaSQLite<>::exec(L"begin transaction");
   MediaTreeFolders::tree_type::pre_order_iterator it = m_lsFolderTree.pre_order_begin();
   while (it != m_lsFolderTree.pre_order_end())
@@ -167,24 +169,29 @@ void media_tree::model::save2DB()
     // store path info
     std::wstring sFolderPath = fullFolderPath(it.node());
 
-    MediaPath mp;
-    mp.path = sFolderPath;
-    mp.valid_type = VALID_PATH_FILENAME;
-    m_model.Add(mp);
-
-    // store file info
-    MediaTreeFiles &files = it->lsFiles;
-    MediaTreeFiles::iterator itFile = files.begin();
-    while (itFile != files.end())
+    if (exists(sFolderPath))
     {
-      MediaData md;
-      md.path = sFolderPath;
-      md.filename = itFile->file_data.filename;
-      md.valid_type = VALID_PATH_FILENAME;
+      // store path
+      MediaPath mp;
+      mp.path = sFolderPath;
+      m_model.Add(mp);
 
-      m_model.Add(md);
+      // store file info
+      MediaTreeFiles &files = it->lsFiles;
+      MediaTreeFiles::iterator itFile = files.begin();
+      while (itFile != files.end())
+      {
+        if (exists(mp.path + itFile->file_data.filename))
+        {
+          MediaData md;
+          md.path = sFolderPath;
+          md.filename = itFile->file_data.filename;
 
-      ++itFile;
+          m_model.Add(md);
+        }
+
+        ++itFile;
+      }
     }
 
     ++it;
