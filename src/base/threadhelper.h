@@ -84,6 +84,11 @@ public:
     return ::GetCurrentThreadId();
   }
 
+  HANDLE _GetThreadHandle()
+  {
+    return m_thread;
+  }
+
   void _ResetThread()
   {
     m_thread = NULL;

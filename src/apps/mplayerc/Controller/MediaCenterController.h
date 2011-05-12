@@ -62,6 +62,7 @@ public:
   void LoadMediaData(int direction, std::list<BlockUnit*>* list, int viewcapacity, 
                      int listcapacity, int remain, int times = 1);
   BOOL LoadMediaDataAlive();
+  HANDLE GetMediaDataThreadHandle();
   
 private:
   // GUI

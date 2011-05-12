@@ -265,6 +265,11 @@ BOOL MediaCenterController::LoadMediaDataAlive()
   return m_loaddata._Is_alive();
 }
 
+HANDLE MediaCenterController::GetMediaDataThreadHandle()
+{
+  return m_loaddata._GetThreadHandle();
+}
+
 //////////////////////////////////////////////////////////////////////////////
 //  GUI control
 

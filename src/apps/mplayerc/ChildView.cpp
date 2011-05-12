@@ -868,15 +868,13 @@ void CChildView::ShowMediaCenter(BOOL bl)
                                  m_blocklistview->GetListCapacity(), 0);
   
   SetCursor(::LoadCursor(NULL, IDC_WAIT));
-  while (m_mediacenter->LoadMediaDataAlive())
-  {
-    
-  }
+
+  // wait until the load data thread is exit and finish its job
+  ::WaitForSingleObject(m_mediacenter->GetMediaDataThreadHandle(), INFINITE);
   
   SetCursor(::LoadCursor(NULL, IDC_HAND));
   
   m_mediacenter->UpdateBlock(rc);
-  
   InvalidateRect(0, FALSE);
 }
 
