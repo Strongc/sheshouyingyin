@@ -6,6 +6,7 @@
 
 extern sqlitepp::session g_dbMediaSQLite;
 extern CriticalSection g_csMediaSQLite;
+extern bool g_bThrowIfFail;  // throw exception if fail, default just write to the log
 
 // Note:
 // this class is used for read and write sqlite media database
@@ -24,7 +25,8 @@ public:
                   , T6 *pRet6 = 0
                   , T7 *pRet7 = 0
                   , T8 *pRet8 = 0
-                  , T9 *pRet9 = 0)
+                  , T9 *pRet9 = 0
+                  )
   {
     g_csMediaSQLite.lock();
 
@@ -130,7 +132,15 @@ public:
     }
     catch (std::runtime_error const& err)
     {
-      Logging(err.what());
+      if (g_bThrowIfFail)
+      {
+        g_csMediaSQLite.unlock();
+        throw;
+      } 
+      else
+      {
+        Logging(err.what());
+      }
     }
     catch (...)
     {
@@ -150,7 +160,8 @@ public:
                   , std::vector<T6 > *pRet6 = 0
                   , std::vector<T7 > *pRet7 = 0
                   , std::vector<T8 > *pRet8 = 0
-                  , std::vector<T9 > *pRet9 = 0)
+                  , std::vector<T9 > *pRet9 = 0
+)
   {
     g_csMediaSQLite.lock();
 
@@ -319,7 +330,15 @@ public:
     }
     catch (std::runtime_error const& err)
     {
-      Logging(err.what());
+      if (g_bThrowIfFail)
+      {
+        g_csMediaSQLite.unlock();
+        throw;
+      } 
+      else
+      {
+        Logging(err.what());
+      }
     }
     catch (...)
     {
@@ -339,6 +358,21 @@ public:
     g_csMediaSQLite.unlock();
   }
 
+  static int last_error()
+  {
+    return g_dbMediaSQLite.last_error();
+  }
+  
+  static size_t last_changes()
+  {
+    return g_dbMediaSQLite.last_changes();
+  }
+
+  static void set_exception_flag(bool bThrowIfFail)
+  {
+    g_bThrowIfFail = bThrowIfFail;
+  }
+
 protected:
   static void init()
   {
@@ -351,6 +385,7 @@ protected:
         toolbox.GetAppDataPath(sPath);
         g_dbMediaSQLite.open(sPath + L"\\mc\\media.db");
 
+        g_dbMediaSQLite << L"CREATE TABLE IF NOT EXISTS spider_info(already_run integer default 0, last_time integer default 0)";
         g_dbMediaSQLite << L"CREATE TABLE IF NOT EXISTS detect_path (" \
           L"uniqueid integer PRIMARY KEY, path text, merit integer default 0, lastspidetime integer default 0, breakpoint integer default 0)";
         g_dbMediaSQLite << L"CREATE TABLE IF NOT EXISTS media_data ("

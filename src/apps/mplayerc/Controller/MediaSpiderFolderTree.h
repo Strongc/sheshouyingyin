@@ -18,4 +18,5 @@ private:
 
   time_t m_tSleep;  // loop time, unit is second
   int m_nSpideInterval;  // record spide interval
+  int m_nThreadStartInterval;  //
 };

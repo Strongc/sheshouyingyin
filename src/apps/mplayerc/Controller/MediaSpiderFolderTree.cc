@@ -3,12 +3,14 @@
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
 #include "../Model/MediaDB.h"
+#include "../Utils/SPlayerGUID.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Normal part
 MediaSpiderFolderTree::MediaSpiderFolderTree()
 : m_tSleep(1)
 , m_nSpideInterval(5)
+, m_nThreadStartInterval(30)
 {
   // Init the media type and the exclude folders & files from the database
   // Warning: the case is sensitive !!!
@@ -58,79 +60,78 @@ void MediaSpiderFolderTree::_Thread()
   using std::wstring;
   using std::vector;
 
+  time_t tCur = ::time(0);
+  std::wstringstream ssSQL;
+
+  bool bRun = false;
+  time_t tLast = 0;
+  ssSQL.str(L"");
+  ssSQL << L"SELECT already_run, last_time FROM spider_info";
+  MediaDB<bool, time_t>::exec(ssSQL.str(), &bRun, &tLast);
+
+  if (MediaDB<>::last_error() != 0)
+    return;
+
+  if (!bRun)
+  {
+    ssSQL.str(L"");
+    ssSQL << L"INSERT INTO spider_info(already_run, last_time) VALUES(1, " << ::time(0) << L")";
+    MediaDB<>::exec(ssSQL.str());
+
+    if (MediaDB<>::last_error() != 0)
+      return;
+  } 
+  else
+  {
+    if (::time(0) - tLast >= m_nThreadStartInterval)
+    {
+      ssSQL.str(L"");
+      ssSQL << L"UPDATE spider_info SET last_time=" << ::time(0);
+      MediaDB<>::exec(ssSQL.str());
+
+      if (MediaDB<>::last_error() != 0)
+        return;
+    }
+    else
+    {
+      return;
+    }
+  }
+
+  // do something
+  bool bBreakType = 1;
   while (true)
   {
     // fetch a record
-    time_t tCur = ::time(0);
-    std::wstringstream ssSQL;
-    ssSQL << L"SELECT path, lastspidetime, breakpoint FROM detect_path ORDER BY merit DESC";
-    vector<wstring> vtPath;
-    vector<time_t> vtLastSpideTime;
-    vector<bool> vtBreakPoint;
-    MediaDB<wstring, time_t, bool>::exec(ssSQL.str(), &vtPath, &vtLastSpideTime, &vtBreakPoint);
-
-    // spider the first record
     wstring sPath;
     time_t tLastSpideTime = 0;
-    if (!vtPath.empty())
+    ssSQL.str(L"");
+    ssSQL << L"SELECT path, lastspidetime FROM detect_path WHERE breakpoint=" << (int)bBreakType << L" ORDER BY merit";
+    MediaDB<wstring, time_t>::exec(ssSQL.str(), &sPath, &tLastSpideTime);
+
+    // update database
+    ssSQL.str(L"");
+    ssSQL << L"UPDATE detect_path SET "
+      << L" breakpoint=" << (int)(!bBreakType)
+      << L" WHERE path='" << MediaModel::EscapeSQL(sPath) << L"'";
+    MediaDB<>::exec(ssSQL.str());  // update the search path's info
+    
+    if (MediaDB<>::last_changes() != 0)
     {
-      // find the last breakpoint
-      int i = 0;
-      for (i = 0; i < vtBreakPoint.size(); ++i)
-      {
-        if (vtBreakPoint[i] == true)
-          break;
-      }
-
-      if ((i == vtBreakPoint.size()) || (i == vtBreakPoint.size() - 1))
-      {
-        // not find last position, always the first search
-        // OR find the position, already the last position
-        // next search path is the first item in the vector
-        sPath = vtPath[0];
-        tLastSpideTime = vtLastSpideTime[0];
-      } 
-      else
-      {
-        // find the position
-        // next search path is the next item in the vector
-        sPath = vtPath[i + 1];
-        tLastSpideTime = vtLastSpideTime[i + 1];
-      }
-
-      // search the folder when the interval is greater than m_nSpideInterval
-      if ((tCur - tLastSpideTime) > m_nSpideInterval)
-      {
-        Search(sPath);
-
-        ssSQL.str(L"");
-        ssSQL << L"UPDATE detect_path SET lastspidetime=" << tCur
-          << L" WHERE path='" << MediaModel::EscapeSQL(sPath) << L"'";
-        MediaDB<>::exec(ssSQL.str());  // save last spide time
-      }
-
-      // update the database
-      MediaDB<>::exec(L"begin transaction");
-
-      ssSQL.str(L"");
-      ssSQL << L"UPDATE detect_path SET breakpoint=0";
-      MediaDB<>::exec(ssSQL.str());  // reset the breakpoint
-
-      ssSQL.str(L"");
-      ssSQL << L"UPDATE detect_path SET "
-        << L" breakpoint=" << (int)true
-        << L" WHERE path='" << MediaModel::EscapeSQL(sPath) << L"'";
-      MediaDB<>::exec(ssSQL.str());  // update the search path's info
-
-      MediaDB<>::exec(L"end transaction");
+      Search(sPath);
+    }
+    else
+    {
+      bBreakType = !bBreakType;
     }
 
-    // see if need to be stop
     if (_Exit_state(0))
+    {
+      ssSQL.str(L"");
+      ssSQL << L"DELETE FROM spider_info";
+      MediaDB<>::exec(ssSQL.str());
       return;
-
-    // sleep for next loop
-    ::Sleep(m_tSleep * 1000);
+    }
   }
 }
 
@@ -142,13 +143,36 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
   using boost::regex_replace;
   using namespace boost::filesystem;
 
-  // search media in the path
   try
   {
+    // First, fetch all db's data to tree and delete these data
+    vector<wstring> vtPath;
+    vector<wstring> vtFilename;
+    vector<wstring> vtThumbnailPath;
+    vector<bool> vtHide;
+
+    std::wstringstream ssSQL;
+    ssSQL.str(L"");
+    ssSQL << L"SELECT path, filename, thumbnailpath, hide FROM media_data WHERE path='" << sFolder << L"'";
+    MediaDB<wstring, wstring, wstring, bool>::exec(ssSQL.str(), &vtPath, &vtFilename, &vtThumbnailPath, &vtHide);
+    for (int i = 0; i < vtPath.size(); ++i)
+    {
+      MediaData md;
+      md.path = vtPath[i];
+      md.filename = vtFilename[i];
+      md.thumbnailpath = vtThumbnailPath[i];
+      md.bHide = vtHide[i];
+      m_treeModel.addFile(md);
+    }
+
+    ssSQL.str(L"");
+    ssSQL << L"DELETE FROM media_data WHERE path='" << sFolder << L"'";
+    MediaDB<>::exec(ssSQL.str());
+
+    // Second, search media in the path
     directory_iterator it(sFolder);
     directory_iterator itEnd;
 
-    // search
     while (it != itEnd)
     {
       if (_Exit_state(0))
