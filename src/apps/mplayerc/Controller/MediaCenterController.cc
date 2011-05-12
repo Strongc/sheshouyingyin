@@ -1,4 +1,4 @@
-#include "StdAfx.h"
+﻿#include "StdAfx.h"
 #include "MediaCenterController.h"
 #include <boost/filesystem.hpp>
 #include <boost/bind.hpp>
@@ -23,31 +23,35 @@ MediaCenterController::MediaCenterController()
   }
 
   // add files to media tree
-  MediaDatas mds;
-  m_model.FindAll(mds);
-  MediaDatas::iterator itFile = mds.begin();
-  while (itFile != mds.end())
-  {
+//   MediaDatas mds;
+//   m_model.FindAll(mds);
+//   MediaDatas::iterator itFile = mds.begin();
+//   while (itFile != mds.end())
+//   {
     //m_treeModel.addFile(*itFile);
     //m_treeModel.initHide(itFile->path, itFile->filename, itFile->bHide);
-
-    // add file to media center gui
-    media_tree::model::tagFileInfo fileInfo;
+// 
+//     // add file to media center gui
+//     media_tree::model::tagFileInfo fileInfo;
     //fileInfo = m_treeModel.findFile(itFile->path, itFile->filename);
-    AddNewFoundData(fileInfo.itFile);
+//     AddNewFoundData(fileInfo.itFile);
+// 
+//     // do not notify this change to main frame window
+//     // because the main window is not created now
+// 
+//     ++itFile;
+//   }
 
-    // do not notify this change to main frame window
-    // because the main window is not created now
-
-    ++itFile;
-  }
-
+  //AddNewFoundData(TRUE);
+  //LoadMediaData(1, m_blocklist.GetEmptyList());
+  
   // connect signals and slots
   m_blocklist.m_sigPlayback.connect(boost::bind(&MediaCenterController::HandlePlayback, this, _1));
 }
 
 MediaCenterController::~MediaCenterController()
 {
+  m_loaddata._Stop();
 }
 
 void MediaCenterController::Playback(std::wstring file)
@@ -126,31 +130,31 @@ void MediaCenterController::CreateMCFolder()
 // data control
 void MediaCenterController::SpiderStart()
 {
-  m_spider._Stop();
+//   m_spider._Stop();
   //m_checkDB._Stop();
-
-  m_spider._Start();
+// 
+//   m_spider._Start();
   //m_checkDB._Start();  // check the media.db, clean invalid records
-
-  CMPlayerCApp *pApp = AfxGetMyApp();
-  if (pApp)
-  {
-    CWnd *pWnd = pApp->GetMainWnd();
-    if (pWnd)
-      pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
-  }
+// 
+//   CMPlayerCApp *pApp = AfxGetMyApp();
+//   if (pApp)
+//   {
+//     CWnd *pWnd = pApp->GetMainWnd();
+//     if (pWnd)
+//       pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
+//   }
 }
 
 void MediaCenterController::SpiderStop()
 {
-  m_spider._Stop();
+//   m_spider._Stop();
   //m_checkDB._Stop();
-  m_coverdown._Stop();
+//   m_coverdown._Stop();
   //m_treeModel.save2DB();
-
-  m_csSpiderNewDatas.lock();
-  m_vtSpiderNewDatas.clear();
-  m_csSpiderNewDatas.unlock();
+// 
+//   m_csSpiderNewDatas.lock();
+//   m_vtSpiderNewDatas.clear();
+//   m_csSpiderNewDatas.unlock();
 }
 
 void MediaCenterController::AddNewFoundData(media_tree::model::FileIterator fileIterator)
@@ -162,9 +166,18 @@ void MediaCenterController::AddNewFoundData(media_tree::model::FileIterator file
   m_csSpiderNewDatas.unlock();
 }
 
+BOOL MediaCenterController::AddNewFoundData(BOOL upordown)
+{
+  if (m_blocklist.GetEmptyList() == 0)
+    return FALSE;
+
+  //m_model.Find(m_mediadatas, 50 - m_blocklist.GetEmptyList()->size(), upordown);
+  return TRUE;
+}
+
 void MediaCenterController::AddBlock()
 {
-  m_csSpiderNewDatas.lock();
+  //m_csSpiderNewDatas.lock();
   
   //// add new found data to gui and then remove them
   //int count = 1;
@@ -173,6 +186,7 @@ void MediaCenterController::AddBlock()
   //HRGN rgn = CalculateUpdateRgn(rc);
 
   //std::vector<media_tree::model::FileIterator>::iterator it = m_vtSpiderNewDatas.begin();
+  MediaDatas::iterator it = m_mediadatas.begin();
   //while (it != m_vtSpiderNewDatas.end())
   //{
   //  // add block units
@@ -197,7 +211,7 @@ void MediaCenterController::AddBlock()
   //      InvalidateRect(m_hwnd, 0, FALSE);
   //      UpdateWindow(m_hwnd);
   //    }
-
+// 
   //    ++count;
   //  }
   //  
@@ -217,8 +231,10 @@ void MediaCenterController::AddBlock()
   //  m_coverdown._Start();
  
   //m_vtSpiderNewDatas.clear();
+// 
+//   m_csSpiderNewDatas.unlock();
 
-  m_csSpiderNewDatas.unlock();
+  m_mediadatas.clear();
 }
 
 void MediaCenterController::DelNotAddedBlock()
@@ -228,6 +244,25 @@ void MediaCenterController::DelNotAddedBlock()
   m_vtSpiderNewDatas.clear();
 
   m_csSpiderNewDatas.unlock();
+}
+
+void MediaCenterController::LoadMediaData(int direction, std::list<BlockUnit*>* list,
+                                          int viewcapacity, int listcapacity, 
+                                          int remain, int times)
+{
+  m_loaddata._Stop();
+  m_loaddata.SetList(list);
+  m_loaddata.SetDirection(direction);
+  m_loaddata.SetWindownCapacity(viewcapacity);
+  m_loaddata.SetAmount(listcapacity);
+  m_loaddata.SetListRemainItem(remain);
+  m_loaddata.SetExecuteTime(times);
+  m_loaddata._Start();
+}
+
+BOOL MediaCenterController::LoadMediaDataAlive()
+{
+  return m_loaddata._Is_alive();
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -252,7 +287,7 @@ void MediaCenterController::UpdateBlock(RECT rc)
 {
   // update the view
   m_blocklist.Update(rc.right - rc.left, rc.bottom - rc.top);
-  ::InvalidateRect(m_hwnd, 0, FALSE);
+  //::InvalidateRect(m_hwnd, 0, FALSE);
 }
 
 void MediaCenterController::DelBlock(int index)

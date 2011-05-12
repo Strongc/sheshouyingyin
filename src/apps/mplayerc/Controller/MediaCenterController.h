@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "LazyInstance.h"
 #include "../Model/MediaComm.h"
@@ -10,6 +10,7 @@
 #include "..\UserInterface\Renderer\BlockList.h"
 #include "CoverDownloadController.h"
 #include "CoverUploadController.h"
+#include "LoadMediaDataFromDB.h"
 
 class MediaCenterController:
   public LazyInstanceImpl<MediaCenterController>
@@ -57,7 +58,11 @@ public:
   void AddNewFoundData(media_tree::model::FileIterator fileIterator);
   void AddBlock();
   void DelNotAddedBlock();   // delete new datas when the app exit
-
+  BOOL AddNewFoundData(BOOL upordown);
+  void LoadMediaData(int direction, std::list<BlockUnit*>* list, int viewcapacity, 
+                     int listcapacity, int remain, int times = 1);
+  BOOL LoadMediaDataAlive();
+  
 private:
   // GUI
   HWND m_hwnd;
@@ -67,6 +72,7 @@ private:
   CoverDownloadController m_coverdown;
   CoverUploadController m_coverup;
   BOOL m_initiablocklist;
+  LoadMediaDataFromDB m_loaddata;
   
   // Data
   MediaModel            m_model;
@@ -76,4 +82,6 @@ private:
 
   std::vector<media_tree::model::FileIterator> m_vtSpiderNewDatas;  // remove when it added
   CriticalSection        m_csSpiderNewDatas;  // protect above vector member
+
+  MediaDatas m_mediadatas;
 };

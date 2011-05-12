@@ -127,3 +127,8 @@ BOOL UILayer::OnHittest(POINT pt, BOOL blbtndown, int extent)
     SetDisplay(FALSE);
   return bl;
 }
+
+BOOL UILayer::DeleteTexture()
+{
+  return m_texture.DeleteObject();
+}

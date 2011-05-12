@@ -18,6 +18,8 @@ public:
 
   virtual BOOL DoPaint(WTL::CDC& dc);
 
+  BOOL DeleteTexture();
+
   BOOL OnHittest(POINT pt, BOOL blbtndown, int extent);
 
 private:
