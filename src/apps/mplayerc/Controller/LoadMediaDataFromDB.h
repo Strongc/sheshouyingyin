@@ -23,6 +23,7 @@ public:
   void LoadMediadatasFromDB();
   void AddDataToList();
   void ClearList();
+  BOOL CalculateStartAndEnd();
 
 private:
   MediaModel m_model;
@@ -34,4 +35,6 @@ private:
   int m_remain;
   int m_executetime;
   HWND m_hwnd;
+  int m_limitstart;
+  int m_limitend;
 };
