@@ -59,7 +59,7 @@ public:
   BOOL AddScrollBar();
   void DoPaint(HDC hdc, RECT rcclient);
   void DoPaint(WTL::CDC& dc);
-  BOOL OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetspeed, HWND hwnd);
+  int OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetspeed, HWND hwnd);
   int OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit);
   
   // logic
