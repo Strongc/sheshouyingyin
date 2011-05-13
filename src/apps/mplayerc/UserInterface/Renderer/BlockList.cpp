@@ -262,7 +262,7 @@ void BlockList::BlockRanges()
     m_start = m_list->begin();
 
   // change start if the window size had changed
-  if (m_maxcolumnpre != m_maxcolumn && m_maxcolumnpre != 0)
+  if (m_maxcolumnpre != 0 && m_maxcolumnpre != m_maxcolumn)
   {
     NewStartIterator();
     m_maxcolumnpre = m_maxcolumn;
@@ -278,6 +278,7 @@ void BlockList::BlockRanges()
 
 void BlockList::NewStartIterator()
 {
+  int maxitems = m_maxcolumn * m_maxrow;
   int count1 = 1;
   int count2 = 0;
   int row = 0;
@@ -290,13 +291,12 @@ void BlockList::NewStartIterator()
     --it;
     ++count1;
   }
-  it = m_start;
-  while (it != m_list->end())
-  {
-    ++it;
-    ++count2;
-  }
 
+  int column = m_list->size() % m_maxcolumn;
+  if (column == 0) 
+    column = m_maxcolumn;
+
+  count2 = m_list->size() - column - count1 + 1;
   bl = count1 > count2 ? FALSE : TRUE;
   int count = count1 > count2 ? count2 : count1;
   row = count / m_maxcolumnpre;
@@ -325,6 +325,8 @@ void BlockList::NewStartIterator()
       --m_start;
     }
   }
+
+  m_remainitem = m_listsize % m_maxcolumn;
 }
 
 void BlockList::AlignColumnBlocks()
@@ -503,8 +505,12 @@ int BlockList::SetStartOffset(float offset)
     {
        SwapListBuff(start, FALSE);
        while (column--)
+       {
          --start;
-       
+         if (start == m_list->begin())
+           break;
+       }
+
        m_offsettotal += height; 
 //        if (start == m_list->begin())
 //          distance = m_top;
@@ -557,12 +563,12 @@ void BlockList::SetYOffset(float offset, int result)
   m_y.front() = y;
 }
 
-BOOL BlockList::OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetspeed, HWND hwnd)
+int BlockList::OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetspeed, HWND hwnd)
 {
   if (m_scrollbar->GetDisPlay())
     return m_scrollbar->OnHittest(pt, blbtndown, offsetspeed, hwnd);
   else
-    return FALSE;
+    return 0;
 }
 
 int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
@@ -796,7 +802,7 @@ void BlockList::CalculateLogicalListEnd()
     return;
   }
 
-  m_remainitem = m_list->size() % m_viewcapacity;
+  m_remainitem = m_list->size() % m_maxcolumn;
 
   std::list<BlockUnit*>::iterator it = m_list->end();
   int remain = m_remainitem;
@@ -916,12 +922,13 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
   if (bscroll == ScrollBarHit && m_lbtndown)
     PostMessage(m_hwnd, WM_LBUTTONUP, 0, 0);
 
-  if (bscroll == NoScrollBarHit)
+  if (bscroll == NoScrollBarHit && m_lbtndown)
   {
     RECT rc = GetScrollBarHittest();
     rc.top = 0;
     rc.bottom = rcclient.bottom;
     InvalidateRect(m_hwnd, &rc, FALSE);
+    m_lbtndown = FALSE;
   }
 
   if (blayer == BEPLAYHITTEST || blayer == BEHIDEHITTEST)
