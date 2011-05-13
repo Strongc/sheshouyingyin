@@ -17640,4 +17640,5 @@ void CMainFrame::OnShowMediaCenter()
 {
   m_bmediacentershow  = !m_bmediacentershow;
   m_wndView.ShowMediaCenter(m_bmediacentershow);
+  m_wndToolTopBar.SetDisplay(!m_bmediacentershow);
 }
