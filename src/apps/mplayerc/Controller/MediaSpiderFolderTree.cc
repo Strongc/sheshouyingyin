@@ -132,6 +132,8 @@ void MediaSpiderFolderTree::_Thread()
       MediaDB<>::exec(ssSQL.str());
       return;
     }
+
+    ::Sleep(m_tSleep * 1000);
   }
 }
 
