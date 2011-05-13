@@ -5,9 +5,7 @@
 
 // BlockOne
 
-#define  BEMARKORDEFHITTEST 11
-#define  BEHIDEHITTEST 12
-#define  BEPLAYHITTEST 13
+#define  BEHITTEST 13
 #define  BEHIDE   14
 #define  BEPLAY    15
 
@@ -89,10 +87,10 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   rc.bottom = rc.top+20;
 
   std::wstring fmnm;
-//   if (m_itFile->file_data.filmname.empty())
-//     fmnm = m_itFile->file_data.filename;
-//   else
-//     fmnm = m_itFile->file_data.filmname;
+  if (m_mediadata.filmname.empty())
+    fmnm = m_mediadata.filename;
+  else
+    fmnm = m_mediadata.filmname;
 
   if (m_mediadata.filmname.empty())
     fmnm = m_mediadata.filename;
@@ -111,7 +109,40 @@ void BlockUnit::DeleteLayer()
 
 int BlockUnit::OnHittest(POINT pt, BOOL blbtndown)
 {
-  return m_layer->OnHittest(pt, blbtndown);
+  UILayer* layer = NULL;
+  UILayer* def = NULL;
+  UILayer* play = NULL;
+  UILayer* hide = NULL;
+
+  m_layer->GetUILayer(L"mark", &layer);
+  m_layer->GetUILayer(L"def", &def);
+  m_layer->GetUILayer(L"play", &play);
+  m_layer->GetUILayer(L"hide", &hide);
+
+  RECT rc;
+  if (blbtndown)
+  {
+    play->GetTextureRect(rc);
+    if (PtInRect(&rc, pt))
+      return BEPLAY;
+    
+    hide->GetTextureRect(rc);
+    if (PtInRect(&rc, pt))
+      return BEHIDE;
+  }
+  else
+  {
+    layer->GetTextureRect(rc);
+    if (PtInRect(&rc, pt))
+    {
+      play->SetDisplay(TRUE);
+      hide->SetDisplay(TRUE);
+      return BEHITTEST;
+    }
+  }
+ 
+  play->SetDisplay(FALSE);
+  hide->SetDisplay(FALSE);
 }
 
 RECT BlockUnit::GetHittest()
@@ -455,9 +486,7 @@ int BlockList::IsListBegin(std::list<BlockUnit*>::iterator it)
 {
   if (it == m_list->begin() && GetIdleList()->empty())
     return UPOFFSETONE;
-//   int column = m_maxcolumn;
-//   while (column-- && it != m_list->begin())
-//     --it;
+
   return UPOFFSETSUCCESS;
 }
 
@@ -518,9 +547,6 @@ int BlockList::SetStartOffset(float offset)
          distance = 0;
        m_offsettotal += distance;
     }
-
-//     if (listState == UPOFFSETSUCCESS && start == m_list->begin())
-//       SwapListBuff(start, FALSE);
   }
 
   m_start = start;
@@ -589,20 +615,16 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
       return state;
     case BEPLAY:
       {
-//         if (!m_sigPlayback.empty())
-//           m_sigPlayback((*it)->m_itFile->file_data); // emit a signal
+         if (!m_sigPlayback.empty())
+           m_sigPlayback((*it)->m_mediadata); // emit a signal
       }
       return state;
-    case  BEHIDEHITTEST:
-    case  BEPLAYHITTEST:
+    case  BEHITTEST:
       *unit = (*it);
-      return state;
-    case BEMARKORDEFHITTEST:
-//       if ((*it)->m_itFile->file_data.filmname.empty())
-//         m_tipstring = (*it)->m_itFile->file_data.filename;
-//       else
-//         m_tipstring = (*it)->m_itFile->file_data.filmname;
-      *unit = (*it);
+      if ((*it)->m_mediadata.filmname.empty())
+        m_tipstring = (*it)->m_mediadata.filename;
+      else
+        m_tipstring = (*it)->m_mediadata.filmname;
       return state;
     }
   }
@@ -618,13 +640,15 @@ RECT BlockList::GetScrollBarHittest()
 void BlockList::DeleteBlock(std::list<BlockUnit*>::iterator it)
 {
   // add it into hide list
-  (*it)->m_itFile->file_data.bHide = true;
+  //(*it)->m_itFile->file_data.bHide = true;
+  (*it)->m_mediadata.bHide = TRUE;
   m_listHide.push_back(*it);
 
   // tell media center
   MediaCenterController::GetInstance()->HandleDelBlock(*it);
 
   (*it)->DeleteLayer();
+  (*it) = NULL;
 
   if (it == m_start)
   {
@@ -725,9 +749,7 @@ void BlockList::SwapListBuff(std::list<BlockUnit*>::iterator& it, BOOL upordown)
     return;
 
   int count = 0;
-//   int height = (int)m_blockh + (int)m_top;
-//   int capacity = ((int)m_winh + height - 1) / height * m_x.size();
-  
+
   std::list<BlockUnit*>::iterator ittmp;
   if (upordown)
   {
@@ -742,7 +764,6 @@ void BlockList::SwapListBuff(std::list<BlockUnit*>::iterator& it, BOOL upordown)
     {
       m_list = GetIdleList();
       it = m_list->begin();
-      //GetIdleList()->clear();
       ClearList(GetIdleList());
     }
   }
@@ -766,7 +787,6 @@ void BlockList::SwapListBuff(std::list<BlockUnit*>::iterator& it, BOOL upordown)
       while (maxsize--)
         --ittmp;
       it = ittmp;
-      //GetIdleList()->clear();
       ClearList(GetIdleList());
     }
   }
@@ -881,7 +901,6 @@ void BlockListView::HandleLButtonDown(POINT pt, BlockUnit** unit)
     InvalidateRect(m_hwnd, &rcclient, FALSE);
     RECT rc = {0, 0, 0, 0};
     m_prehittest = rc;
-    //InvalidateRect(m_hwnd, (&(*unit)->GetHittest()), FALSE);
   }
 }
 
@@ -931,13 +950,23 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
     m_lbtndown = FALSE;
   }
 
-  if (blayer == BEPLAYHITTEST || blayer == BEHIDEHITTEST)
+  if (blayer == BEHITTEST)
   {
     SetTimer(m_hwnd, TIMER_TIPS, 500, NULL);
     ::InvalidateRect(m_hwnd, &m_prehittest, FALSE);
-    //::InvalidateRect(m_hwnd, &((*unit)->GetHittest()), FALSE);
-    m_prehittest = (*unit)->GetHittest();
+    ::InvalidateRect(m_hwnd, &((*unit)->GetHittest()), FALSE);
+    if (*unit)
+      m_prehittest = (*unit)->GetHittest();
   }
+
+  HCURSOR hcursor;
+  if (blayer == BEHITTEST || bscroll == ScrollBarHit || bscroll == ScrollBarClick)
+    hcursor = LoadCursor(NULL, IDC_HAND);
+  else
+    hcursor = LoadCursor(NULL, IDC_ARROW);
+
+  SetCursor(hcursor);
+
 }
 
 BOOL BlockListView::HandleRButtonUp(POINT pt, BlockUnit** unit, CMenu* menu)
@@ -946,7 +975,7 @@ BOOL BlockListView::HandleRButtonUp(POINT pt, BlockUnit** unit, CMenu* menu)
 
   int blayer = OnHittest(pt, FALSE, unit);
   
-  if (blayer == BEMARKORDEFHITTEST)
+  if (blayer == BEHITTEST)
   {
     RECT rc;
     GetWindowRect(m_hwnd, &rc);

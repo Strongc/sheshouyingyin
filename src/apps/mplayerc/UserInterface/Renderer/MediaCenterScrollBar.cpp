@@ -122,7 +122,7 @@ BOOL MediaCenterScrollBar::OnHittest(POINT pt, int bLbtdown, int& offsetspeed, H
   }
   else //if (PtInRect(&m_hittest, pt) && ((m_pos.x != m_prepos.x) || (m_pos.y != m_prepos.y)))
   { 
-    if (PtInRect(&m_hittest, pt) && ((m_pos.x != m_prepos.x) || (m_pos.y != m_prepos.y)))
+    if (PtInRect(&m_hittest, pt))//&& ((m_pos.x != m_prepos.x) || (m_pos.y != m_prepos.y)))
       bhit = ScrollBarHit;
     else
       bhit = NoScrollBarHit;
