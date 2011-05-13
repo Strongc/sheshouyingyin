@@ -10,41 +10,6 @@ MediaCenterController::MediaCenterController()
 : m_planestate(FALSE)
  ,m_initiablocklist(FALSE)
 {
-  // add path to media tree
-  MediaPaths mps;
-  m_model.FindAll(mps);
-  MediaPaths::iterator it = mps.begin();
-  while (it != mps.end())
-  {
-    //m_treeModel.addFolder(it->path);
-    //m_treeModel.initMerit(it->path, it->merit);
-
-    ++it;
-  }
-
-  // add files to media tree
-//   MediaDatas mds;
-//   m_model.FindAll(mds);
-//   MediaDatas::iterator itFile = mds.begin();
-//   while (itFile != mds.end())
-//   {
-    //m_treeModel.addFile(*itFile);
-    //m_treeModel.initHide(itFile->path, itFile->filename, itFile->bHide);
-// 
-//     // add file to media center gui
-//     media_tree::model::tagFileInfo fileInfo;
-    //fileInfo = m_treeModel.findFile(itFile->path, itFile->filename);
-//     AddNewFoundData(fileInfo.itFile);
-// 
-//     // do not notify this change to main frame window
-//     // because the main window is not created now
-// 
-//     ++itFile;
-//   }
-
-  //AddNewFoundData(TRUE);
-  //LoadMediaData(1, m_blocklist.GetEmptyList());
-  
   // connect signals and slots
   m_blocklist.m_sigPlayback.connect(boost::bind(&MediaCenterController::HandlePlayback, this, _1));
 }
@@ -80,29 +45,6 @@ void MediaCenterController::SetFrame(HWND hwnd)
   m_coverdown.SetFrame(hwnd);
 }
 
-HRGN MediaCenterController::CalculateUpdateRgn(WTL::CRect& rc)
-{
-  WTL::CRect clientrc;
-  GetClientRect(m_hwnd, &clientrc);
-  
-  int left1 = min(rc.right, clientrc.Width());
-  int top1 = rc.top;
-  int right1 = left1 == clientrc.Width()? 0:clientrc.Width();
-  int bottom1 = left1 == clientrc.Width()? 0:clientrc.Height();
-  HRGN hrgn1 = CreateRectRgn(left1, top1, right1, bottom1);
-  
-  int left2 = 0;
-  int top2 = min(rc.bottom, clientrc.Height());
-  int right2 = top2 == clientrc.Height()? 0:clientrc.Width();
-  int bottom2 = top2 == clientrc.Height()? 0:clientrc.Height();
-  HRGN hrgn2 = CreateRectRgn(left2, top2, right2, bottom2);
-  
-  HRGN hrgntotal = CreateRectRgn(0, 0, 0, 0);
-  CombineRgn(hrgntotal, hrgn1, hrgn2, RGN_OR);
-  return hrgntotal;
-
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // Maintenance for MC folder
 bool MediaCenterController::IsMCFolderExist()
@@ -130,120 +72,16 @@ void MediaCenterController::CreateMCFolder()
 // data control
 void MediaCenterController::SpiderStart()
 {
-//   m_spider._Stop();
-  //m_checkDB._Stop();
-// 
-//   m_spider._Start();
-  //m_checkDB._Start();  // check the media.db, clean invalid records
-// 
-//   CMPlayerCApp *pApp = AfxGetMyApp();
-//   if (pApp)
-//   {
-//     CWnd *pWnd = pApp->GetMainWnd();
-//     if (pWnd)
-//       pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
-//   }
+  m_spider._Stop();
+  
+  m_spider._Start();
 }
 
 void MediaCenterController::SpiderStop()
 {
-//   m_spider._Stop();
-  //m_checkDB._Stop();
-//   m_coverdown._Stop();
-  //m_treeModel.save2DB();
-// 
-//   m_csSpiderNewDatas.lock();
-//   m_vtSpiderNewDatas.clear();
-//   m_csSpiderNewDatas.unlock();
-}
-
-void MediaCenterController::AddNewFoundData(media_tree::model::FileIterator fileIterator)
-{
-  m_csSpiderNewDatas.lock();
-
-  m_vtSpiderNewDatas.push_back(fileIterator);
-
-  m_csSpiderNewDatas.unlock();
-}
-
-BOOL MediaCenterController::AddNewFoundData(BOOL upordown)
-{
-  if (m_blocklist.GetEmptyList() == 0)
-    return FALSE;
-
-  //m_model.Find(m_mediadatas, 50 - m_blocklist.GetEmptyList()->size(), upordown);
-  return TRUE;
-}
-
-void MediaCenterController::AddBlock()
-{
-  //m_csSpiderNewDatas.lock();
+   m_spider._Stop();
   
-  //// add new found data to gui and then remove them
-  //int count = 1;
-  //WTL::CRect rc;
-  //m_blocklist.GetLastBlockPosition(rc);
-  //HRGN rgn = CalculateUpdateRgn(rc);
-
-  //std::vector<media_tree::model::FileIterator>::iterator it = m_vtSpiderNewDatas.begin();
-  MediaDatas::iterator it = m_mediadatas.begin();
-  //while (it != m_vtSpiderNewDatas.end())
-  //{
-  //  // add block units
-  //  
-  //  BlockUnit* one = new BlockUnit;
-  //  one->m_itFile = *it;
-  //  m_blocklist.AddBlock(one);
-
-  //  m_coverdown.SetBlockUnit(one);
-  //  
-  //  GetClientRect(m_hwnd, &rc);
-  //  m_blocklist.Update(rc.right - rc.left, rc.bottom - rc.top);
-
-  //  if (!m_initiablocklist)
-  //  {
-  //    int size = m_vtSpiderNewDatas.size() > m_blocklist.GetEnableShowAmount()? \
-  //      m_blocklist.GetEnableShowAmount() : m_vtSpiderNewDatas.size();
-  //    
-  //    if (count == size)
-  //    {
-  //      m_initiablocklist = TRUE;
-  //      InvalidateRect(m_hwnd, 0, FALSE);
-  //      UpdateWindow(m_hwnd);
-  //    }
-// 
-  //    ++count;
-  //  }
-  //  
-  //  ++it;
-  //}
-
-  //if (m_initiablocklist && m_blocklist.ContiniuPaint())
-  //  if (m_blocklist.GetScrollBarInitializeFlag())
-  //  {
-  //    InvalidateRect(m_hwnd, 0, FALSE);
-  //    m_blocklist.SetScrollBarInitializeFlag(FALSE);
-  //  }
-  //  else
-  //    InvalidateRgn(m_hwnd, rgn, FALSE);
-
-  //if (!m_vtSpiderNewDatas.empty())
-  //  m_coverdown._Start();
- 
-  //m_vtSpiderNewDatas.clear();
-// 
-//   m_csSpiderNewDatas.unlock();
-
-  m_mediadatas.clear();
-}
-
-void MediaCenterController::DelNotAddedBlock()
-{
-  m_csSpiderNewDatas.lock();
-
-  m_vtSpiderNewDatas.clear();
-
-  m_csSpiderNewDatas.unlock();
+   m_coverdown._Stop();
 }
 
 void MediaCenterController::LoadMediaData(int direction, std::list<BlockUnit*>* list,
@@ -260,14 +98,14 @@ void MediaCenterController::LoadMediaData(int direction, std::list<BlockUnit*>* 
   m_loaddata._Start();
 }
 
-BOOL MediaCenterController::LoadMediaDataAlive()
-{
-  return m_loaddata._Is_alive();
-}
-
 HANDLE MediaCenterController::GetMediaDataThreadHandle()
 {
   return m_loaddata._GetThreadHandle();
+}
+
+BOOL MediaCenterController::LoadMediaDataAlive()
+{
+  return m_loaddata._Is_alive();
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -292,7 +130,6 @@ void MediaCenterController::UpdateBlock(RECT rc)
 {
   // update the view
   m_blocklist.Update(rc.right - rc.left, rc.bottom - rc.top);
-  //::InvalidateRect(m_hwnd, 0, FALSE);
 }
 
 void MediaCenterController::DelBlock(int index)
@@ -304,6 +141,10 @@ void MediaCenterController::DelBlock(int index)
 void MediaCenterController::SetCover(BlockUnit* unit, std::wstring orgpath)
 {
   m_coverup.SetCover(unit, orgpath);
+  
+  m_treeModel.addFile(unit->m_mediadata);
+  m_treeModel.save2DB();
+  m_treeModel.delTree();
 
   CRect rc;
   rc = unit->GetHittest();

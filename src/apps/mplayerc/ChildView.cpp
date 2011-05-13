@@ -820,13 +820,6 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
       m_blocklistview->SetOffset(m_offsetspeed);
     }
 
-//     if (nIDEvent == TIMER_SLOWOFFSET)
-//     {
-//       m_blocklistview->SetOffset(m_offsetspeed);
-//       if (m_preoffsetspeed == m_offsetspeed)
-//         KillTimer(TIMER_SLOWOFFSET);
-//     }
-
     if (nIDEvent == TIMER_TIPS)
     {
       KillTimer(TIMER_TIPS);

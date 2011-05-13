@@ -41,7 +41,7 @@ void CoverDownloadController::_Thread()
      if (_Exit_state(0))
        return;
 
-     std::wstring thumbnailpath = (*it)->m_itFile->file_data.thumbnailpath;
+     std::wstring thumbnailpath = (*it)->m_mediadata.thumbnailpath;
      if (!thumbnailpath.empty() &&
         (GetFileAttributes(thumbnailpath.c_str()) != INVALID_FILE_ATTRIBUTES || 
          GetLastError() != ERROR_FILE_NOT_FOUND))
@@ -51,7 +51,7 @@ void CoverDownloadController::_Thread()
      25026521a390357bd1fcf52899268c97;c0c3ddd9b5a1c1d292131a91c9200648;cb72fdc1ff58dfc5cda9943e098c304b;e7752a7553168a73f29b0e36f09a86a8";
      
      // Get http response
-     std::wstring szFilePath = (*it)->m_itFile->file_data.path + (*it)->m_itFile->file_data.filename; 
+     std::wstring szFilePath = (*it)->m_mediadata.path + (*it)->m_mediadata.filename; 
      std::string results("");
      BOOL bGet = HttpGetResponse(requesturl, szFilePath, results);
      if (!bGet)
@@ -61,7 +61,7 @@ void CoverDownloadController::_Thread()
      
      // Parse the respond string
      std::wstring cover;
-     BOOL bParse = ParseRespondString(results, (*it)->m_itFile->file_data.filmname, cover);
+     BOOL bParse = ParseRespondString(results, (*it)->m_mediadata.filmname, cover);
      if (!bParse)
        continue;
      if (cover.empty())
@@ -75,7 +75,7 @@ void CoverDownloadController::_Thread()
     
      // Change cover
      cover = coverdownloadpath.substr(coverdownloadpath.find(L"mc"));
-     (*it)->m_itFile->file_data.thumbnailpath = cover;
+     (*it)->m_mediadata.thumbnailpath = cover;
      (*it)->ResetCover();
      InvalidateRect(m_hwnd, &((*it)->GetHittest()), FALSE);
      

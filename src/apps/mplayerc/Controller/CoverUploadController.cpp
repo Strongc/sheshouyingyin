@@ -30,7 +30,7 @@ void CoverUploadController::SetCover(BlockUnit* unit, std::wstring orgpath)
   
   if (unit != 0 && bsuccess)
   {
-    unit->m_itFile->file_data.thumbnailpath = destpath.substr(destpath.find(L"mc"));
+    unit->m_mediadata.thumbnailpath = destpath.substr(destpath.find(L"mc"));
     unit->ResetCover();
     m_list.push_back(unit);
     _Start();
@@ -70,13 +70,13 @@ void CoverUploadController::_Thread()
 
 void CoverUploadController::UploadCover(BlockUnit* unit, std::wstring url)
 {
-  std::wstring szFilePath = unit->m_itFile->file_data.path + unit->m_itFile->file_data.filename; 
+  std::wstring szFilePath = unit->m_mediadata.path + unit->m_mediadata.filename; 
   std::wstring szFileHash = HashController::GetInstance()->GetSPHash(szFilePath.c_str());
   
   std::wstring coverPath;
   CSVPToolBox csvptb;
   csvptb.GetAppDataPath(coverPath);
-  coverPath += L"\\" + unit->m_itFile->file_data.thumbnailpath;
+  coverPath += L"\\" + unit->m_mediadata.thumbnailpath;
   
   refptr<pool> pool = pool::create_instance();
   refptr<task> task = task::create_instance();

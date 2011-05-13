@@ -186,6 +186,9 @@ void media_tree::model::save2DB()
           MediaData md;
           md.path = sFolderPath;
           md.filename = itFile->file_data.filename;
+          md.thumbnailpath = itFile->file_data.thumbnailpath;
+          md.videotime = itFile->file_data.videotime;
+          md.bHide = itFile->file_data.bHide;
 
           m_model.Add(md);
         }

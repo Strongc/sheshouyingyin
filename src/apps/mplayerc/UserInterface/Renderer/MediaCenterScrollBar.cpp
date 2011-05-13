@@ -11,7 +11,6 @@
 
 MediaCenterScrollBar::MediaCenterScrollBar(void):
  m_lastlbtstate(FALSE)
-,m_preoffset(0)
 ,m_binitialize(FALSE)
 {
   m_prepos.x = 0;
@@ -110,13 +109,10 @@ BOOL MediaCenterScrollBar::OnHittest(POINT pt, int bLbtdown, int& offsetspeed, H
       offsetspeed = (offset - i + 1) / i;
 /*    DWORD timer = max(63 - (abs(offset) + j - 1) / j * 3, 1);*/
     DWORD timer = 42 - (abs(offset) + i - 1) / i * 2;
-    if (m_preoffset != offset)
-    {
-      SetTimer(hwnd, TIMER_SLOWOFFSET, 1, 0);
-      m_preoffset = offset;
-    }
-    else
-      SetTimer(hwnd, TIMER_OFFSET, timer, NULL);
+
+    SetTimer(hwnd, TIMER_OFFSET, 1, NULL);
+    KillTimer(hwnd, TIMER_OFFSET);
+    SetTimer(hwnd, TIMER_OFFSET, timer, NULL);
     
     bhit = ScrollBarClick;
   }

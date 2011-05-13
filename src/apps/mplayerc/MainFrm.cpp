@@ -365,8 +365,6 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
   ON_COMMAND_RANGE(ID_PLAYBACK_LOOP_NORMAL,ID_PLAYBACK_LOOP_RANDOM, OnPlayMenuLoopSetting )
   ON_UPDATE_COMMAND_UI_RANGE(ID_PLAYBACK_LOOP_NORMAL, ID_PLAYBACK_LOOP_RANDOM, OnUpdatePlayMenuLoopSetting )
 
-  ON_COMMAND(ID_SPIDER_NEWFILE_FOUND, OnSpiderNewFileFound)
-
   //Sub Delay Button
   ON_COMMAND_RANGE(ID_SUBDELAYDEC,ID_SUBDELAYINC, OnPlaySubDelay )
   ON_UPDATE_COMMAND_UI_RANGE(ID_SUBDELAYDEC, ID_SUBDELAYINC, OnUpdatePlaySubDelay )
@@ -1730,7 +1728,6 @@ void CMainFrame::OnResetSetting(){
 }
 void CMainFrame::OnDestroy()
 {
-  MediaCenterController::GetInstance()->DelNotAddedBlock();
   MediaCenterController::GetInstance()->SpiderStop();
 
   //AfxMessageBox(_T("2"));
@@ -17490,14 +17487,6 @@ void CMainFrame::OnMovieShare()
 void CMainFrame::OnOpenShooterMedia()
 {
   UserShareController::GetInstance()->OpenShooterMedia();
-}
-
-void CMainFrame::OnSpiderNewFileFound()
-{
-  // let the media center to add new file to the media gui
-//   if (MediaCenterController::GetInstance()->AddNewFoundData(TRUE))
-//     MediaCenterController::GetInstance()->AddBlock();
-//   ::Sleep(20); // sleep for a moment
 }
 
 void CMainFrame::OnSkinSelection(UINT nID)

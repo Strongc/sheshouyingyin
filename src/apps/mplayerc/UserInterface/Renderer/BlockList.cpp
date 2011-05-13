@@ -60,18 +60,18 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   POINT hidept = {hide_fixpt.x+pt.x, hide_fixpt.y+pt.y};
   hide->SetTexturePos(hidept);
 
-//   if (!m_itFile->file_data.thumbnailpath.empty() && !m_cove)
-//   {
-//     std::wstring thumbnailpath = m_itFile->file_data.thumbnailpath;
-//     if (GetFileAttributes(thumbnailpath.c_str()) != INVALID_FILE_ATTRIBUTES || 
-//         GetLastError() != ERROR_FILE_NOT_FOUND)
-//     {
-//       ResLoader resLoad;
-//       m_cove = resLoad.LoadBitmapFromAppData(thumbnailpath);
-//       if (m_cove)
-//         def->SetTexture(m_cove);
-//     }
-//   }
+  if (!m_mediadata.thumbnailpath.empty() && !m_cove)
+  {
+    std::wstring thumbnailpath = m_mediadata.thumbnailpath;
+    if (GetFileAttributes(thumbnailpath.c_str()) != INVALID_FILE_ATTRIBUTES || 
+        GetLastError() != ERROR_FILE_NOT_FOUND)
+    {
+      ResLoader resLoad;
+      m_cove = resLoad.LoadBitmapFromAppData(thumbnailpath);
+      if (m_cove)
+        def->SetTexture(m_cove);
+    }
+  }
 
   m_layer->DoPaint(dc);
 
