@@ -29,7 +29,8 @@ CPlayerToolTopBar::CPlayerToolTopBar():
 m_hovering(0),
 m_pbtnList(&m_btnList),
 m_nHeight(20),
-m_bSendStatusMsg(false)
+m_bSendStatusMsg(false),
+m_bdisplay(TRUE)
 {
 }
 
@@ -393,6 +394,9 @@ void CPlayerToolTopBar::OnMove(int x, int y)
 
 void CPlayerToolTopBar::OnPaint()
 {
+  if (!m_bdisplay)
+    return;
+
 	CPaintDC dc(this); // device context for painting
 	
 	AppSettings& s = AfxGetAppSettings();
@@ -513,6 +517,9 @@ BOOL CPlayerToolTopBar::OnEraseBkgnd(CDC* pDC)
 void CPlayerToolTopBar::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	// TODO: Add your message handler code here and/or call default
+  if (!m_bdisplay)
+    return;
+
 	CMainFrame* pFrame = ((CMainFrame*)AfxGetMainWnd());
 	
 	ReleaseCapture();
@@ -549,6 +556,9 @@ void CPlayerToolTopBar::OnLButtonUp(UINT nFlags, CPoint point)
 void CPlayerToolTopBar::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	// TODO: Add your message handler code here and/or call default
+  if (!m_bdisplay)
+    return;
+
 	SetCapture();
 	CRect rc;
 	GetWindowRect(&rc);
@@ -603,6 +613,9 @@ static CPoint m_lastMouseMove;
 void CPlayerToolTopBar::OnMouseMove(UINT nFlags, CPoint point)
 {
 	// TODO: Add your message handler code here and/or call default
+  if (!m_bdisplay)
+    return;
+
 	CSize diff = m_lastMouseMove - point;
 	CMainFrame* pFrame = ((CMainFrame*)AfxGetMainWnd());
 	
@@ -899,4 +912,9 @@ void CPlayerToolTopBar::ResizeToolbarHeight()
   m_nHeight = max(20, m_btnList.GetMaxHeight());
   if (m_nHeight > 20)
     m_nHeight += 2;
+}
+
+void CPlayerToolTopBar::SetDisplay(BOOL bl)
+{
+  m_bdisplay = bl;
 }
