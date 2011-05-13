@@ -37,10 +37,13 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   UILayer* play = NULL;
   UILayer* hide = NULL;
 
-  m_layer->GetUILayer(L"mark", &layer);
-  m_layer->GetUILayer(L"def", &def);
-  m_layer->GetUILayer(L"play", &play);
-  m_layer->GetUILayer(L"hide", &hide);
+  BOOL bmark = m_layer->GetUILayer(L"mark", &layer);
+  BOOL bdef = m_layer->GetUILayer(L"def", &def);
+  BOOL bplay = m_layer->GetUILayer(L"play", &play);
+  BOOL bhide = m_layer->GetUILayer(L"hide", &hide);
+
+  if (!bmark || !bdef || !bplay || !bhide)
+    return;
 
   layer->SetDisplay(TRUE);
   def->SetDisplay(TRUE);
@@ -469,8 +472,9 @@ int BlockList::IsListEnd(std::list<BlockUnit*>::iterator it)
     ++count;
     if (it == m_logicalend)//m_list->end())
     {
-      if (!GetIdleList()->empty())
-        break;
+      if (!MediaCenterController::GetInstance()->LoadMediaDataAlive())
+        if (!GetIdleList()->empty())
+          break;
 
       int row = (count  + m_x.size() - 1)/ m_x.size();
       float y = m_y.front(); 
@@ -750,6 +754,9 @@ void BlockList::SwapListBuff(std::list<BlockUnit*>::iterator& it, BOOL upordown)
   if (GetIdleList()->empty())
     return;
 
+  if (MediaCenterController::GetInstance()->LoadMediaDataAlive())
+    return;
+
   int count = 0;
 
   std::list<BlockUnit*>::iterator ittmp;
@@ -765,7 +772,7 @@ void BlockList::SwapListBuff(std::list<BlockUnit*>::iterator& it, BOOL upordown)
     if (count <= m_viewcapacity) 
     {
       m_list = GetIdleList();
-      if (m_list && !m_list->empty())
+      if (m_list)
       {
         it = m_list->begin();
         ClearList(GetIdleList());
@@ -787,7 +794,7 @@ void BlockList::SwapListBuff(std::list<BlockUnit*>::iterator& it, BOOL upordown)
     if (count <= m_viewcapacity)
     {
       m_list = GetIdleList();
-      if (m_list && !m_list->empty())
+      if (m_list)
       {
         int maxsize = m_viewcapacity + m_remainitem;
         ittmp = m_list->end();
