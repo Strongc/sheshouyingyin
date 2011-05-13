@@ -532,6 +532,7 @@ void CChildView::OnSize(UINT nType, int cx, int cy)
 	((CMainFrame*)GetParentFrame())->MoveVideoWindow();
 	ReCalcBtn();
 
+  m_blocklistview->SetSizeChanged();
   if (m_mediacenter->GetPlaneState())
   {
     RECT rc;
@@ -818,6 +819,12 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
       }
       
       m_blocklistview->SetOffset(m_offsetspeed);
+
+      RECT rc;
+      GetClientRect(&rc);
+      m_blocklistview->Update(rc.right - rc.left, rc.bottom - rc.top);
+      InvalidateRect(&rc);
+      return;
     }
 
     if (nIDEvent == TIMER_TIPS)
@@ -838,10 +845,6 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
       return;
     }
 
-    RECT rc;
-    GetClientRect(&rc);
-    m_blocklistview->Update(rc.right - rc.left, rc.bottom - rc.top);
-    InvalidateRect(&rc);
     CWnd::OnTimer(nIDEvent);
 }
 

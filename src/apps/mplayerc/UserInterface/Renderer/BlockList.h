@@ -91,6 +91,7 @@ public:
   int GetViewCapacity();
   int GetListRemainItem();
   int GetListCapacity();
+  void SetSizeChanged();
 
 // signals
 public:
@@ -139,7 +140,7 @@ private:
   BOOL m_scrollbarinitialize;
 
   ModelPtr m_pModel;
-
+  bool m_bSizeChanged;
 };
 
 class BlockListView : public BlockList
