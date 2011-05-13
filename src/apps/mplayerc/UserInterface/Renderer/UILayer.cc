@@ -2,7 +2,8 @@
 #include "UILayer.h"
 #include <ResLoader.h>
 #include "logging.h"
-UILayer::UILayer(std::wstring respath, BOOL display /* = TRUE */)
+UILayer::UILayer(std::wstring respath, BOOL display /* = TRUE */):
+ m_texturerect(0, 0, 0, 0)
 {
   ResLoader rs;
   SetTexture(rs.LoadBitmap(respath));

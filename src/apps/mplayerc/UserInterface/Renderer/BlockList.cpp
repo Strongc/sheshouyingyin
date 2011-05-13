@@ -604,7 +604,8 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
   std::list<BlockUnit*>::iterator it = m_start;
   for (; it != m_end; ++it)
   {
-    state = (*it)->OnHittest(pt, blbtndown);
+    if (*it)
+      state = (*it)->OnHittest(pt, blbtndown);
     
     switch (state)
     {
@@ -763,8 +764,11 @@ void BlockList::SwapListBuff(std::list<BlockUnit*>::iterator& it, BOOL upordown)
     if (count <= m_viewcapacity) 
     {
       m_list = GetIdleList();
-      it = m_list->begin();
-      ClearList(GetIdleList());
+      if (m_list && !m_list->empty())
+      {
+        it = m_list->begin();
+        ClearList(GetIdleList());
+      }
     }
   }
   else
@@ -782,12 +786,15 @@ void BlockList::SwapListBuff(std::list<BlockUnit*>::iterator& it, BOOL upordown)
     if (count <= m_viewcapacity)
     {
       m_list = GetIdleList();
-      int maxsize = m_viewcapacity + m_remainitem;
-      ittmp = m_list->end();
-      while (maxsize--)
-        --ittmp;
-      it = ittmp;
-      ClearList(GetIdleList());
+      if (m_list && !m_list->empty())
+      {
+        int maxsize = m_viewcapacity + m_remainitem;
+        ittmp = m_list->end();
+        while (maxsize--)
+          --ittmp;
+        it = ittmp;
+        ClearList(GetIdleList());
+      }
     }
   }
 }
