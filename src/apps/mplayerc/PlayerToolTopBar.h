@@ -14,6 +14,8 @@ class CPlayerToolTopBar : public CWnd
 
   bool m_bSendStatusMsg;  // send status message when status changed
 
+  BOOL m_bdisplay;
+
 public:
 	CPlayerToolTopBar();
 	virtual ~CPlayerToolTopBar();
@@ -78,6 +80,8 @@ public:
   void PointCloseBtn();
 
   void ResizeToolbarHeight();
+
+  void SetDisplay(BOOL bl);
 
 };
 
