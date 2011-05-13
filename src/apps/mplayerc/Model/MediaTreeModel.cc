@@ -9,6 +9,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // normal part
 MediaTreeFolders media_tree::model::m_lsFolderTree;
+CriticalSection media_tree::model::m_cs;
 
 ////////////////////////////////////////////////////////////////////////////////
 // properties
@@ -106,6 +107,7 @@ MediaTreeFolders& media_tree::model::mediaTree()
 // add media info to the tree and save the info to the database
 void media_tree::model::addFolder(const std::wstring &sFolder, bool bIncreaseMerit /* = false */)
 {
+  m_cs.lock();
   TreeIterator itFolder = findFolder(sFolder, true);
   TreeIterator itEnd;
   if (itFolder != itEnd)
@@ -118,12 +120,14 @@ void media_tree::model::addFolder(const std::wstring &sFolder, bool bIncreaseMer
   {
     // should never go here
   }
+  m_cs.unlock();
 }
 
 void media_tree::model::addFile(const MediaData &md)
 {
   using namespace boost::lambda;
 
+  m_cs.lock();
   TreeIterator itFolder = findFolder(md.path, true);
   TreeIterator itEnd;
   if (itFolder != itEnd)
@@ -156,11 +160,14 @@ void media_tree::model::addFile(const MediaData &md)
   {
     // should never go here
   }
+  m_cs.unlock();
 }
 
 void media_tree::model::save2DB()
 {
   using namespace boost::filesystem;
+
+  m_cs.lock();
 
   MediaSQLite<>::exec(L"begin transaction");
   MediaTreeFolders::tree_type::pre_order_iterator it = m_lsFolderTree.pre_order_begin();
@@ -200,11 +207,15 @@ void media_tree::model::save2DB()
     ++it;
   }
   MediaSQLite<>::exec(L"end transaction");
+
+  m_cs.unlock();
 }
 
 void media_tree::model::delTree()
 {
+  m_cs.lock();
   m_lsFolderTree.clear();
+  m_cs.unlock();
 }
 
 void media_tree::model::splitPath(const std::wstring &sPath, std::stack<std::wstring> &skResult)
@@ -238,15 +249,19 @@ void media_tree::model::splitPath(const std::wstring &sPath, std::stack<std::wst
 
 void media_tree::model::initMerit(const std::wstring &sFolder, int nMerit)
 {
+  m_cs.lock();
   TreeIterator itFolder = findFolder(sFolder, true);
   TreeIterator itEnd;
   if (itFolder != itEnd)
     itFolder->folder_data.merit = nMerit;
+  m_cs.unlock();
 }
 
 void media_tree::model::initHide(const std::wstring &sFolder, const std::wstring &sFilename, bool bHide)
 {
+  m_cs.lock();
   tagFileInfo fileInfo = findFile(sFolder, sFilename);
   if (fileInfo.isValid())
     fileInfo.itFile->file_data.bHide = bHide;
+  m_cs.unlock();
 }

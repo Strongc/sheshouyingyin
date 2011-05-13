@@ -25,18 +25,8 @@ void MediaCenterController::Playback(std::wstring file)
     return;
 
   m_treeModel.addFolder(file, true);
-
-  std::wstring name(::PathFindFileName(file.c_str()));
-  MediaFindCondition mc = {0, name};
-  MediaData mdc;
-  m_model.FindOne(mdc, mc);
-  if (mdc.uniqueid == 0)
-  {
-    MediaData md;
-    md.path = file;
-    md.filename = name;
-    //m_treeModel.addFile(md);
-  }
+  m_treeModel.save2DB();
+  m_treeModel.delTree();
 }
 
 void MediaCenterController::SetFrame(HWND hwnd)
