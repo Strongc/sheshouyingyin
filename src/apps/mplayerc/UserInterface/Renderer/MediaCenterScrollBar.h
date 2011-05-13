@@ -32,6 +32,5 @@ private:
   BOOL    m_lastlbtstate;
   float   m_offset;
   float   m_winh;
-  int     m_preoffset;
   BOOL    m_binitialize;
 };

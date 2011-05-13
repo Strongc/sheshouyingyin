@@ -55,20 +55,18 @@ public:
   void SpiderStart();
   void SpiderStop();
 
-  void AddNewFoundData(media_tree::model::FileIterator fileIterator);
-  void AddBlock();
-  void DelNotAddedBlock();   // delete new datas when the app exit
-  BOOL AddNewFoundData(BOOL upordown);
   void LoadMediaData(int direction, std::list<BlockUnit*>* list, int viewcapacity, 
                      int listcapacity, int remain, int times = 1);
-  BOOL LoadMediaDataAlive();
+  
   HANDLE GetMediaDataThreadHandle();
+
+  BOOL LoadMediaDataAlive();
   
 private:
   // GUI
   HWND m_hwnd;
   BOOL m_planestate;
-  //MediaDatas m_mediadata;
+  
   BlockListView m_blocklist;
   CoverDownloadController m_coverdown;
   CoverUploadController m_coverup;
@@ -78,11 +76,5 @@ private:
   // Data
   MediaModel            m_model;
   media_tree::model     m_treeModel;
-  MediaCheckDB          m_checkDB;
   MediaSpiderFolderTree m_spider;
-
-  std::vector<media_tree::model::FileIterator> m_vtSpiderNewDatas;  // remove when it added
-  CriticalSection        m_csSpiderNewDatas;  // protect above vector member
-
-  MediaDatas m_mediadatas;
 };

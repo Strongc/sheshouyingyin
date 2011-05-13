@@ -60,6 +60,8 @@ void MediaSpiderFolderTree::_Thread()
   using std::wstring;
   using std::vector;
 
+  return;
+
   time_t tCur = ::time(0);
   std::wstringstream ssSQL;
 
@@ -187,6 +189,14 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
         md.path = sFolder;
         md.filename = it->path().filename().wstring();
         m_treeModel.addFile(md);
+              //MediaCenterController::GetInstance()->AddNewFoundData(fileInfo.itFile);
+//               CMPlayerCApp *pApp = AfxGetMyApp();
+//               if (pApp)
+//               {
+//                 CWnd *pWnd = pApp->GetMainWnd();
+//                 if (::IsWindow(pWnd->m_hWnd))
+//                   pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
+//               }
       }
 
       ++it;
