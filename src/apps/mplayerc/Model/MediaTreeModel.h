@@ -2,6 +2,7 @@
 
 #include "MediaComm.h"
 #include "MediaModel.h"
+#include "CriticalSection.h"
 
 namespace media_tree {
 
@@ -36,6 +37,7 @@ public:
 
 private:
   static MediaTreeFolders m_lsFolderTree;
+  static CriticalSection m_cs;
   MediaModel       m_model;
 };
 
