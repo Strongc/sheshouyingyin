@@ -113,21 +113,6 @@ BOOL UILayer::DoPaint(WTL::CDC& dc)
   return TRUE;
 }
 
-BOOL UILayer::OnHittest(POINT pt, BOOL blbtndown, int extent)
-{
-  if (!m_fixdisplay)
-    return FALSE;
-
-//   RECT hittestrc = {m_texturepos.x, m_texturepos.y, m_texturepos.x + m_bm.bmWidth,
-//              m_texturepos.y + m_bm.bmHeight + extent};
-  BOOL bl = PtInRect(&m_texturerect, pt);
-  if (bl)
-    SetDisplay(TRUE);
-  else
-    SetDisplay(FALSE);
-  return bl;
-}
-
 BOOL UILayer::DeleteTexture()
 {
   return m_texture.DeleteObject();

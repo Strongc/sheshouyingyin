@@ -20,8 +20,6 @@ public:
 
   BOOL DeleteTexture();
 
-  BOOL OnHittest(POINT pt, BOOL blbtndown, int extent);
-
 private:
   WTL::CBitmap   m_texture;
   POINT          m_texturepos;

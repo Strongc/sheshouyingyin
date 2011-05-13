@@ -33,7 +33,6 @@ public:
   void ResetCover();
 
 public:
-  FileIterator m_itFile;  // file iterator
   MediaData m_mediadata;
 
 private:
