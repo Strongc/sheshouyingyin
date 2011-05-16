@@ -1,24 +1,20 @@
 #include "stdafx.h"
 #include "UILayerBlock.h"
 
-UILayerBlock::UILayerBlock(void) :
-  m_blockname(L"")
-{
-}
+#define  BEMARKORDEFHITTEST 11
+#define  BEHIDEHITTEST 12
+#define  BEPLAYHITTEST 13
+#define  BEHIDE   14
+#define  BEPLAY    15
 
-UILayerBlock::UILayerBlock(std::wstring& name) :
-  m_blockname(name)
+UILayerBlock::UILayerBlock()
 {
+
 }
 
 UILayerBlock::~UILayerBlock()
 {
 
-}
-
-void UILayerBlock::GetBlockName(std::wstring& out)
-{
-  out = m_blockname;
 }
 
 BOOL UILayerBlock::GetUILayer(std::wstring key, UILayer** layer)
@@ -37,9 +33,6 @@ BOOL UILayerBlock::GetUILayer(std::wstring key, UILayer** layer)
 
 BOOL UILayerBlock::AddUILayer(std::wstring key, UILayer* layer)
 {
-  if (m_layers.find(key) != m_layers.end())
-    return FALSE;
-
   m_layers[key] = layer;
   return TRUE;
 }
@@ -75,6 +68,7 @@ BOOL UILayerBlock::DeleteAllLayer()
   std::map<std::wstring, UILayer*>::iterator it;
   for (it = m_layers.begin(); it != m_layers.end(); it++)
   {
+    it->second->DeleteTexture();
     delete (it->second);
   }
 
