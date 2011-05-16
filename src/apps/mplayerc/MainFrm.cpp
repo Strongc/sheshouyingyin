@@ -1166,11 +1166,11 @@ static int m_nomorefloatbarforawhile = 0;
 void CMainFrame::OnMouseMove(UINT nFlags, CPoint point)
 {
   BOOL bSomethingChanged = false;
-  BOOL bMedianCenterState = FALSE;
+  BOOL bMediaCenterState = FALSE;
 
   m_wndSeekBar.CloseToolTips();
   if( m_iMediaLoadState == MLS_CLOSED )
-    bMedianCenterState = m_wndView.OnMouseMove(nFlags,point);
+    bMediaCenterState = m_wndView.OnMouseMove(nFlags,point);
   
   CRect CVideoRect = m_wndView.GetVideoRect();
   if(m_iPlaybackMode == PM_DVD)
@@ -1202,7 +1202,7 @@ void CMainFrame::OnMouseMove(UINT nFlags, CPoint point)
 
   int iDistance = sqrt( pow( (double)abs(point.x - m_pLastClickPoint.x) , 2)  + pow( (double)abs( point.y - m_pLastClickPoint.y ) , 2) );
   int idisplacement = sqrt(pow((double)abs(point.x - m_pDragFuncStartPoint.x), 2) + pow((double)abs( point.y - m_pDragFuncStartPoint.y ) , 2));
-  if( ( iDistance > 30 || s_mDragFucOn) && bMouseMoved && s_mDragFuc && !bMedianCenterState){
+  if( ( iDistance > 30 || s_mDragFucOn) && bMouseMoved && s_mDragFuc && !bMediaCenterState){
     if(!s_mDragFucOn){
       m_pDragFuncStartPoint = point;
       SetAlwaysOnTop(s.iOnTop , FALSE);
@@ -1268,7 +1268,8 @@ void CMainFrame::OnMouseMove(UINT nFlags, CPoint point)
     }
 
   }
-  if( ( m_fFullScreen || s.fHideCaptionMenu || !(s.nCS&CS_TOOLBAR) ) && bMouseMoved && m_notshowtoolbarforawhile <= 0)
+  if( ( m_fFullScreen || s.fHideCaptionMenu || !(s.nCS&CS_TOOLBAR) ) && bMouseMoved && m_notshowtoolbarforawhile <= 0
+     && m_wndToolBar.GetDisplay())
   {
 
 
@@ -1368,7 +1369,7 @@ void CMainFrame::OnMouseMove(UINT nFlags, CPoint point)
           bSomethingChanged = true;
         }
       }else{
-        if(m_wndToolTopBar.IsWindowVisible() ){
+        if(m_wndToolTopBar.IsWindowVisible()){
           //	SVP_LogMsg5(_T(" hide tooltopbar") );
           m_wndToolTopBar.ShowWindow(SW_HIDE);
           bSomethingChanged = true;
@@ -17630,4 +17631,15 @@ void CMainFrame::OnShowMediaCenter()
   m_bmediacentershow  = !m_bmediacentershow;
   m_wndView.ShowMediaCenter(m_bmediacentershow);
   m_wndToolTopBar.SetDisplay(!m_bmediacentershow);
+  
+  m_wndToolBar.SetDisplay(!m_bmediacentershow);
+  if (!m_bmediacentershow)
+    m_wndToolBar.ShowWindow(SW_SHOWNOACTIVATE);
+  else
+  {
+    m_wndToolBar.ShowWindow(SW_HIDE);
+    if (m_wndSeekBar.IsWindowVisible())
+      m_wndSeekBar.ShowWindow(SW_HIDE);
+  }
+  RedrawNonClientArea();
 }
