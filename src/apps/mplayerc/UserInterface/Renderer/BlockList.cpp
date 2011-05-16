@@ -472,9 +472,11 @@ int BlockList::IsListEnd(std::list<BlockUnit*>::iterator it)
     ++count;
     if (it == m_logicalend)//m_list->end())
     {
-      if (!MediaCenterController::GetInstance()->LoadMediaDataAlive())
-        if (!GetIdleList()->empty())
-          break;
+      if (MediaCenterController::GetInstance()->LoadMediaDataAlive())
+        ::WaitForSingleObject(MediaCenterController::GetInstance()->GetMediaDataThreadHandle()
+        , INFINITE);
+      if (!GetIdleList()->empty())
+        break;
 
       int row = (count  + m_x.size() - 1)/ m_x.size();
       float y = m_y.front(); 
@@ -489,8 +491,14 @@ int BlockList::IsListEnd(std::list<BlockUnit*>::iterator it)
 
 int BlockList::IsListBegin(std::list<BlockUnit*>::iterator it)
 {
-  if (it == m_list->begin() && GetIdleList()->empty())
-    return UPOFFSETONE;
+  if (it == m_list->begin())
+  {
+    if (MediaCenterController::GetInstance()->LoadMediaDataAlive())
+      ::WaitForSingleObject(MediaCenterController::GetInstance()->GetMediaDataThreadHandle()
+                            , INFINITE);
+    if (GetIdleList()->empty())
+      return UPOFFSETONE;
+  }
 
   return UPOFFSETSUCCESS;
 }
@@ -552,7 +560,7 @@ int BlockList::SetStartOffset(float offset)
          distance = 0;
        m_offsettotal += distance;
     }
-  }
+   }
 
   m_start = start;
   return listState;
@@ -824,6 +832,7 @@ void BlockList::CalculateViewCapacity()
 {
   int height = (int)m_blockh + (int)m_top;
   m_viewcapacity = ((int)m_winh + height - 1) / height * m_x.size();
+  m_listsize = 2 * m_viewcapacity;
 }
 
 void BlockList::CalculateLogicalListEnd()
