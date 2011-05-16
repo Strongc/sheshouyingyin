@@ -4,20 +4,6 @@
 #include "SourceModel.h"
 #include <sqlitepp/sqlitepp.hpp>
 
-// When search the media, use this to judge if the media should be searched
-typedef struct
-{
-    long long uniqueid;
-    std::wstring filename;
-} MediaFindCondition;
-
-typedef struct
-{
-  long long uniqueid;
-  std::wstring path;
-  int merit;
-} MediaPathCondition;
-
 // An implement class to add, find and delete media data in the sqlite database
 class MediaModel :
     public SourceModel<MediaData, MediaFindCondition>
@@ -39,10 +25,13 @@ public:
     void FindAll(MediaDatas& data);
 
     void FindOne(MediaData& data, const MediaFindCondition& condition);
-    void Find(MediaDatas& data,
-                const MediaFindCondition& condition,
-                int limit_start, int limit_end);
+    void Find(MediaDatas& data, const MediaFindCondition& condition,
+              int limit_start, int limit_end);
+
+    void Find(int limit_start, int limit_end, MediaDatas& data);
 
     void Delete(const MediaFindCondition& condition);
     void DeleteAll();
+
+    static std::wstring EscapeSQL(std::wstring sSQL);
 };

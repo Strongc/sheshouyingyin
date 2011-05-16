@@ -5,7 +5,6 @@
 #include "MediaCenterScrollBar.h"
 #include "UILayerBlock.h"
 #include "../../Model/MediaComm.h"
-#include "../../Model/MCBlockModel.h"
 #include "../../Model/MediaTreeModel.h"
 #include <boost/signals.hpp>
 #include <boost/shared_ptr.hpp>
@@ -39,13 +38,9 @@ private:
 class BlockList
 {
 public:
-  typedef boost::shared_ptr<MCBlockModel::abstract_model<BlockUnit*> > ModelPtr;
-
-public:
   BlockList();
   ~BlockList();
 
-  void SetModel(ModelPtr ptr);  // using various model to sort the items in the list
   void AddBlock(BlockUnit* unit);  
   void DeleteBlock(std::list<BlockUnit*>::iterator it);
   void DeleteBlock(int i);
@@ -133,7 +128,6 @@ private:
 
   BOOL m_scrollbarinitialize;
 
-  ModelPtr m_pModel;
   bool m_bSizeChanged;
 };
 

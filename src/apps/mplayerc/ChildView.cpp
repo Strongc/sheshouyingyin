@@ -285,7 +285,6 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_WM_SETFOCUS()
 	//}}AFX_MSG_MAP
 	ON_WM_CREATE()
-	ON_WM_MOUSEMOVE()
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
   ON_WM_RBUTTONUP()
@@ -633,7 +632,7 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	return 0;
 }
 
-void CChildView::OnMouseMove(UINT nFlags, CPoint point)
+BOOL CChildView::OnMouseMove(UINT nFlags, CPoint point)
 {
 	// TODO: Add your message handler code here and/or call default
   if (m_mediacenter->GetPlaneState())

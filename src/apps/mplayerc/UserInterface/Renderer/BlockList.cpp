@@ -217,12 +217,6 @@ BlockList::~BlockList()
   ClearList(&m_list2);
 }
 
-void BlockList::SetModel(ModelPtr ptr)
-{
-  //m_pModel = ptr;
-  //m_pModel->set_data(m_list, &m_start);
-}
-
 void BlockList::DoPaint(HDC hdc, RECT rcclient)
 {
   WTL::CMemoryDC dc(hdc, rcclient);

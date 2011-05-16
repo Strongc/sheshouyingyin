@@ -5179,12 +5179,7 @@ void CMPlayerCApp::SetLanguage (int nLanguage)
 		s.iLanguage  = nLanguage;
 	}
 	
-	szLangSeting.Format(L"%d" , s.iLanguage );
-	svpTool.filePutContent(szLangDefault,szLangSeting );
-	AfxSetResourceHandle(hMod);
-  Strings::SetResourceHandle(hMod);
-  ResLoader::hResourceHandle = hMod;
-  ResLoader::hMainInstance =  AfxGetApp()->m_hInstance;
+  szLangSeting.Format(L"%d" , s.iLanguage );  svpTool.filePutContent(szLangDefault,szLangSeting );  AfxSetResourceHandle(hMod);  Strings::SetResourceHandle(hMod);
 
 #if (_ATL_VER >= 0x0700)
   ATL::_AtlBaseModule.SetResourceInstance(hMod);

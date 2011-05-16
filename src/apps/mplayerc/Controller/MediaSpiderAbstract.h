@@ -44,9 +44,6 @@ public:
 
   BOOL IsSupportExtension(const std::wstring& sFilePath)
   {
-    //// for debug
-    //AfxMessageBox(sFilePath.c_str());
-
     // Find if the file is a media file
     std::wstring sExt = ::PathFindExtension(sFilePath.c_str());
     if (find(m_supportexts.begin(), m_supportexts.end(), sExt) != m_supportexts.end())
@@ -73,8 +70,28 @@ public:
     m_supportexts.push_back(ext);
   }
 
+  bool IsFilteredItem(const std::wstring &str)
+  {
+    std::vector<std::wstring>::iterator it = m_filtered_items.begin();
+    while (it != m_filtered_items.end())
+    {
+      if (str.find(*it) != std::wstring::npos)
+        return true;
+
+      ++it;
+    }
+
+    return false;
+  }
+
+  void SetFilteredItem(const std::wstring &str)
+  {
+    m_filtered_items.push_back(str);
+  }
+
 private:
   std::vector<std::wstring> m_supportexts;
   std::vector<std::wstring> m_exincludepaths;
   std::vector<std::wstring> m_detectpath;
+  std::vector<std::wstring> m_filtered_items;  // filter user's some private media
 };

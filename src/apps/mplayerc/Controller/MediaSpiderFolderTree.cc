@@ -1,18 +1,17 @@
 #include "stdafx.h"
 #include "MediaSpiderFolderTree.h"
-#include "..\Controller\PlayerPreference.h"
-#include "..\Controller\SPlayerDefs.h"
 #include <boost/filesystem.hpp>
-#include <boost/lambda/lambda.hpp>
-#include <boost/lambda/bind.hpp>
+#include <boost/regex.hpp>
+#include "../Model/MediaDB.h"
+#include "../Utils/SPlayerGUID.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Normal part
 MediaSpiderFolderTree::MediaSpiderFolderTree()
+: m_tSleep(1)
+, m_nSpideInterval(5)
+, m_nThreadStartInterval(30)
 {
-  // Init the last search path from the database
-  m_sLastSearchPath = PlayerPreference::GetInstance()->GetStringVar(STRVAR_LASTSPIDERPATH);
-
   // Init the media type and the exclude folders & files from the database
   // Warning: the case is sensitive !!!
   SetSupportExtension(L".avi");
@@ -30,18 +29,12 @@ MediaSpiderFolderTree::MediaSpiderFolderTree()
   SetExcludePath(L"c:\\Windows\\");
   SetExcludePath(L"C:\\Program Files\\");
   SetExcludePath(L"C:\\Program Files (x86)\\");
+
+  SetFilteredItem(L"private");
 }
 
 MediaSpiderFolderTree::~MediaSpiderFolderTree()
 {
-  // Store the last search path, if the path is NULL, then represent the last
-  // search is a complete search
-  PlayerPreference::GetInstance()->SetStringVar(STRVAR_LASTSPIDERPATH, m_sLastSearchPath);
-}
-
-bool _sort_tree_folders(const MediaTreeFolder &treeFolder1, const MediaTreeFolder &treeFolder2)
-{
-  return treeFolder1.nMerit > treeFolder2.nMerit;  // descending order
 }
 
 //void cDebug(const std::wstring &sDebugInfo, bool bAutoBreak = true)
@@ -64,52 +57,83 @@ bool _sort_tree_folders(const MediaTreeFolder &treeFolder1, const MediaTreeFolde
 
 void MediaSpiderFolderTree::_Thread()
 {
-  using namespace boost::lambda;
   using std::wstring;
   using std::vector;
-  using std::list;
 
+  time_t tCur = ::time(0);
+  std::wstringstream ssSQL;
+
+  bool bRun = false;
+  time_t tLast = 0;
+  ssSQL.str(L"");
+  ssSQL << L"SELECT already_run, last_time FROM spider_info";
+  MediaDB<bool, time_t>::exec(ssSQL.str(), &bRun, &tLast);
+
+  if (MediaDB<>::last_error() != 0)
+    return;
+
+  if (!bRun)
+  {
+    ssSQL.str(L"");
+    ssSQL << L"INSERT INTO spider_info(already_run, last_time) VALUES(1, " << ::time(0) << L")";
+    MediaDB<>::exec(ssSQL.str());
+
+    if (MediaDB<>::last_error() != 0)
+      return;
+  } 
+  else
+  {
+    if (::time(0) - tLast >= m_nThreadStartInterval)
+    {
+      ssSQL.str(L"");
+      ssSQL << L"UPDATE spider_info SET last_time=" << ::time(0);
+      MediaDB<>::exec(ssSQL.str());
+
+      if (MediaDB<>::last_error() != 0)
+        return;
+    }
+    else
+    {
+      return;
+    }
+  }
+
+  // do something
+  bool bBreakType = 1;
   while (true)
   {
-    // see if need to be stop
-    if (_Exit_state(0))
-      return;
+    // fetch a record
+    wstring sPath;
+    time_t tLastSpideTime = 0;
+    ssSQL.str(L"");
+    ssSQL << L"SELECT path, lastspidetime FROM detect_path WHERE breakpoint=" << (int)bBreakType << L" ORDER BY merit";
+    MediaDB<wstring, time_t>::exec(ssSQL.str(), &sPath, &tLastSpideTime);
 
-    // sort the path according the merit by descending order
-    MediaTreeFolders treeFolders = m_treeModel.mediaTreeFolders();
-    treeFolders.sort(bind(&MediaTreeFolder::nMerit, _1) > bind(&MediaTreeFolder::nMerit, _2));
-
-    //// for test
-    //MediaTreeFolders::const_iterator itTest = treeFolders.begin();
-    //while (itTest != treeFolders.end())
-    //{
-    //  std::wstringstream ss;
-    //  ss << L"folder = " << itTest->sFolderPath << L", tFolderCreateTime = " << itTest->tFolderCreateTime;
-    //  cDebug(ss.str());
-
-    //  ++itTest;
-    //}
-    //cDebug(L"");
-
-    // search the media files
-    MediaTreeFolders::const_iterator it = treeFolders.begin();
-    while (it != treeFolders.end())
+    // update database
+    ssSQL.str(L"");
+    ssSQL << L"UPDATE detect_path SET "
+      << L" breakpoint=" << (int)(!bBreakType)
+      << L" WHERE path='" << MediaModel::EscapeSQL(sPath) << L"'";
+    MediaDB<>::exec(ssSQL.str());  // update the search path's info
+    
+    if (MediaDB<>::last_changes() != 0)
     {
-      // see if need to be stop
-      if (_Exit_state(0))
-        return;
-
-      // search the path for media files
-      if (it->tNextSpiderInterval == 0)
-        Search(it->sFolderPath);
-      else if (((::time(0) - it->tFolderCreateTime) % it->tNextSpiderInterval) == 0)
-        Search(it->sFolderPath);
-
-      ++it;
+      Search(sPath);
+    }
+    else
+    {
+      bBreakType = !bBreakType;
     }
 
-    // sleep for a moment
-    ::Sleep(300);
+    if (_Exit_state(0))
+    {
+      ssSQL.str(L"");
+      ssSQL << L"DELETE FROM spider_info";
+      MediaDB<>::exec(ssSQL.str());
+      return;
+    }
+
+    ::Sleep(m_tSleep * 1000);
   }
 }
 
@@ -117,36 +141,75 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
 {
   using std::wstring;
   using std::vector;
+  using boost::wregex;
+  using boost::regex_replace;
   using namespace boost::filesystem;
 
-  // see if need to be stop
-  if (_Exit_state(0))
-    return;  
-
-  // if the folder is not exist or the folder is been exclude, then return
-  if (!is_directory(sFolder) || IsExcludePath(sFolder))
-    return;
-
-  // search the folder
-  wpath folder(sFolder);
-  directory_iterator itCur(folder);
-  directory_iterator itEnd;
-
-  while (itCur != itEnd)
+  try
   {
-    if (is_regular_file(itCur->path()) && IsSupportExtension(itCur->path().wstring()))
+    // First, fetch all db's data to tree and delete these data
+    vector<wstring> vtPath;
+    vector<wstring> vtFilename;
+    vector<wstring> vtThumbnailPath;
+    vector<bool> vtHide;
+
+    std::wstringstream ssSQL;
+    ssSQL.str(L"");
+    ssSQL << L"SELECT path, filename, thumbnailpath, hide FROM media_data WHERE path='" << sFolder << L"'";
+    MediaDB<wstring, wstring, wstring, bool>::exec(ssSQL.str(), &vtPath, &vtFilename, &vtThumbnailPath, &vtHide);
+    for (int i = 0; i < vtPath.size(); ++i)
     {
-      // add it to the folder tree
       MediaData md;
-      md.path = sFolder;
-      md.filename = itCur->path().filename().wstring();
-      
+      md.path = vtPath[i];
+      md.filename = vtFilename[i];
+      md.thumbnailpath = vtThumbnailPath[i];
+      md.bHide = vtHide[i];
       m_treeModel.addFile(md);
     }
 
-    ++itCur;
+    ssSQL.str(L"");
+    ssSQL << L"DELETE FROM media_data WHERE path='" << sFolder << L"'";
+    MediaDB<>::exec(ssSQL.str());
 
-    // sleep for a moment
-    ::Sleep(50);
+    // Second, search media in the path
+    directory_iterator it(sFolder);
+    directory_iterator itEnd;
+
+    while (it != itEnd)
+    {
+      if (_Exit_state(0))
+        return;
+
+      if (IsSupportExtension(it->path().wstring())
+       && !is_directory(it->path())
+       && !isHiddenPath(it->path().wstring())
+       && !IsFilteredItem(it->path().wstring()))
+      {
+        MediaData md;
+        md.path = sFolder;
+        md.filename = it->path().filename().wstring();
+        m_treeModel.addFile(md);
+              //MediaCenterController::GetInstance()->AddNewFoundData(fileInfo.itFile);
+//               CMPlayerCApp *pApp = AfxGetMyApp();
+//               if (pApp)
+//               {
+//                 CWnd *pWnd = pApp->GetMainWnd();
+//                 if (::IsWindow(pWnd->m_hWnd))
+//                   pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
+//               }
+      }
+
+      ++it;
+    }
+
+    // store info to db
+    m_treeModel.save2DB();
+
+    // delete tree
+    m_treeModel.delTree();
+  }
+  catch (const filesystem_error &err)
+  {
+    Logging(err.what());
   }
 }
