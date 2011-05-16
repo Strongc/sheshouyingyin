@@ -18,9 +18,6 @@
 class BlockUnit
 {
 public:
-  typedef media_tree::model::FileIterator FileIterator;
-
-public:
   BlockUnit();
   ~BlockUnit();
 

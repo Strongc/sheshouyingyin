@@ -5,6 +5,7 @@
 
 // BlockOne
 
+#define  BENORMAL 0
 #define  BEHITTEST 13
 #define  BEHIDE   14
 #define  BEPLAY    15
@@ -146,6 +147,7 @@ int BlockUnit::OnHittest(POINT pt, BOOL blbtndown)
  
   play->SetDisplay(FALSE);
   hide->SetDisplay(FALSE);
+  return BENORMAL;
 }
 
 RECT BlockUnit::GetHittest()
@@ -604,11 +606,12 @@ int BlockList::OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetspeed, HW
 
 int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
 {
-  int state = 0;
+  int stRet = BENORMAL;  // state will return
   
   std::list<BlockUnit*>::iterator it = m_start;
   for (; it != m_end; ++it)
   {
+    int state = 0;
     if (*it)
       state = (*it)->OnHittest(pt, blbtndown);
     
@@ -631,11 +634,11 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
         m_tipstring = (*it)->m_mediadata.filename;
       else
         m_tipstring = (*it)->m_mediadata.filmname;
-      return state;
+      stRet = BEHITTEST;
     }
   }
   m_tipstring = L"";
-  return state;
+  return stRet;
 }
 
 RECT BlockList::GetScrollBarHittest()

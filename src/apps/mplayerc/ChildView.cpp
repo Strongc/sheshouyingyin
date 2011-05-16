@@ -332,6 +332,7 @@ void CChildView::OnPaint()
     if (m_mediacenter->GetPlaneState())
     {
       m_blocklistview->DoPaint(hdc.m_hDC, rcClient);
+      ValidateRect(0);
       return;
     }
 
