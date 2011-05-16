@@ -60,7 +60,8 @@ iButtonWidth (30),
 m_pbtnList(&m_btnList),
 m_bMouseDown(FALSE),
 m_nHeight(90),
-m_movieshare_hidestat(1)
+m_movieshare_hidestat(1),
+m_bdisplay(TRUE)
 {
 }
 
@@ -621,6 +622,7 @@ INT_PTR CPlayerToolBar::OnToolHitTest(	CPoint point,TOOLINFO* pTI 	) const
 };
 void CPlayerToolBar::OnMouseMove(UINT nFlags, CPoint point)
 {
+  
   int diffx = m_lastMouseMove.x - point.x;
   int diffy = m_lastMouseMove.y - point.y;
   CPoint lastMouseMove = m_lastMouseMove;
@@ -1314,6 +1316,16 @@ void CPlayerToolBar::ResizeToolbarHeight()
   m_nHeight = max(45, m_btnList.GetMaxHeight());
   if (m_nHeight > 45)
     m_nHeight += 4;
+}
+
+void CPlayerToolBar::SetDisplay(BOOL bl)
+{
+  m_bdisplay = bl;
+}
+
+BOOL CPlayerToolBar::GetDisplay()
+{
+  return m_bdisplay;
 }
 /*
 BottomToolBarButton.dat
