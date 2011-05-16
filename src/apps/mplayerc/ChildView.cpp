@@ -40,11 +40,19 @@ static char THIS_FILE[] = __FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // CChildView
 
+#define TIMER_OFFSET 11
+#define  TIMER_SLOWOFFSET 12
+#define TIMER_TIPS 15
+
 CChildView::CChildView() :
 m_vrect(0,0,0,0)
 ,m_cover(NULL)
 ,m_bMouseDown(FALSE)
 , m_lastLyricColor(0x00dfe7ff)
+, m_blocklistview(0)
+, m_blockunit(0)
+, m_offsetspeed(0)
+, m_preoffsetspeed(0)
 {
 	m_lastlmdowntime = 0;
 	m_lastlmdownpoint.SetPoint(0, 0);
@@ -58,6 +66,7 @@ m_vrect(0,0,0,0)
 
 	}
 	m_mediacenter = MediaCenterController::GetInstance();
+  m_blocklistview = &(m_mediacenter->GetBlockListView());
 	//m_btnList.AddTail( new CSUIButton(L"BTN_OPENADV.BMP" ,ALIGN_TOPLEFT, CRect(-50 , -62, 0,0)  , FALSE, ID_FILE_OPENMEDIA, FALSE, ALIGN_LEFT,btnFileOpen,  CRect(3,3,3,3) ) ) ;
 	
 	m_btnList.AddTail( new CSUIButton(L"WATERMARK2.BMP" , ALIGN_BOTTOMRIGHT, CRect(6 , 6, 0,6)  , TRUE, 0, FALSE  ) );
@@ -279,9 +288,12 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_WM_MOUSEMOVE()
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
+  ON_WM_RBUTTONUP()
+  ON_WM_LBUTTONDBLCLK()
 	ON_WM_NCHITTEST()
 	ON_WM_KEYUP()
-    ON_WM_TIMER()
+  ON_WM_TIMER()
+  ON_WM_MOUSELEAVE()
 END_MESSAGE_MAP()
 
 static COLORREF colorNextLyricColor(COLORREF lastColor)
@@ -317,11 +329,12 @@ void CChildView::OnPaint()
 		CMemoryDC hdc(&dc, rcClient);
 
     // only response of media center messages(WM_PAINT)
-//     if (m_mediacenter->GetPlaneState())
-//     {
-//       m_mediacenter->m_plane.DoPaint(hdc.m_hDC, rcClient);
-//       return;
-//     }
+    if (m_mediacenter->GetPlaneState())
+    {
+      m_blocklistview->DoPaint(hdc.m_hDC, rcClient);
+      ValidateRect(0);
+      return;
+    }
 
 		hdc.FillSolidRect( rcClient, s.GetColorFromTheme(_T("MainBackgroundColor"),0));
     CRect rcLoading(rcClient);
@@ -520,14 +533,14 @@ void CChildView::OnSize(UINT nType, int cx, int cy)
 	((CMainFrame*)GetParentFrame())->MoveVideoWindow();
 	ReCalcBtn();
 
-//   if (m_mediacenter->GetPlaneState())
-//   {
-//   RECT rc;
-//   GetClientRect(&rc);
-//     m_mediacenter->m_plane.SetClientrc(rc);
-//     m_mediacenter->m_plane.AutoBreakline();
-//     Invalidate();
-//   }
+  m_blocklistview->SetSizeChanged();
+  if (m_mediacenter->GetPlaneState())
+  {
+    RECT rc;
+    GetClientRect(&rc);
+    m_blocklistview->Update(rc.right - rc.left, rc.bottom - rc.top);
+    Invalidate();
+  }
 }
 
 
@@ -589,13 +602,53 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	GetSystemFontWithScale(&m_font, 14.0);
     GetSystemFontWithScale(&m_font_lyric, 20.0, FW_BOLD, s.subdefstyle.fontName); //
 	// TODO:  Add your specialized creation code here
+    DWORD dwTransFlag = 0; 
+    if (s.bUserAeroUI())
+      dwTransFlag = WS_EX_TRANSPARENT;
 
+    WNDCLASSEX layeredClass;
+    layeredClass.cbSize        = sizeof(WNDCLASSEX);
+    layeredClass.style         = CS_HREDRAW | CS_VREDRAW;
+    layeredClass.lpfnWndProc   = 0;
+    layeredClass.cbClsExtra    = 0;
+    layeredClass.cbWndExtra    = 0;
+    layeredClass.hInstance     = AfxGetMyApp()->m_hInstance;
+    layeredClass.hIcon         = NULL;
+    layeredClass.hCursor       = NULL;
+    layeredClass.hbrBackground = NULL;
+    layeredClass.lpszMenuName  = NULL;
+    layeredClass.lpszClassName = _T("SVPLayered");
+    layeredClass.hIconSm       = NULL;
+    RegisterClassEx(&layeredClass) ;
+    if (!m_tip.CreateEx(WS_EX_NOACTIVATE|WS_EX_TOPMOST|dwTransFlag, _T("SVPLayered"), _T("TIP"), WS_POPUP, CRect( 20,20,21,21 ) , this,  0))
+      AfxMessageBox(ResStr(IDS_MSG_CREATE_SEEKTIP_FAIL));
+
+
+    m_blocklistview->SetFrameHwnd(m_hWnd);
+    m_blocklistview->SetScrollSpeed(&m_offsetspeed);
+
+    m_menu.LoadMenu(IDR_MEDIACENTERMENU);
+
+    SetMenu(&m_menu);
 	return 0;
 }
 
 void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 {
 	// TODO: Add your message handler code here and/or call default
+  if (m_mediacenter->GetPlaneState())
+  {
+    m_blocklistview->HandleMouseMove(point, &m_blockunit);
+
+    TRACKMOUSEEVENT tmet;
+    tmet.cbSize = sizeof(TRACKMOUSEEVENT);
+    tmet.dwFlags = TME_LEAVE;
+    tmet.hwndTrack = m_hWnd;
+    _TrackMouseEvent(&tmet);
+
+    return TRUE;
+  }
+
 	CSize diff = m_lastMouseMove - point;
 	BOOL bMouseMoved =  diff.cx || diff.cy ;
 	m_lastMouseMove = point;
@@ -610,16 +663,7 @@ void CChildView::OnMouseMove(UINT nFlags, CPoint point)
 		UINT ret = m_btnList.OnHitTest(point,rc,-1);
 		m_nItemToTrack = ret;
 		
-//     if (m_mediacenter->GetPlaneState())
-//     {
-//       RECT uprc;
-//       POINT pt = {point.x, point.y};
-//       ScreenToClient(&pt);
-//       m_mediacenter->m_plane.SelectBlockEffect(pt, uprc);
-//       m_mediacenter->m_plane.DragScrollBar(pt);
-//       Invalidate();
-//     }
-			if( m_btnList.HTRedrawRequired ){
+    if( m_btnList.HTRedrawRequired ){
 				Invalidate();
 			}
   }
@@ -647,6 +691,14 @@ void CChildView::OnLButtonDown(UINT nFlags, CPoint point)
 	m_bMouseDown = TRUE;
 	CRect rc;
 	GetWindowRect(&rc);
+
+  if (m_mediacenter->GetPlaneState())
+  {
+    RECT rc;
+    GetClientRect(&rc);
+    m_blocklistview->HandleLButtonDown(point, &m_blockunit);
+    return;
+  }
   
 	point += rc.TopLeft() ;
 	UINT ret = m_btnList.OnHitTest(point,rc,TRUE);
@@ -657,17 +709,7 @@ void CChildView::OnLButtonDown(UINT nFlags, CPoint point)
 	}
 	m_nItemToTrack = ret;
 
-//   if (m_mediacenter->GetPlaneState())
-//   {
-//     POINT curr;
-//     ::GetCursorPos(&curr);
-//     ScreenToClient(&curr);
-//     SetCapture();
-//     m_mediacenter->m_plane.SelectScrollBar(curr, m_scrollbarrect);
-//     m_mediacenter->ClickEvent();
-//   }
-
-	CWnd::OnLButtonDown(nFlags, point);
+  CWnd::OnLButtonDown(nFlags, point);
 }
 
 void CChildView::OnLButtonUp(UINT nFlags, CPoint point)
@@ -679,6 +721,15 @@ void CChildView::OnLButtonUp(UINT nFlags, CPoint point)
 
 	CRect rc;
 	GetWindowRect(&rc);
+
+  if (m_mediacenter->GetPlaneState())
+  {
+    RECT rc;
+    GetClientRect(&rc);
+    m_blocklistview->HandleLButtonUp(point, &m_blockunit);
+    InvalidateRect(&m_scrollbarrect);
+    return;
+  }
   
 	CPoint xpoint = point + rc.TopLeft() ;
 	UINT ret = m_btnList.OnHitTest(xpoint,rc,FALSE);
@@ -690,15 +741,43 @@ void CChildView::OnLButtonUp(UINT nFlags, CPoint point)
 	}
 	m_nItemToTrack = ret;
 
-//   if (m_mediacenter->GetPlaneState())
-//   {
-//     m_mediacenter->m_plane.UnDragScrollBar();
-//     ReleaseCapture();
-//     InvalidateRect(&m_scrollbarrect);
-//   }
-	//	__super::OnLButtonUp(nFlags, point);
+  __super::OnLButtonUp(nFlags, point);
 	m_bMouseDown = FALSE;
 }
+
+BOOL CChildView::OnRButtonUP(UINT nFlags, CPoint point)
+{
+  BOOL bmenutrack = FALSE;
+
+  if (m_mediacenter->GetPlaneState())
+  {
+    CRect rc;
+    GetClientRect(&rc);
+    bmenutrack = m_blocklistview->HandleRButtonUp(point, &m_blockunit, &m_menu);
+  }
+
+  return bmenutrack;
+}
+
+BOOL CChildView::OnLButtonDBCLK(UINT nFlags, CPoint point)
+{
+  BOOL bl = FALSE;
+
+  if (m_mediacenter->GetPlaneState())
+    bl = TRUE;
+
+  return bl;
+}
+
+void CChildView::OnMouseLeave()
+{
+  if (m_mediacenter->GetPlaneState())
+  {
+    m_blocklistview->HandleMouseLeave();
+    return;
+  }
+}
+
 
 LRESULT CChildView::OnNcHitTest(CPoint point)
 {
@@ -727,5 +806,94 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
         m_strAudioInfo.Empty(); 
 
     }
+
+    if (nIDEvent == TIMER_OFFSET)
+    {
+      m_preoffsetspeed = m_offsetspeed;
+
+      if (m_offsetspeed == 0)
+        return;
+
+      m_blocklistview->SetScrollBarDragDirection(m_offsetspeed);
+      std::list<BlockUnit*>* list = m_blocklistview->GetEmptyList();
+      if (list && !m_mediacenter->LoadMediaDataAlive())
+        m_mediacenter->LoadMediaData(m_offsetspeed, list, m_blocklistview->GetViewCapacity(),
+        m_blocklistview->GetListCapacity(),
+        m_blocklistview->GetListRemainItem());
+      else
+      {
+        if (m_blocklistview->BeDirectionChange())
+        {
+          list = m_blocklistview->GetIdleList();
+          m_mediacenter->LoadMediaData(m_offsetspeed, list, m_blocklistview->GetViewCapacity(),
+            m_blocklistview->GetListCapacity(),
+            m_blocklistview->GetListRemainItem(), 2);
+        }
+      }
+
+      m_blocklistview->SetOffset(m_offsetspeed);
+
+      RECT rc;
+      GetClientRect(&rc);
+      m_blocklistview->Update(rc.right - rc.left, rc.bottom - rc.top);
+      InvalidateRect(&rc);
+      return;
+    }
+
+    if (nIDEvent == TIMER_TIPS)
+    {
+      KillTimer(TIMER_TIPS);
+      std::wstring tips = m_blocklistview->m_tipstring;
+      if (tips.empty())
+        m_tip.ClearStat();
+      else
+        m_tip.SetTips(tips.c_str(), TRUE);
+
+      RECT rc;
+      if (m_blockunit)
+      {
+        rc = m_blockunit->GetHittest();
+        InvalidateRect(&rc);
+      }
+      return;
+    }
+
     CWnd::OnTimer(nIDEvent);
+}
+
+void CChildView::ShowMediaCenter(BOOL bl)
+{
+  m_mediacenter->SetPlaneState(bl);
+
+  if (!bl)
+    return;
+
+  RECT rc;
+  GetClientRect(&rc);
+  m_mediacenter->UpdateBlock(rc);
+  std::list<BlockUnit*>* list = m_blocklistview->GetEmptyList();
+  if (list)
+    m_mediacenter->LoadMediaData(1, list, m_blocklistview->GetViewCapacity(), 
+    m_blocklistview->GetListCapacity(), 0);
+
+  SetCursor(::LoadCursor(NULL, IDC_WAIT));
+
+  // wait until the load data thread is exit and finish its job
+  ::WaitForSingleObject(m_mediacenter->GetMediaDataThreadHandle(), INFINITE);
+
+  SetCursor(::LoadCursor(NULL, IDC_ARROW));
+
+  m_mediacenter->UpdateBlock(rc);
+  InvalidateRect(0, FALSE);
+}
+
+BOOL CChildView::OnSetCover(UINT nID)
+{
+  CFileDialog filedlg(TRUE, L"jpg", 0, OFN_READONLY, L"JPEG Files (*.jpg)|*.jpg||", this);
+  filedlg.DoModal();
+
+  std::wstring orgpath = filedlg.GetPathName().GetString();
+  m_mediacenter->SetCover(m_blockunit, orgpath);
+
+  return TRUE;
 }

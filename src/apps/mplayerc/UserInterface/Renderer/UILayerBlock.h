@@ -5,8 +5,7 @@
 class UILayerBlock
 {
 public:
-  UILayerBlock(void);
-  UILayerBlock(std::wstring& name);
+  UILayerBlock();
   ~UILayerBlock();
 
 public:
@@ -16,9 +15,7 @@ public:
   BOOL DoPaint(WTL::CDC& dc);
   BOOL DeleteAllLayer();
 
-  void GetBlockName(std::wstring& out);
-
 private:
   std::map<std::wstring, UILayer*> m_layers;
-  std::wstring m_blockname;
+  BOOL m_lastbtnstate;
 };

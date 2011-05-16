@@ -511,6 +511,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
   ON_UPDATE_COMMAND_UI_RANGE(ID_SKIN_FIRST, ID_SKIN_TENTH, OnUpdateSkinSelection)
 
   ON_COMMAND(ID_SKIN_MORESELECTION, OnSkinMoreSelection)
+
+  ON_COMMAND(ID_MEDIACENTER, OnShowMediaCenter)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1142,10 +1144,11 @@ static int m_nomorefloatbarforawhile = 0;
 void CMainFrame::OnMouseMove(UINT nFlags, CPoint point)
 {
   BOOL bSomethingChanged = false;
+  BOOL bMediaCenterState = FALSE;
 
   m_wndSeekBar.CloseToolTips();
   if( m_iMediaLoadState == MLS_CLOSED )
-    m_wndView.OnMouseMove(nFlags,point);
+    bMediaCenterState = m_wndView.OnMouseMove(nFlags,point);
 
 
   CRect CVideoRect = m_wndView.GetVideoRect();
@@ -1178,7 +1181,7 @@ void CMainFrame::OnMouseMove(UINT nFlags, CPoint point)
 
   int iDistance = sqrt( pow( (double)abs(point.x - m_pLastClickPoint.x) , 2)  + pow( (double)abs( point.y - m_pLastClickPoint.y ) , 2) );
   int idisplacement = sqrt(pow((double)abs(point.x - m_pDragFuncStartPoint.x), 2) + pow((double)abs( point.y - m_pDragFuncStartPoint.y ) , 2));
-  if( ( iDistance > 30 || s_mDragFucOn) && bMouseMoved && s_mDragFuc){
+  if( ( iDistance > 30 || s_mDragFucOn) && bMouseMoved && s_mDragFuc && !bMediaCenterState){
     if(!s_mDragFucOn){
       m_pDragFuncStartPoint = point;
       SetAlwaysOnTop(s.iOnTop , FALSE);
@@ -1244,7 +1247,8 @@ void CMainFrame::OnMouseMove(UINT nFlags, CPoint point)
     }
 
   }
-  if( ( m_fFullScreen || s.fHideCaptionMenu || !(s.nCS&CS_TOOLBAR) ) && bMouseMoved && m_notshowtoolbarforawhile <= 0)
+  if( ( m_fFullScreen || s.fHideCaptionMenu || !(s.nCS&CS_TOOLBAR) ) && bMouseMoved && m_notshowtoolbarforawhile <= 0
+     && m_wndToolBar.GetDisplay())
   {
 
 
@@ -3718,6 +3722,8 @@ void CMainFrame::OnUpdateShowColorControlBar(CCmdUI *pCmdUI)
 void CMainFrame::OnLButtonDblClk(UINT nFlags, CPoint point)
 {
   if(!IsSomethingLoaded()){
+    if (m_wndView.OnLButtonDBCLK(nFlags, point))
+      return;
     if( !AfxGetAppSettings().htpcmode)
       SendMessage(WM_COMMAND, ID_VIEW_FULLSCREEN);
     else
@@ -3765,6 +3771,9 @@ void CMainFrame::OnRButtonDown(UINT nFlags, CPoint point)
 
 void CMainFrame::OnRButtonUp(UINT nFlags, CPoint point)
 {
+  if (m_iMediaLoadState == MLS_CLOSED)
+    if (m_wndView.OnRButtonUP(nFlags, point))
+      return;
   if(!OnButton(HotkeyCmd::RUP, nFlags, point))
     __super::OnRButtonUp(nFlags, point);
 }
@@ -14884,4 +14893,26 @@ void CMainFrame::SearchSkinFolder()
   m_skinmanage.SetSkinPath(skinpath);
   m_skinmanage.SeachFile(skinpath.GetBuffer(MAX_PATH));
   skinpath.ReleaseBuffer();
+}
+
+void CMainFrame::OnShowMediaCenter()
+{
+  m_bmediacentershow  = !m_bmediacentershow;
+  m_wndView.ShowMediaCenter(m_bmediacentershow);
+  m_wndToolTopBar.SetDisplay(!m_bmediacentershow);
+
+  m_wndToolBar.SetDisplay(!m_bmediacentershow);
+  if (!m_bmediacentershow)
+    m_wndToolBar.ShowWindow(SW_SHOWNOACTIVATE);
+  else
+  {
+    m_wndToolBar.ShowWindow(SW_HIDE);
+    if (m_wndSeekBar.IsWindowVisible())
+      m_wndSeekBar.ShowWindow(SW_HIDE);
+  }
+  RedrawNonClientArea();
+
+  CRect rc;
+  GetClientRect(&rc);
+  PostMessage(WM_SIZE, 0, MAKELPARAM(rc.Width(), rc.Height()));
 }

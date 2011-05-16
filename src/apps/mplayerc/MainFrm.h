@@ -737,4 +737,7 @@ public:
   afx_msg void OnSkinMoreSelection();
   afx_msg void OnOpenShooterMedia();
 
+  afx_msg void OnShowMediaCenter();
+  BOOL m_bmediacentershow; 
+
 };

@@ -24,11 +24,13 @@
 #include "libpng.h"
 #include "SUIButton.h"
 #include "Controller\MediaCenterController.h"
+#include "SeekBarTip.h"
 
 class CChildView : public CWnd
 {
 	CRect m_vrect;
   MediaCenterController* m_mediacenter;
+  BlockListView* m_blocklistview;
 	DWORD m_lastlmdowntime;
 	CPoint m_lastlmdownpoint;
 
@@ -42,9 +44,14 @@ class CChildView : public CWnd
 	int iBottonClicked;
 	CRect m_logo_r;
 	CFont m_font;
-    CFont m_font_lyric;
-    DWORD m_lastLyricColor;
-    RECT m_scrollbarrect;
+  CFont m_font_lyric;
+  DWORD m_lastLyricColor;
+  RECT m_scrollbarrect;
+
+  //MediaCenter Menu
+  CMenu m_menu;
+  BlockUnit* m_blockunit;
+
 public:
 	CChildView();
 	virtual ~CChildView();
@@ -55,6 +62,11 @@ public:
 	CSUIButton* m_cover;
 	CSUIBtnList m_btnList;
 	CSUIBtnList m_btnBBList;
+
+  int m_offsetspeed;
+  int m_preoffsetspeed;
+
+  CSeekBarTip m_tip;
 
 	void ReCalcBtn();
 	DECLARE_DYNAMIC(CChildView)
@@ -89,7 +101,14 @@ public:
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+  afx_msg BOOL OnLButtonDBCLK(UINT nFlags, CPoint point);
 	afx_msg LRESULT OnNcHitTest(CPoint point);
 	afx_msg void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
-    afx_msg void OnTimer(UINT_PTR nIDEvent);
+  afx_msg void OnTimer(UINT_PTR nIDEvent);
+
+  afx_msg void OnMouseLeave();
+
+  afx_msg BOOL OnSetCover(UINT nID);
+
+  void ShowMediaCenter(BOOL bl);
 };
