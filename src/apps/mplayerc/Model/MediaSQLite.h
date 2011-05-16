@@ -2,13 +2,17 @@
 
 #include <sqlitepp/sqlitepp.hpp>
 #include "../../../base/CriticalSection.h"
+#include "SVPToolBox.h"
 
 extern sqlitepp::session g_dbMediaSQLite;
 extern CriticalSection g_csMediaSQLite;
+extern bool g_bThrowIfFail;  // throw exception if fail, default just write to the log
 
 // Note:
 // this class is used for read and write sqlite media database
-template<typename T1 = int, typename T2 = int, typename T3 = int, typename T4 = int, typename T5 = int >
+template<typename T1 = int, typename T2 = int, typename T3 = int,
+         typename T4 = int, typename T5 = int, typename T6 = int,
+         typename T7 = int, typename T8 = int, typename T9 = int>
 class MediaSQLite
 {
 public:
@@ -17,7 +21,12 @@ public:
                   , T2 *pRet2 = 0
                   , T3 *pRet3 = 0
                   , T4 *pRet4 = 0
-                  , T5 *pRet5 = 0)
+                  , T5 *pRet5 = 0
+                  , T6 *pRet6 = 0
+                  , T7 *pRet7 = 0
+                  , T8 *pRet8 = 0
+                  , T9 *pRet9 = 0
+                  )
   {
     g_csMediaSQLite.lock();
 
@@ -60,7 +69,7 @@ public:
           , sqlitepp::into(*pRet4);
         st.exec();
       }
-      else
+      else if (pRet6 == 0)
       {
         st << sql
           , sqlitepp::into(*pRet1)
@@ -70,10 +79,68 @@ public:
           , sqlitepp::into(*pRet5);
         st.exec();
       }
+      else if (pRet7 == 0)
+      {
+        st << sql
+          , sqlitepp::into(*pRet1)
+          , sqlitepp::into(*pRet2)
+          , sqlitepp::into(*pRet3)
+          , sqlitepp::into(*pRet4)
+          , sqlitepp::into(*pRet5)
+          , sqlitepp::into(*pRet6);
+        st.exec();
+      }
+      else if (pRet8 == 0)
+      {
+        st << sql
+          , sqlitepp::into(*pRet1)
+          , sqlitepp::into(*pRet2)
+          , sqlitepp::into(*pRet3)
+          , sqlitepp::into(*pRet4)
+          , sqlitepp::into(*pRet5)
+          , sqlitepp::into(*pRet6)
+          , sqlitepp::into(*pRet7);
+        st.exec();
+      }
+      else if (pRet9 == 0)
+      {
+        st << sql
+          , sqlitepp::into(*pRet1)
+          , sqlitepp::into(*pRet2)
+          , sqlitepp::into(*pRet3)
+          , sqlitepp::into(*pRet4)
+          , sqlitepp::into(*pRet5)
+          , sqlitepp::into(*pRet6)
+          , sqlitepp::into(*pRet7)
+          , sqlitepp::into(*pRet8);
+        st.exec();
+      }
+      else
+      {
+        st << sql
+          , sqlitepp::into(*pRet1)
+          , sqlitepp::into(*pRet2)
+          , sqlitepp::into(*pRet3)
+          , sqlitepp::into(*pRet4)
+          , sqlitepp::into(*pRet5)
+          , sqlitepp::into(*pRet6)
+          , sqlitepp::into(*pRet7)
+          , sqlitepp::into(*pRet8)
+          , sqlitepp::into(*pRet9);
+        st.exec();
+      }
     }
     catch (std::runtime_error const& err)
     {
-      Logging(err.what());
+      if (g_bThrowIfFail)
+      {
+        g_csMediaSQLite.unlock();
+        throw;
+      } 
+      else
+      {
+        Logging(err.what());
+      }
     }
     catch (...)
     {
@@ -89,7 +156,12 @@ public:
                   , std::vector<T2 > *pRet2 = 0
                   , std::vector<T3 > *pRet3 = 0
                   , std::vector<T4 > *pRet4 = 0
-                  , std::vector<T5 > *pRet5 = 0)
+                  , std::vector<T5 > *pRet5 = 0
+                  , std::vector<T6 > *pRet6 = 0
+                  , std::vector<T7 > *pRet7 = 0
+                  , std::vector<T8 > *pRet8 = 0
+                  , std::vector<T9 > *pRet9 = 0
+)
   {
     g_csMediaSQLite.lock();
 
@@ -144,7 +216,7 @@ public:
           pRet4->push_back(t4);
         }
       }
-      else
+      else if (pRet6 == 0)
       {
         T1 t1;
         T2 t2;
@@ -161,10 +233,112 @@ public:
           pRet5->push_back(t5);
         }
       }
+      else if (pRet7 == 0)
+      {
+        T1 t1;
+        T2 t2;
+        T3 t3;
+        T4 t4;
+        T5 t5;
+        T6 t6;
+        st << sql, sqlitepp::into(t1), sqlitepp::into(t2), sqlitepp::into(t3), sqlitepp::into(t4), sqlitepp::into(t5), sqlitepp::into(t6);
+        while (st.exec())
+        {
+          pRet1->push_back(t1);
+          pRet2->push_back(t2);
+          pRet3->push_back(t3);
+          pRet4->push_back(t4);
+          pRet5->push_back(t5);
+          pRet6->push_back(t6);
+        }
+      }
+      else if (pRet8 == 0)
+      {
+        T1 t1;
+        T2 t2;
+        T3 t3;
+        T4 t4;
+        T5 t5;
+        T6 t6;
+        T7 t7;
+        st << sql, sqlitepp::into(t1), sqlitepp::into(t2), sqlitepp::into(t3)
+            , sqlitepp::into(t4), sqlitepp::into(t5), sqlitepp::into(t6)
+            , sqlitepp::into(t7);
+        while (st.exec())
+        {
+          pRet1->push_back(t1);
+          pRet2->push_back(t2);
+          pRet3->push_back(t3);
+          pRet4->push_back(t4);
+          pRet5->push_back(t5);
+          pRet6->push_back(t6);
+          pRet7->push_back(t7);
+        }
+      }
+      else if (pRet9 == 0)
+      {
+        T1 t1;
+        T2 t2;
+        T3 t3;
+        T4 t4;
+        T5 t5;
+        T6 t6;
+        T7 t7;
+        T8 t8;
+        st << sql, sqlitepp::into(t1), sqlitepp::into(t2), sqlitepp::into(t3)
+            , sqlitepp::into(t4), sqlitepp::into(t5), sqlitepp::into(t6)
+            , sqlitepp::into(t7), sqlitepp::into(t8);
+        while (st.exec())
+        {
+          pRet1->push_back(t1);
+          pRet2->push_back(t2);
+          pRet3->push_back(t3);
+          pRet4->push_back(t4);
+          pRet5->push_back(t5);
+          pRet6->push_back(t6);
+          pRet7->push_back(t7);
+          pRet8->push_back(t8);
+        }
+      }
+      else
+      {
+        T1 t1;
+        T2 t2;
+        T3 t3;
+        T4 t4;
+        T5 t5;
+        T6 t6;
+        T7 t7;
+        T8 t8;
+        T9 t9;
+        st << sql, sqlitepp::into(t1), sqlitepp::into(t2), sqlitepp::into(t3)
+            , sqlitepp::into(t4), sqlitepp::into(t5), sqlitepp::into(t6)
+            , sqlitepp::into(t7), sqlitepp::into(t8), sqlitepp::into(t9);
+        while (st.exec())
+        {
+          pRet1->push_back(t1);
+          pRet2->push_back(t2);
+          pRet3->push_back(t3);
+          pRet4->push_back(t4);
+          pRet5->push_back(t5);
+          pRet6->push_back(t6);
+          pRet7->push_back(t7);
+          pRet8->push_back(t8);
+          pRet9->push_back(t9);
+        }
+      }
     }
     catch (std::runtime_error const& err)
     {
-      Logging(err.what());
+      if (g_bThrowIfFail)
+      {
+        g_csMediaSQLite.unlock();
+        throw;
+      } 
+      else
+      {
+        Logging(err.what());
+      }
     }
     catch (...)
     {
@@ -184,6 +358,21 @@ public:
     g_csMediaSQLite.unlock();
   }
 
+  static int last_error()
+  {
+    return g_dbMediaSQLite.last_error();
+  }
+  
+  static size_t last_changes()
+  {
+    return g_dbMediaSQLite.last_changes();
+  }
+
+  static void set_exception_flag(bool bThrowIfFail)
+  {
+    g_bThrowIfFail = bThrowIfFail;
+  }
+
 protected:
   static void init()
   {
@@ -191,13 +380,17 @@ protected:
     {
       try
       {
-        g_dbMediaSQLite.open(GetModuleFolder() + L"media.db");
+        std::wstring sPath;
+        CSVPToolBox toolbox;
+        toolbox.GetAppDataPath(sPath);
+        g_dbMediaSQLite.open(sPath + L"\\mc\\media.db");
 
+        g_dbMediaSQLite << L"CREATE TABLE IF NOT EXISTS spider_info(already_run integer default 0, last_time integer default 0)";
+        g_dbMediaSQLite << L"CREATE TABLE IF NOT EXISTS detect_path (" \
+          L"uniqueid integer PRIMARY KEY, path text, merit integer default 0, lastspidetime integer default 0, breakpoint integer default 0)";
         g_dbMediaSQLite << L"CREATE TABLE IF NOT EXISTS media_data ("
           L"uniqueid integer PRIMARY KEY, path text, filename text,"
-          L"thumbnailpath text, videotime integer)";
-        g_dbMediaSQLite << L"CREATE TABLE IF NOT EXISTS detect_path (" \
-          L"uniqueid integer PRIMARY KEY, path text, merit integer)";
+          L"thumbnailpath text, videotime integer default 0, hide integer default 0)";
       }
       catch (std::runtime_error const& err)
       {
@@ -209,23 +402,5 @@ protected:
         throw;
       }
     }
-  }
-
-  // helper functions
-  static std::wstring GetModuleFolder(HMODULE hModuleHandle = 0)
-  {
-    TCHAR szModuleFullPath[MAX_PATH] = {0};
-    ::GetModuleFileName(hModuleHandle, szModuleFullPath, MAX_PATH);
-
-    TCHAR szDrive[10] = {0};
-    TCHAR szDir[MAX_PATH] = {0};
-
-    ::_wsplitpath(szModuleFullPath, szDrive, szDir, 0, 0);
-
-    std::wstring sResult;
-    sResult += szDrive;
-    sResult += szDir;
-
-    return sResult;
   }
 };
