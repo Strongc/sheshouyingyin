@@ -150,6 +150,7 @@ public:
   void HandleLButtonUp(POINT pt, BlockUnit** unit);
   void HandleMouseMove(POINT pt, BlockUnit** unit);
   BOOL HandleRButtonUp(POINT pt, BlockUnit** unit, CMenu* menu);
+  void HandleMouseLeave();
 
   void SetFrameHwnd(HWND hwnd);
   void SetScrollSpeed(int* speed);
