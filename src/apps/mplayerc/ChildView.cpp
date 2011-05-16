@@ -294,6 +294,7 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_WM_NCHITTEST()
 	ON_WM_KEYUP()
   ON_WM_TIMER()
+  ON_WM_MOUSELEAVE()
 END_MESSAGE_MAP()
 
 static COLORREF colorNextLyricColor(COLORREF lastColor)
@@ -639,9 +640,14 @@ BOOL CChildView::OnMouseMove(UINT nFlags, CPoint point)
 
   if (m_mediacenter->GetPlaneState())
   {
-    RECT rc;
-    GetClientRect(&rc);
     m_blocklistview->HandleMouseMove(point, &m_blockunit);
+
+    TRACKMOUSEEVENT tmet;
+    tmet.cbSize = sizeof(TRACKMOUSEEVENT);
+    tmet.dwFlags = TME_LEAVE;
+    tmet.hwndTrack = m_hWnd;
+    _TrackMouseEvent(&tmet);
+
     return TRUE;
   }
 
@@ -676,7 +682,7 @@ BOOL CChildView::OnMouseMove(UINT nFlags, CPoint point)
     PostMessage(WM_LBUTTONUP, 0, MAKELPARAM(point.x, point.y));
     PostMessage(WM_MOVE, 0, MAKELPARAM(point.x, point.y));
   }
-  
+
   CWnd::OnMouseMove(nFlags, point);
   return FALSE;
 }
@@ -765,6 +771,15 @@ BOOL CChildView::OnLButtonDBCLK(UINT nFlags, CPoint point)
     bl = TRUE;
 
   return bl;
+}
+
+void CChildView::OnMouseLeave()
+{
+  if (m_mediacenter->GetPlaneState())
+  {
+    m_blocklistview->HandleMouseLeave();
+    return;
+  }
 }
 
 LRESULT CChildView::OnNcHitTest(CPoint point)

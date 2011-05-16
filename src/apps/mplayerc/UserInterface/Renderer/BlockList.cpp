@@ -147,6 +147,7 @@ int BlockUnit::OnHittest(POINT pt, BOOL blbtndown)
  
   play->SetDisplay(FALSE);
   hide->SetDisplay(FALSE);
+  
   return BENORMAL;
 }
 
@@ -990,7 +991,7 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
     if (*unit)
       m_prehittest = (*unit)->GetHittest();
   }
-
+ 
   HCURSOR hcursor;
   if (blayer == BEHITTEST || bscroll == ScrollBarHit || bscroll == ScrollBarClick)
     hcursor = LoadCursor(NULL, IDC_HAND);
@@ -1018,4 +1019,15 @@ BOOL BlockListView::HandleRButtonUp(POINT pt, BlockUnit** unit, CMenu* menu)
   }
 
   return bhit;
+}
+
+void BlockListView::HandleMouseLeave()
+{
+  POINT pt = {-1, -1};
+  int blayer = OnHittest(pt, FALSE, 0);
+
+  ::InvalidateRect(m_hwnd, &m_prehittest, FALSE);
+  UpdateWindow(m_hwnd);
+  RECT rc = {0, 0, 0, 0};
+  m_prehittest = rc;
 }
