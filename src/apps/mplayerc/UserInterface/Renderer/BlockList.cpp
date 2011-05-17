@@ -428,7 +428,9 @@ void BlockList::AlignScrollBar()
   float height = m_blockh + m_top;
 
   BOOL bScrollShow = (m_list->size() + m_maxcolumn - 1) / m_maxcolumn * height > m_winh? TRUE:FALSE; 
-  m_scrollbar->SetDisPlay(bScrollShow);
+  if (!m_scrollbarinitialize)
+    m_scrollbar->SetDisPlay(bScrollShow);
+
   if (bScrollShow && !m_scrollbarinitialize)
   {
     AlignColumnBlocks();
@@ -963,7 +965,7 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
 {
   RECT rcclient;
   GetClientRect(m_hwnd, &rcclient);
-
+  
   int bscroll = OnScrollBarHittest(pt, -1, *m_scrollspeed, m_hwnd);
   int blayer = OnHittest(pt, FALSE, unit);
 
