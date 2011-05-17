@@ -563,7 +563,8 @@ m_l_been_playing_sec(0),
 m_lyricDownloadThread(NULL),
 m_secret_switch(NULL),
 m_movieShared(false),
-m_bmenuinitialize(FALSE)
+m_bmenuinitialize(FALSE),
+m_bmediacentershow(FALSE)
 {
   m_wndFloatToolBar = new CPlayerFloatToolBar();
 }
@@ -740,7 +741,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
   }
 
   MediaCenterController::GetInstance()->SetFrame(m_wndView.m_hWnd);
-  // MediaCenterController::GetInstance()->SpiderStart();
+  MediaCenterController::GetInstance()->SpiderStart();
 
   WNDCLASSEX layeredClass;
   layeredClass.cbSize        = sizeof(WNDCLASSEX);
@@ -1708,7 +1709,7 @@ void CMainFrame::OnResetSetting(){
 }
 void CMainFrame::OnDestroy()
 {
-  // MediaCenterController::GetInstance()->SpiderStop();
+   MediaCenterController::GetInstance()->SpiderStop();
 
   //AfxMessageBox(_T("2"));
   ShowTrayIcon(false);
@@ -12392,7 +12393,7 @@ void CMainFrame::OpenCurPlaylistItem(REFERENCE_TIME rtStart)
   }
   CAutoPtr<OpenMediaData> p(m_wndPlaylistBar.GetCurOMD(rtStart));
 
-  // MediaCenterController::GetInstance()->Playback(pli.m_fns.GetHead().GetString());
+  MediaCenterController::GetInstance()->Playback(pli.m_fns.GetHead().GetString());
   if(p) OpenMedia(p);
 
 }
