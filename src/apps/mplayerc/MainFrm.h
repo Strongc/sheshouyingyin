@@ -738,6 +738,10 @@ public:
   afx_msg void OnOpenShooterMedia();
 
   afx_msg void OnShowMediaCenter();
+  afx_msg void HideToolBar();
+  afx_msg void ShowToolBar();
+
   BOOL m_bmediacentershow; 
+  BOOL m_btoolbardisplay;
 
 };

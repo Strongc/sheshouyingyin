@@ -564,7 +564,8 @@ m_lyricDownloadThread(NULL),
 m_secret_switch(NULL),
 m_movieShared(false),
 m_bmenuinitialize(FALSE),
-m_bmediacentershow(FALSE)
+m_bmediacentershow(FALSE),
+m_btoolbardisplay(TRUE)
 {
   m_wndFloatToolBar = new CPlayerFloatToolBar();
 }
@@ -1248,8 +1249,7 @@ void CMainFrame::OnMouseMove(UINT nFlags, CPoint point)
     }
 
   }
-  if( ( m_fFullScreen || s.fHideCaptionMenu || !(s.nCS&CS_TOOLBAR) ) && bMouseMoved && m_notshowtoolbarforawhile <= 0
-     && m_wndToolBar.GetDisplay())
+  if( ( m_fFullScreen || s.fHideCaptionMenu || !(s.nCS&CS_TOOLBAR) ) && bMouseMoved && m_notshowtoolbarforawhile <= 0)
   {
 
 
@@ -1331,7 +1331,7 @@ void CMainFrame::OnMouseMove(UINT nFlags, CPoint point)
   }
 
 
-  if( bMouseMoved ){ //&& IsSomethingLoaded()
+  if( bMouseMoved && m_btoolbardisplay){ //&& IsSomethingLoaded()
     if(m_nomoretopbarforawhile > 0){
       m_nomoretopbarforawhile --;
     }else{
@@ -1362,9 +1362,9 @@ void CMainFrame::OnMouseMove(UINT nFlags, CPoint point)
 
 
 
-  if(bSomethingChanged){
+  if(bSomethingChanged && m_btoolbardisplay){
     rePosOSD();
-  }
+ }
 
   __super::OnMouseMove(nFlags, point);
 
@@ -6610,6 +6610,9 @@ void CMainFrame::OnUpdateFileProperties(CCmdUI* pCmdUI)
 void CMainFrame::OnFileCloseMedia()
 {
   CloseMedia();
+
+  if (MediaCenterController::GetInstance()->GetPlaneState())
+    HideToolBar();
 }
 
 void CMainFrame::OnFileClosePlaylist()
@@ -14900,20 +14903,35 @@ void CMainFrame::OnShowMediaCenter()
 {
   m_bmediacentershow  = !m_bmediacentershow;
   m_wndView.ShowMediaCenter(m_bmediacentershow);
-  m_wndToolTopBar.SetDisplay(!m_bmediacentershow);
-
-  m_wndToolBar.SetDisplay(!m_bmediacentershow);
+  
   if (!m_bmediacentershow)
-    m_wndToolBar.ShowWindow(SW_SHOWNOACTIVATE);
+    ShowToolBar();
   else
-  {
-    m_wndToolBar.ShowWindow(SW_HIDE);
-    if (m_wndSeekBar.IsWindowVisible())
-      m_wndSeekBar.ShowWindow(SW_HIDE);
-  }
+    HideToolBar();
+
+  m_btoolbardisplay = !m_bmediacentershow;
   RedrawNonClientArea();
 
   CRect rc;
   GetClientRect(&rc);
   PostMessage(WM_SIZE, 0, MAKELPARAM(rc.Width(), rc.Height()));
+}
+
+void CMainFrame::HideToolBar()
+{
+  m_btoolbardisplay = FALSE;
+
+  m_wndToolTopBar.ShowWindow(SW_HIDE);
+  m_wndToolBar.ShowWindow(SW_HIDE);
+  if (m_wndSeekBar.IsWindowVisible())
+    m_wndSeekBar.ShowWindow(SW_HIDE);
+}
+
+void CMainFrame::ShowToolBar()
+{
+  m_btoolbardisplay = TRUE;
+
+  m_wndToolTopBar.ShowWindow(SW_SHOWNOACTIVATE);
+  m_wndToolBar.ShowWindow(SW_SHOWNOACTIVATE);
+  m_wndSeekBar.ShowWindow(SW_SHOWNOACTIVATE);
 }
