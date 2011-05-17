@@ -14901,6 +14901,10 @@ void CMainFrame::SearchSkinFolder()
 
 void CMainFrame::OnShowMediaCenter()
 {
+  // show media center only when the media is not loaded
+  if (m_iMediaLoadState == MLS_LOADED)
+    return;
+
   m_bmediacentershow  = !m_bmediacentershow;
   m_wndView.ShowMediaCenter(m_bmediacentershow);
   
@@ -14933,5 +14937,8 @@ void CMainFrame::ShowToolBar()
 
   m_wndToolTopBar.ShowWindow(SW_SHOWNOACTIVATE);
   m_wndToolBar.ShowWindow(SW_SHOWNOACTIVATE);
-  m_wndSeekBar.ShowWindow(SW_SHOWNOACTIVATE);
+
+  // show seek bar only when the media is loaded
+  if (m_iMediaLoadState == MLS_LOADED)
+    m_wndSeekBar.ShowWindow(SW_SHOWNOACTIVATE);
 }
