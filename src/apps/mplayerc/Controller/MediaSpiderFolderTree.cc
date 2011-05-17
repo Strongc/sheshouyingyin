@@ -147,7 +147,7 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
 
   try
   {
-    // First, fetch all db's data to tree and delete these data
+    // First, fetch all db's data to tree
     vector<wstring> vtPath;
     vector<wstring> vtFilename;
     vector<wstring> vtThumbnailPath;
@@ -167,14 +167,9 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
       m_treeModel.addFile(md);
     }
 
-    ssSQL.str(L"");
-    ssSQL << L"DELETE FROM media_data WHERE path='" << sFolder << L"'";
-    MediaDB<>::exec(ssSQL.str());
-
     // Second, search media in the path
     directory_iterator it(sFolder);
     directory_iterator itEnd;
-
     while (it != itEnd)
     {
       if (_Exit_state(0))
@@ -189,18 +184,15 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
         md.path = sFolder;
         md.filename = it->path().filename().wstring();
         m_treeModel.addFile(md);
-              //MediaCenterController::GetInstance()->AddNewFoundData(fileInfo.itFile);
-//               CMPlayerCApp *pApp = AfxGetMyApp();
-//               if (pApp)
-//               {
-//                 CWnd *pWnd = pApp->GetMainWnd();
-//                 if (::IsWindow(pWnd->m_hWnd))
-//                   pWnd->PostMessage(WM_COMMAND, ID_SPIDER_NEWFILE_FOUND);
-//               }
       }
 
       ++it;
     }
+
+    // delete related media data before save info to db
+    ssSQL.str(L"");
+    ssSQL << L"DELETE FROM media_data WHERE path='" << sFolder << L"'";
+    MediaDB<>::exec(ssSQL.str());
 
     // store info to db
     m_treeModel.save2DB();
