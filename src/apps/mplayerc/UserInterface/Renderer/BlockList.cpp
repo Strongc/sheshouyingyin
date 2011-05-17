@@ -178,6 +178,8 @@ void BlockUnit::ResetCover()
 #define  ScrollBarHit   22
 #define  NoScrollBarHit 23
 
+#define WM_MEDIACENTERPLAYVEDIO 16
+
 BlockList::BlockList()
 : m_bSizeChanged(false)
 , m_scrollbarinitialize(FALSE)
@@ -919,16 +921,19 @@ void BlockListView::HandleLButtonDown(POINT pt, BlockUnit** unit)
     m_lbtndown = TRUE;
   }
 
-  //if (layerstate == BEPLAY)
-  //  SendMessage(m_hwnd, WM_LBUTTONUP, 0, 0);
+  if (layerstate == BEPLAY)
+  {
+    SendMessage(m_hwnd, WM_LBUTTONUP, 0, 0);
+    SendMessage(m_hwnd, WM_MEDIACENTERPLAYVEDIO, 0, 0);
+  }
 
-  //if (layerstate == BEHIDE)
-  //{
-  //  Update(rcclient.right, rcclient.bottom);
-  //  InvalidateRect(m_hwnd, &rcclient, FALSE);
-  //  RECT rc = {0, 0, 0, 0};
-  //  m_prehittest = rc;
-  //}
+  if (layerstate == BEHIDE)
+  {
+    Update(rcclient.right, rcclient.bottom);
+    InvalidateRect(m_hwnd, &rcclient, FALSE);
+    RECT rc = {0, 0, 0, 0};
+    m_prehittest = rc;
+  }
 }
 
 void BlockListView::HandleLButtonUp(POINT pt, BlockUnit** unit)

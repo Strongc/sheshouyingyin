@@ -44,6 +44,8 @@ static char THIS_FILE[] = __FILE__;
 #define  TIMER_SLOWOFFSET 12
 #define TIMER_TIPS 15
 
+#define WM_MEDIACENTERPLAYVEDIO 16
+
 CChildView::CChildView() :
 m_vrect(0,0,0,0)
 ,m_cover(NULL)
@@ -294,6 +296,7 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_WM_KEYUP()
   ON_WM_TIMER()
   ON_WM_MOUSELEAVE()
+  ON_MESSAGE(WM_MEDIACENTERPLAYVEDIO, OnMediaCenterPlayVedio)
 END_MESSAGE_MAP()
 
 static COLORREF colorNextLyricColor(COLORREF lastColor)
@@ -896,4 +899,12 @@ BOOL CChildView::OnSetCover(UINT nID)
   m_mediacenter->SetCover(m_blockunit, orgpath);
 
   return TRUE;
+}
+
+LRESULT CChildView::OnMediaCenterPlayVedio(WPARAM wParam, LPARAM lParam)
+{
+   CMainFrame* pFrame = (CMainFrame*)GetParentFrame();
+   pFrame->ShowToolBar();
+   
+   return 0;
 }
