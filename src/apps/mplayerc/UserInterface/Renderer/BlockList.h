@@ -26,6 +26,9 @@ public:
   RECT GetHittest();
   void ResetCover();
 
+  void ActMouseOver();
+  void ActMouseOut();
+
 public:
   MediaData m_mediadata;
 
@@ -153,4 +156,6 @@ private:
   BOOL* m_boffset; 
   BOOL m_lbtndown;
   RECT m_prehittest;
+
+  BlockUnit* m_curUnit;
 };

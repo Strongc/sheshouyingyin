@@ -4,7 +4,7 @@ class UILayer
 {
 public:
   UILayer(std::wstring respath, BOOL display = TRUE);
-  ~UILayer();
+  virtual ~UILayer();
 
   // Interface
 public:
@@ -19,6 +19,12 @@ public:
   virtual BOOL DoPaint(WTL::CDC& dc);
 
   BOOL DeleteTexture();
+
+  virtual void ActMouseOver() {}
+  virtual void ActMouseOut() {}
+  virtual void ActMouseDown() {}
+  virtual void ActMouseUp() {}
+
 
 private:
   WTL::CBitmap   m_texture;
