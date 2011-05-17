@@ -103,6 +103,10 @@ BOOL MediaCenterScrollBar::OnHittest(POINT pt, int bLbtdown, int& offsetspeed, H
     int offset = m_pos.y - m_prepos.y;
     int i = (m_winh - m_bm.bmHeight) / 2 / 20;
     /*    int j = (m_winh - m_bm.bmHeight) / 2 / 20;*/
+
+    if (i == 0)
+      i = 1;    // if i equal to 0 then changed it to 1
+
     if (offset > 0)
       offsetspeed = (offset + i - 1) / i;
     else
