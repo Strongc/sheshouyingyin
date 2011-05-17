@@ -2,6 +2,7 @@
 #include "CoverUploadController.h"
 #include "HashController.h"
 #include "SVPToolBox.h"
+#include "Strings.h"
 
 CoverUploadController::CoverUploadController(void)
 {
@@ -18,14 +19,16 @@ void CoverUploadController::SetFrame(HWND hwnd)
 
 void CoverUploadController::SetCover(BlockUnit* unit, std::wstring orgpath)
 {
-
   std::wstring destpath;
   BOOL bsuccess;
+
+  std::wstring szFilePath = unit->m_mediadata.path + unit->m_mediadata.filename;
+  std::string szFileHash = Strings::WStringToUtf8String(HashController::GetInstance()->GetSPHash(szFilePath.c_str()));
 
   CSVPToolBox csvptb;
   csvptb.GetAppDataPath(destpath);
   destpath += L"\\mc\\cover\\";
-  destpath += GetSystemTimeString() + L".jpg";
+  destpath += GetSystemTimeString(szFileHash) + L".jpg";
   bsuccess = ::CopyFile(orgpath.c_str(), destpath.c_str(), TRUE);
 
   if (unit != 0 && bsuccess)
@@ -37,18 +40,21 @@ void CoverUploadController::SetCover(BlockUnit* unit, std::wstring orgpath)
   }
 }
 
-std::wstring CoverUploadController::GetSystemTimeString()
+std::wstring CoverUploadController::GetSystemTimeString(std::string szFileHash)
 {
-  SYSTEMTIME time;
-  GetSystemTime(&time);
+  std::wstring szJpgName = HashController::GetInstance()->GetMD5Hash(szFileHash.c_str(), szFileHash.length());
+  return szJpgName;
 
-  wchar_t* buff = new wchar_t[1024];
-  wsprintf(buff, L"%d%d%d%d%d%d%d", time.wYear, time.wMonth, time.wDay, time.wHour,
-    time.wMinute, time.wSecond, time.wMilliseconds);
+  //SYSTEMTIME time;
+  //GetSystemTime(&time);
 
-  std::wstring timestr = buff;
-  delete[] buff;
-  return timestr;
+  //wchar_t* buff = new wchar_t[1024];
+  //wsprintf(buff, L"%d%d%d%d%d%d%d", time.wYear, time.wMonth, time.wDay, time.wHour,
+  //  time.wMinute, time.wSecond, time.wMilliseconds);
+
+  //std::wstring timestr = buff;
+  //delete[] buff;
+  //return timestr;
 }
 
 void CoverUploadController::_Thread()

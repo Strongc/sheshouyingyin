@@ -53,7 +53,8 @@ void CoverDownloadController::_Thread()
     // Get http response
     std::wstring szFilePath = (*it)->m_mediadata.path + (*it)->m_mediadata.filename; 
     std::string results("");
-    BOOL bGet = HttpGetResponse(requesturl, szFilePath, results);
+    std::string szFileHash = Strings::WStringToUtf8String(HashController::GetInstance()->GetSPHash(szFilePath.c_str()));
+    BOOL bGet = HttpGetResponse(szFileHash, szFilePath, requesturl, results);
     if (!bGet)
       continue;
     if (results.empty())
@@ -69,7 +70,7 @@ void CoverDownloadController::_Thread()
 
     // Download cover
     std::wstring coverdownloadpath;
-    BOOL bDownload = HttpDownloadCover(downloadurl, coverdownloadpath, cover);
+    BOOL bDownload = HttpDownloadCover(szFileHash, downloadurl, coverdownloadpath, cover);
     if (!bDownload)
       continue;
 
@@ -84,8 +85,8 @@ void CoverDownloadController::_Thread()
   }
 }
 
-BOOL CoverDownloadController::HttpGetResponse(std::wstring szFilePath, std::wstring requesturl, 
-                                              std::string& responsestr)
+BOOL CoverDownloadController::HttpGetResponse(std::string szFileHash, std::wstring szFilePath,
+                                              std::wstring requesturl, std::string& responsestr)
 {
   refptr<pool> pool = pool::create_instance();
   refptr<task> task = task::create_instance();
@@ -93,8 +94,7 @@ BOOL CoverDownloadController::HttpGetResponse(std::wstring szFilePath, std::wstr
   task->use_config(cfg);
   refptr<request> req = request::create_instance();
 
-  std::wstring szFileHash = HashController::GetInstance()->GetSPHash(szFilePath.c_str());
-  requesturl += szFileHash;
+  requesturl += Strings::Utf8StringToWString(szFileHash);
 
   req->set_request_url(requesturl.c_str());
   req->set_request_method(REQ_GET);
@@ -142,8 +142,8 @@ BOOL CoverDownloadController::ParseRespondString(std::string& parsestr, std::wst
   return TRUE;
 }
 
-BOOL CoverDownloadController::HttpDownloadCover(std::wstring downloadurl, std::wstring& downloadpath, 
-                                                std::wstring cover)
+BOOL CoverDownloadController::HttpDownloadCover(std::string szFileHash, std::wstring downloadurl,
+                                                std::wstring& downloadpath, std::wstring cover)
 {
   refptr<pool> pool = pool::create_instance();
   refptr<task> task = task::create_instance();
@@ -159,7 +159,7 @@ BOOL CoverDownloadController::HttpDownloadCover(std::wstring downloadurl, std::w
   CSVPToolBox csvptb;
   csvptb.GetAppDataPath(downloadpath);
   downloadpath += L"\\mc\\cover\\";
-  downloadpath += GetSystemTimeString() + L".jpg";
+  downloadpath += GetSystemTimeString(szFileHash) + L".jpg";
 
   req->set_request_url(url.c_str());
   req->set_request_method(REQ_GET);
@@ -183,16 +183,18 @@ BOOL CoverDownloadController::HttpDownloadCover(std::wstring downloadurl, std::w
   return TRUE;
 }
 
-std::wstring CoverDownloadController::GetSystemTimeString()
+std::wstring CoverDownloadController::GetSystemTimeString(std::string szFileHash)
 {
-  SYSTEMTIME time;
-  GetSystemTime(&time);
+  std::wstring szJpgName = HashController::GetInstance()->GetMD5Hash(szFileHash.c_str(), szFileHash.length());
+  return szJpgName;
+  //SYSTEMTIME time;
+  //GetSystemTime(&time);
 
-  wchar_t* buff = new wchar_t[1024];
-  wsprintf(buff, L"%d%d%d%d%d%d%d", time.wYear, time.wMonth, time.wDay, time.wHour,
-    time.wMinute, time.wSecond, time.wMilliseconds);
+  //wchar_t* buff = new wchar_t[1024];
+  //wsprintf(buff, L"%d%d%d%d%d%d%d", time.wYear, time.wMonth, time.wDay, time.wHour,
+  //  time.wMinute, time.wSecond, time.wMilliseconds);
 
-  std::wstring timestr = buff;
-  delete[] buff;
-  return timestr;
+  //std::wstring timestr = buff;
+  //delete[] buff;
+  //return timestr;
 }
