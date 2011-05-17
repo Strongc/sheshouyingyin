@@ -21,7 +21,7 @@ public:
   void SetCover(BlockUnit* unit, std::wstring orgpath);
   void UploadCover(BlockUnit* unit, std::wstring url);
 
-  std::wstring GetSystemTimeString();
+  std::wstring GetSystemTimeString(std::string szFileHash);
 
 private:
   std::list<BlockUnit*> m_list;

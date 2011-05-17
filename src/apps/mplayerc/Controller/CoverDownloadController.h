@@ -18,11 +18,11 @@ public:
 
   //Download cover
   void _Thread();
-  BOOL HttpGetResponse(std::wstring szFilePath, std::wstring requesturl, std::string& responsestr);
+  BOOL HttpGetResponse(std::string szFileHash, std::wstring szFilePath, std::wstring requesturl, std::string& responsestr);
   BOOL ParseRespondString(std::string& parsestr, std::wstring& title, std::wstring& cover);
-  BOOL HttpDownloadCover(std::wstring downloadurl, std::wstring& downloadpath,
+  BOOL HttpDownloadCover(std::string szFileHash, std::wstring downloadurl, std::wstring& downloadpath,
     std::wstring cover);
-  std::wstring GetSystemTimeString();
+  std::wstring GetSystemTimeString(std::string szFileHash);
 
 private:
   std::list<BlockUnit*> m_list;
