@@ -26,6 +26,10 @@ public:
 public:
   // Gui control, should not for other use
 
+   void SetMCCover();
+
+   void DoPaint(HDC hdc, RECT rcClient);
+
    void UpdateBlock(RECT rc);
    void DelBlock(int i);
 
@@ -67,6 +71,8 @@ private:
   BOOL m_planestate;
   
   BlockListView m_blocklist;
+  WTL::CBitmap m_mccover;
+  BITMAP  m_mccoverbm;
   CoverDownloadController m_coverdown;
   CoverUploadController m_coverup;
   BOOL m_initiablocklist;
