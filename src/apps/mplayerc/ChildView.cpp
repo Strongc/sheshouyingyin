@@ -1,4 +1,4 @@
-/* 
+ï»¿/* 
  *	Copyright (C) 2003-2006 Gabest
  *	http://www.gabest.org
  *
@@ -55,6 +55,7 @@ m_vrect(0,0,0,0)
 , m_blockunit(0)
 , m_offsetspeed(0)
 , m_preoffsetspeed(0)
+, m_mcstatusbar(0)
 {
 	m_lastlmdowntime = 0;
 	m_lastlmdownpoint.SetPoint(0, 0);
@@ -69,6 +70,7 @@ m_vrect(0,0,0,0)
 	}
 	m_mediacenter = MediaCenterController::GetInstance();
   m_blocklistview = &(m_mediacenter->GetBlockListView());
+  m_mcstatusbar = &(m_mediacenter->GetStatusBar());
 	//m_btnList.AddTail( new CSUIButton(L"BTN_OPENADV.BMP" ,ALIGN_TOPLEFT, CRect(-50 , -62, 0,0)  , FALSE, ID_FILE_OPENMEDIA, FALSE, ALIGN_LEFT,btnFileOpen,  CRect(3,3,3,3) ) ) ;
 	
 	m_btnList.AddTail( new CSUIButton(L"WATERMARK2.BMP" , ALIGN_BOTTOMRIGHT, CRect(6 , 6, 0,6)  , TRUE, 0, FALSE  ) );
@@ -315,7 +317,7 @@ void CChildView::OnPaint()
 	CPaintDC dc(this); // device context for painting
 
 	CMainFrame* pFrame = (CMainFrame*)GetParentFrame();
-  if (pFrame->IsSomethingLoading()) //´ò¿ªÎÄ¼þ¹ý³Ì²»Repaint
+  if (pFrame->IsSomethingLoading()) //ï¿½Ä¼Ì²Repaint
     return;
 	pFrame->RepaintVideo();
 
@@ -338,6 +340,8 @@ void CChildView::OnPaint()
       m_mediacenter->DoPaint(hdc, rcClient);
       //m_blocklistview->DoPaint(hdc.m_hDC, rcClient);
       //ValidateRect(0);
+      m_mcstatusbar->SetText(L"chenjian");  // just for test
+      m_mcstatusbar->Update();
       return;
     }
 
@@ -350,10 +354,10 @@ void CChildView::OnPaint()
 
 			CRect r;
 			GetClientRect(r);
-			// Ëõ·Å ±£³Ö¿í¸ß±È
+			// ï¿½ï¿½Ö¿ï¿½ï¿½
 			CRect cover_r;
 			if ( bm.bmWidth * 100 / bm.bmHeight > r.Width() * 100 / r.Height() ){
-				//ÒÔr.Width()Îª×¼
+				//ï¿½r.Width()Îª×¼
 				int w = r.Width();
 				int h = r.Width() * bm.bmHeight/ bm.bmWidth ;
 				int x = 0;
@@ -377,18 +381,18 @@ void CChildView::OnPaint()
 			GetClientRect(r);
       PlayerPreference* pref = PlayerPreference::GetInstance();
 			/*
-			if( s.logostretch == 1){ // ±£³Ö¿í¸ß  ²»Ëõ·Å
+			if( s.logostretch == 1){ // Ö¿ï¿½  ï¿½ï¿½
 							int w = min(bm.bmWidth, r.Width());
 							int h = min(abs(bm.bmHeight), r.Height());
 							int x = (r.Width() - w) / 2;
 							int y = (r.Height() - h) / 2;
 							m_logo_r = CRect(CPoint(x, y), CSize(w, h));
 						}else */
-			if(pref->GetIntVar(INTVAR_LOGO_AUTOSTRETCH) == 2 || isUsingSkinBG){ // Ëõ·Å ²»±£³Ö¿í¸ß±È
+			if(pref->GetIntVar(INTVAR_LOGO_AUTOSTRETCH) == 2 || isUsingSkinBG){ // ï¿½ï¿½Ö¿ï¿½ï¿½
 				m_logo_r = r;
-			}else if(pref->GetIntVar(INTVAR_LOGO_AUTOSTRETCH) == 3){// Ëõ·Å ±£³Ö¿í¸ß±È
+			}else if(pref->GetIntVar(INTVAR_LOGO_AUTOSTRETCH) == 3){// ï¿½ï¿½Ö¿ï¿½ï¿½
 				if ( bm.bmWidth * 100 / bm.bmHeight > r.Width() * 100 / r.Height() ){
-					//ÒÔr.Width()Îª×¼
+					//ï¿½r.Width()Îª×¼
 					int w = r.Width();
 					int h = r.Width() * bm.bmHeight/ bm.bmWidth ;
 					int x = 0;
@@ -402,7 +406,7 @@ void CChildView::OnPaint()
 					m_logo_r = CRect(CPoint(x, y), CSize(w, h));
 				}
 				
-			}else{ //²»Ëõ·Å ²»±£³Ö¿í¸ß±È
+			}else{ //ï¿½ï¿½Ö¿ï¿½ï¿½
 				int w = bm.bmWidth;
 				int h = bm.bmHeight ;
 				CPoint pos = r.CenterPoint();
@@ -452,7 +456,7 @@ void CChildView::OnPaint()
         {
             //rcLoading.top += rcLoading.Height()/2;
             //hdc.FillSolidRect( rcLoading, 0xffffff);
-            //TODO: µþ¼Ó opening ¶¯»­
+            //TODO: ï¿½opening 
         }
 	}
 	// Do not call CWnd::OnPaint() for painting messages
@@ -546,6 +550,8 @@ void CChildView::OnSize(UINT nType, int cx, int cy)
     m_blocklistview->Update(rc.right - rc.left, rc.bottom - rc.top);
     //Invalidate();
   }
+
+  m_mcstatusbar->SetRect(CRect(0, 0, cx, 30));    // set the position of the status bar
 }
 
 
@@ -631,6 +637,9 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
     m_blocklistview->SetFrameHwnd(m_hWnd);
     m_blocklistview->SetScrollSpeed(&m_offsetspeed);
+
+    m_mcstatusbar->SetFrame(m_hWnd);
+    m_mcstatusbar->SetVisible(false);
 
     m_menu.LoadMenu(IDR_MEDIACENTERMENU);
 
