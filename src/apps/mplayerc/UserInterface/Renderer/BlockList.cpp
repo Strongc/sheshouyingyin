@@ -833,7 +833,7 @@ void BlockList::ClearList(std::list<BlockUnit*>* list)
 void BlockList::CalculateViewCapacity()
 {
   int height = (int)m_blockh + (int)m_top;
-  m_viewcapacity = ((int)m_winh + height - 1) / height * m_x.size();
+  m_viewcapacity = ((int)m_winh / height + 2) * m_x.size();
   m_listsize = 2 * m_viewcapacity;
 }
 
