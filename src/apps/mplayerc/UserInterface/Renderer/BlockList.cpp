@@ -447,8 +447,12 @@ void BlockList::Update(float winw, float winh)
   AlignRowBlocks();
   AlignScrollBar();
   CalculateViewCapacity();
-  CalculateLogicalListEnd();
-  BlockRanges();
+  
+  if (!m_list->empty())
+  {
+    CalculateLogicalListEnd();
+    BlockRanges();
+  }
 }
 
 void BlockList::SetOffset(float offset)
@@ -883,6 +887,15 @@ int BlockList::GetListCapacity()
 void BlockList::SetSizeChanged()
 {
   m_bSizeChanged = true;
+}
+
+BOOL BlockList::IsEmpty()
+{
+  BOOL bl = TRUE;
+  if (m_list)
+    return m_list->empty();
+  
+  return bl;
 }
 
 //BlockListView
