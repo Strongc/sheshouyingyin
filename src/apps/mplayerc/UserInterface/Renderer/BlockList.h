@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <list>
 #include <vector>
@@ -84,6 +84,7 @@ public:
   int GetListRemainItem();
   int GetListCapacity();
   void SetSizeChanged();
+  BOOL IsEmpty();
 
   // signals
 public:

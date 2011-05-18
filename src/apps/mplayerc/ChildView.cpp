@@ -44,6 +44,8 @@ static char THIS_FILE[] = __FILE__;
 #define  TIMER_SLOWOFFSET 12
 #define TIMER_TIPS 15
 
+#define WM_MEDIACENTERPLAYVEDIO 16
+
 CChildView::CChildView() :
 m_vrect(0,0,0,0)
 ,m_cover(NULL)
@@ -72,6 +74,7 @@ m_vrect(0,0,0,0)
 	m_btnList.AddTail( new CSUIButton(L"WATERMARK2.BMP" , ALIGN_BOTTOMRIGHT, CRect(6 , 6, 0,6)  , TRUE, 0, FALSE  ) );
 
 	m_cover = new CSUIButton(L"AUDIO_BG.BMP" , ALIGN_TOPLEFT, CRect(-50 , -44, 0,0)  , TRUE, 0, FALSE  ) ;
+
 }
 
 CChildView::~CChildView()
@@ -294,6 +297,7 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_WM_KEYUP()
   ON_WM_TIMER()
   ON_WM_MOUSELEAVE()
+  ON_MESSAGE(WM_MEDIACENTERPLAYVEDIO, OnMediaCenterPlayVedio)
 END_MESSAGE_MAP()
 
 static COLORREF colorNextLyricColor(COLORREF lastColor)
@@ -331,8 +335,9 @@ void CChildView::OnPaint()
     // only response of media center messages(WM_PAINT)
     if (m_mediacenter->GetPlaneState())
     {
-      m_blocklistview->DoPaint(hdc.m_hDC, rcClient);
-      ValidateRect(0);
+      m_mediacenter->DoPaint(hdc, rcClient);
+      //m_blocklistview->DoPaint(hdc.m_hDC, rcClient);
+      //ValidateRect(0);
       return;
     }
 
@@ -539,7 +544,7 @@ void CChildView::OnSize(UINT nType, int cx, int cy)
     RECT rc;
     GetClientRect(&rc);
     m_blocklistview->Update(rc.right - rc.left, rc.bottom - rc.top);
-    Invalidate();
+    //Invalidate();
   }
 }
 
@@ -866,7 +871,10 @@ void CChildView::ShowMediaCenter(BOOL bl)
   m_mediacenter->SetPlaneState(bl);
 
   if (!bl)
+  {
+    SetClassLong(m_hWnd, GCL_HCURSOR, (LONG)::LoadCursor(NULL, IDC_HAND));
     return;
+  }
 
   RECT rc;
   GetClientRect(&rc);
@@ -876,14 +884,17 @@ void CChildView::ShowMediaCenter(BOOL bl)
     m_mediacenter->LoadMediaData(1, list, m_blocklistview->GetViewCapacity(), 
     m_blocklistview->GetListCapacity(), 0);
 
-  SetCursor(::LoadCursor(NULL, IDC_WAIT));
+  HCURSOR oldcursor = SetCursor(::LoadCursor(NULL, IDC_WAIT));
 
   // wait until the load data thread is exit and finish its job
   ::WaitForSingleObject(m_mediacenter->GetMediaDataThreadHandle(), INFINITE);
 
-  SetCursor(::LoadCursor(NULL, IDC_ARROW));
+  SetCursor(oldcursor);
 
-  m_mediacenter->UpdateBlock(rc);
+  SetClassLong(m_hWnd, GCL_HCURSOR, (LONG)::LoadCursor(NULL, IDC_ARROW));
+
+  if (!m_blocklistview->IsEmpty())
+    m_mediacenter->UpdateBlock(rc);
   InvalidateRect(0, FALSE);
 }
 
@@ -896,4 +907,12 @@ BOOL CChildView::OnSetCover(UINT nID)
   m_mediacenter->SetCover(m_blockunit, orgpath);
 
   return TRUE;
+}
+
+LRESULT CChildView::OnMediaCenterPlayVedio(WPARAM wParam, LPARAM lParam)
+{
+   CMainFrame* pFrame = (CMainFrame*)GetParentFrame();
+   pFrame->ShowToolBar();
+   
+   return 0;
 }

@@ -110,6 +110,8 @@ public:
 
   afx_msg BOOL OnSetCover(UINT nID);
 
+  afx_msg LRESULT OnMediaCenterPlayVedio(WPARAM wParam, LPARAM lParam);
+
   void ShowMediaCenter(BOOL bl);
   BOOL OnRButtonUP(UINT nFlags, CPoint point);
 };

@@ -29,8 +29,7 @@ CPlayerToolTopBar::CPlayerToolTopBar():
 m_hovering(0),
 m_pbtnList(&m_btnList),
 m_nHeight(20),
-m_bSendStatusMsg(false),
-m_bdisplay(TRUE)
+m_bSendStatusMsg(false)
 {
 }
 
@@ -900,9 +899,4 @@ void CPlayerToolTopBar::ResizeToolbarHeight()
   m_nHeight = max(20, m_btnList.GetMaxHeight());
   if (m_nHeight > 20)
     m_nHeight += 2;
-}
-
-void CPlayerToolTopBar::SetDisplay(BOOL bl)
-{
-  m_bdisplay = bl;
 }

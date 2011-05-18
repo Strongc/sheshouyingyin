@@ -3,6 +3,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/bind.hpp>
 #include "../MainFrm.h"
+#include "ResLoader.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // normal part
@@ -10,6 +11,8 @@ MediaCenterController::MediaCenterController()
 : m_planestate(FALSE)
  ,m_initiablocklist(FALSE)
 {
+  // load default mc cover
+  SetMCCover();
   // connect signals and slots
   m_blocklist.m_sigPlayback.connect(boost::bind(&MediaCenterController::HandlePlayback, this, _1));
 }
@@ -101,6 +104,30 @@ BOOL MediaCenterController::LoadMediaDataAlive()
 //////////////////////////////////////////////////////////////////////////////
 //  GUI control
 
+void MediaCenterController::DoPaint(HDC hdc, RECT rcClient)
+{
+  if (m_blocklist.IsEmpty())
+  {
+    if (!m_mccover)
+      return;
+
+    WTL::CDC dcmem;
+    HBITMAP  hold;
+
+    dcmem.CreateCompatibleDC(hdc);
+    hold = dcmem.SelectBitmap(m_mccover);
+
+    SetStretchBltMode(hdc, HALFTONE);
+    SetBrushOrgEx(hdc, 0, 0, NULL);
+    StretchBlt(hdc, rcClient.left, rcClient.top, rcClient.right, rcClient.bottom,
+               dcmem, 0, 0, m_mccoverbm.bmWidth, m_mccoverbm.bmHeight, SRCCOPY);
+
+    dcmem.SelectBitmap(hold);
+    dcmem.DeleteDC();
+  }
+  else
+    m_blocklist.DoPaint(hdc, rcClient);
+}
 BOOL MediaCenterController::GetPlaneState()
 {
   return m_planestate;
@@ -114,6 +141,35 @@ void MediaCenterController::SetPlaneState(BOOL bl)
 BlockListView& MediaCenterController::GetBlockListView()
 {
   return m_blocklist;
+}
+
+void MediaCenterController::SetMCCover()
+{
+  ResLoader resLoader;
+  HBITMAP mccover = resLoader.LoadBitmap(L"skin\\mccover.jpg");
+
+  if (mccover)
+  {
+    m_mccover.Attach(mccover);
+
+    m_mccover.GetBitmap(&m_mccoverbm);
+
+    if(m_mccoverbm.bmBitsPixel != 32)
+      return;
+
+    for (int y=0; y<m_mccoverbm.bmHeight; y++)
+    {
+      BYTE * pPixel = (BYTE *) m_mccoverbm.bmBits + m_mccoverbm.bmWidth * 4 * y;
+      for (int x=0; x<m_mccoverbm.bmWidth; x++)
+      {
+        pPixel[0] = pPixel[0] * pPixel[3] / 255; 
+        pPixel[1] = pPixel[1] * pPixel[3] / 255; 
+        pPixel[2] = pPixel[2] * pPixel[3] / 255; 
+        pPixel += 4;
+      }
+    }
+    
+  }
 }
 
 void MediaCenterController::UpdateBlock(RECT rc)

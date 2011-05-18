@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "BlockList.h"
 #include "..\..\Controller\MediaCenterController.h"
 #include "ResLoader.h"
@@ -225,6 +225,8 @@ void BlockUnit::ResetCover()
 #define  ScrollBarClick 21
 #define  ScrollBarHit   22
 #define  NoScrollBarHit 23
+
+#define WM_MEDIACENTERPLAYVEDIO 16
 
 BlockList::BlockList()
 : m_bSizeChanged(false)
@@ -474,7 +476,9 @@ void BlockList::AlignScrollBar()
   float height = m_blockh + m_top;
 
   BOOL bScrollShow = (m_list->size() + m_maxcolumn - 1) / m_maxcolumn * height > m_winh? TRUE:FALSE; 
-  m_scrollbar->SetDisPlay(bScrollShow);
+  if (!m_scrollbarinitialize)
+    m_scrollbar->SetDisPlay(bScrollShow);
+
   if (bScrollShow && !m_scrollbarinitialize)
   {
     AlignColumnBlocks();
@@ -491,8 +495,12 @@ void BlockList::Update(float winw, float winh)
   AlignRowBlocks();
   AlignScrollBar();
   CalculateViewCapacity();
-  CalculateLogicalListEnd();
-  BlockRanges();
+  
+  if (!m_list->empty())
+  {
+    CalculateLogicalListEnd();
+    BlockRanges();
+  }
 }
 
 void BlockList::SetOffset(float offset)
@@ -883,7 +891,7 @@ void BlockList::ClearList(std::list<BlockUnit*>* list)
 void BlockList::CalculateViewCapacity()
 {
   int height = (int)m_blockh + (int)m_top;
-  m_viewcapacity = ((int)m_winh + height - 1) / height * m_x.size();
+  m_viewcapacity = ((int)m_winh / height + 2) * m_x.size();
   m_listsize = 2 * m_viewcapacity;
 }
 
@@ -935,6 +943,15 @@ void BlockList::SetSizeChanged()
   m_bSizeChanged = true;
 }
 
+BOOL BlockList::IsEmpty()
+{
+  BOOL bl = TRUE;
+  if (m_list)
+    return m_list->empty();
+  
+  return bl;
+}
+
 //BlockListView
 
 BlockListView::BlockListView():
@@ -974,16 +991,19 @@ void BlockListView::HandleLButtonDown(POINT pt, BlockUnit** unit)
     m_lbtndown = TRUE;
   }
 
-  //if (layerstate == BEPLAY)
-  //  SendMessage(m_hwnd, WM_LBUTTONUP, 0, 0);
+  if (layerstate == BEPLAY)
+  {
+    SendMessage(m_hwnd, WM_LBUTTONUP, 0, 0);
+    SendMessage(m_hwnd, WM_MEDIACENTERPLAYVEDIO, 0, 0);
+  }
 
-  //if (layerstate == BEHIDE)
-  //{
-  //  Update(rcclient.right, rcclient.bottom);
-  //  InvalidateRect(m_hwnd, &rcclient, FALSE);
-  //  RECT rc = {0, 0, 0, 0};
-  //  m_prehittest = rc;
-  //}
+  if (layerstate == BEHIDE)
+  {
+    Update(rcclient.right, rcclient.bottom);
+    InvalidateRect(m_hwnd, &rcclient, FALSE);
+    RECT rc = {0, 0, 0, 0};
+    m_prehittest = rc;
+  }
 }
 
 void BlockListView::HandleLButtonUp(POINT pt, BlockUnit** unit)
@@ -1013,7 +1033,7 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
 {
   RECT rcclient;
   GetClientRect(m_hwnd, &rcclient);
-
+  
   int bscroll = OnScrollBarHittest(pt, -1, *m_scrollspeed, m_hwnd);
 
   if (bscroll == ScrollBarClick)

@@ -51,7 +51,6 @@ private:
 	int m_lastLeftText;
 	CSUIButton* btnSubSwitch;
   BOOL m_breadfromfile;
-  BOOL m_bdisplay;
 
 public:
 	CString m_timerstr;
@@ -128,8 +127,6 @@ public:
 
   void ResizeToolbarHeight();
 
-  void SetDisplay(BOOL bl);
-  BOOL GetDisplay();
 private:
   int m_movieshare_hidestat;
 
