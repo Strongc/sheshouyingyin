@@ -1,7 +1,8 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "BlockList.h"
 #include "..\..\Controller\MediaCenterController.h"
 #include "ResLoader.h"
+#include "MCUILayer.h"
 
 // BlockOne
 
@@ -18,6 +19,41 @@ m_layer(new UILayerBlock)
 
 BlockUnit::~BlockUnit() {}
 
+void BlockUnit::ActMouseOver()
+{
+  UILayer* play = NULL;
+  UILayer* hide = NULL;
+
+  BOOL bplay = m_layer->GetUILayer(L"play", &play);
+  BOOL bhide = m_layer->GetUILayer(L"hide", &hide);
+  if (!bplay && !bhide)
+    return;
+
+  
+  ((ULPlayback*)play)->ActMouseOver();
+  ((ULDel*)hide)->ActMouseOver();
+
+  ((ULPlayback*)play)->SetDisplay(TRUE);
+  ((ULDel*)hide)->SetDisplay(TRUE);
+}
+
+void BlockUnit::ActMouseOut()
+{
+  UILayer* play = NULL;
+  UILayer* hide = NULL;
+
+  BOOL bplay = m_layer->GetUILayer(L"play", &play);
+  BOOL bhide = m_layer->GetUILayer(L"hide", &hide);
+  if (!bplay && !bhide)
+    return;
+
+  ((ULPlayback*)play)->ActMouseOut();
+  ((ULDel*)hide)->ActMouseOut();
+
+  ((ULPlayback*)play)->SetDisplay(FALSE);
+  ((ULDel*)hide)->SetDisplay(FALSE);
+}
+
 void BlockUnit::AddLayer(std::wstring tag, std::wstring Texture, BOOL display)
 {
   m_layer->AddUILayer(tag, new UILayer(Texture));
@@ -27,8 +63,8 @@ void BlockUnit::DefLayer()
 {
   m_layer->AddUILayer(L"mark", new UILayer(L"\\skin\\mark.png"));
   m_layer->AddUILayer(L"def", new UILayer(L"\\skin\\def.png"));
-  m_layer->AddUILayer(L"play", new UILayer(L"\\skin\\play.png"));
-  m_layer->AddUILayer(L"hide", new UILayer(L"\\skin\\hide.png"));
+  m_layer->AddUILayer(L"play", (UILayer*)new ULPlayback(L"\\skin\\play.png"));
+  m_layer->AddUILayer(L"hide", (UILayer*)new ULDel(L"\\skin\\hide.png"));
 }
 
 void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
@@ -43,7 +79,7 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   BOOL bplay = m_layer->GetUILayer(L"play", &play);
   BOOL bhide = m_layer->GetUILayer(L"hide", &hide);
 
-  if (!bmark || !bdef || !bplay || !bhide)
+  if (!bmark && !bdef && !bplay && !bhide)
     return;
 
   layer->SetDisplay(TRUE);
@@ -113,40 +149,52 @@ void BlockUnit::DeleteLayer()
 
 int BlockUnit::OnHittest(POINT pt, BOOL blbtndown)
 {
-  UILayer* layer = NULL;
-  UILayer* def = NULL;
-  UILayer* play = NULL;
-  UILayer* hide = NULL;
+  if (!m_layer)
+    return 0;
 
-  m_layer->GetUILayer(L"mark", &layer);
-  m_layer->GetUILayer(L"def", &def);
-  m_layer->GetUILayer(L"play", &play);
-  m_layer->GetUILayer(L"hide", &hide);
+  UILayer* layer = NULL;
+//   UILayer* def = NULL;
+//   UILayer* play = NULL;
+//   UILayer* hide = NULL;
+
+  BOOL bmark = m_layer->GetUILayer(L"mark", &layer);
+//   BOOL bdef = m_layer->GetUILayer(L"def", &def);
+//   BOOL bplay = m_layer->GetUILayer(L"play", &play);
+//   BOOL bhide = m_layer->GetUILayer(L"hide", &hide);
 
   RECT rc;
-  if (blbtndown)
+  layer->GetTextureRect(rc);
+  if (PtInRect(&rc, pt))
   {
-    play->GetTextureRect(rc);
-    if (PtInRect(&rc, pt))
-      return BEPLAY;
-
-    hide->GetTextureRect(rc);
-    if (PtInRect(&rc, pt))
-      return BEHIDE;
-  }
-  else
-  {
-    layer->GetTextureRect(rc);
-    if (PtInRect(&rc, pt))
-    {
-      play->SetDisplay(TRUE);
-      hide->SetDisplay(TRUE);
-      return BEHITTEST;
-    }
+//     play->SetDisplay(TRUE);
+//     hide->SetDisplay(TRUE);
+    return BEHITTEST;
   }
 
-  play->SetDisplay(FALSE);
-  hide->SetDisplay(FALSE);
+//   RECT rc;
+//   if (blbtndown)
+//   {
+//     play->GetTextureRect(rc);
+//     if (PtInRect(&rc, pt))
+//       return BEPLAY;
+// 
+//     hide->GetTextureRect(rc);
+//     if (PtInRect(&rc, pt))
+//       return BEHIDE;
+//   }
+//   else
+//   {
+//     layer->GetTextureRect(rc);
+//     if (PtInRect(&rc, pt))
+//     {
+//       play->SetDisplay(TRUE);
+//       hide->SetDisplay(TRUE);
+//       return BEHITTEST;
+//     }
+//   }
+// 
+//   play->SetDisplay(FALSE);
+//   hide->SetDisplay(FALSE);
 
   return BENORMAL;
 }
@@ -618,35 +666,41 @@ int BlockList::OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetspeed, HW
 int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
 {
   int stRet = BENORMAL;  // state will return
+  *unit = NULL;
 
   std::list<BlockUnit*>::iterator it = m_start;
   for (; it != m_end; ++it)
   {
-    int state = 0;
-    if (*it)
-      state = (*it)->OnHittest(pt, blbtndown);
-
-    switch (state)
+    if ((*it)->OnHittest(pt, blbtndown))
     {
-    case BEHIDE:
-      if ((*unit) == (*it))
-        *unit = 0;
-      DeleteBlock(it);
-      return state;
-    case BEPLAY:
-      {
-        if (!m_sigPlayback.empty())
-          m_sigPlayback((*it)->m_mediadata); // emit a signal
-      }
-      return state;
-    case  BEHITTEST:
-      *unit = (*it);
-      if ((*it)->m_mediadata.filmname.empty())
-        m_tipstring = (*it)->m_mediadata.filename;
-      else
-        m_tipstring = (*it)->m_mediadata.filmname;
-      stRet = BEHITTEST;
+      *unit = *it;
+      break;
     }
+//     int state = 0;
+//     if (*it)
+//       state = (*it)->OnHittest(pt, blbtndown);
+// 
+//     switch (state)
+//     {
+//     case BEHIDE:
+//       if ((*unit) == (*it))
+//         *unit = 0;
+//       DeleteBlock(it);
+//       return state;
+//     case BEPLAY:
+//       {
+//         if (!m_sigPlayback.empty())
+//           m_sigPlayback((*it)->m_mediadata); // emit a signal
+//       }
+//       return state;
+//     case  BEHITTEST:
+//       *unit = (*it);
+//       if ((*it)->m_mediadata.filmname.empty())
+//         m_tipstring = (*it)->m_mediadata.filename;
+//       else
+//         m_tipstring = (*it)->m_mediadata.filmname;
+//       stRet = BEHITTEST;
+//     }
   }
   m_tipstring = L"";
   return stRet;
@@ -901,7 +955,8 @@ BOOL BlockList::IsEmpty()
 //BlockListView
 
 BlockListView::BlockListView():
-m_lbtndown(FALSE)
+m_lbtndown(FALSE),
+m_curUnit(NULL)
 {
   RECT rc = {0,0,0,0};
   m_prehittest = rc;
@@ -980,7 +1035,6 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
   GetClientRect(m_hwnd, &rcclient);
   
   int bscroll = OnScrollBarHittest(pt, -1, *m_scrollspeed, m_hwnd);
-  int blayer = OnHittest(pt, FALSE, unit);
 
   if (bscroll == ScrollBarClick)
     ::InvalidateRect(m_hwnd, &rcclient, FALSE);
@@ -997,22 +1051,48 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
     m_lbtndown = FALSE;
   }
 
-  if (blayer == BEHITTEST)
+  *unit = NULL;
+
+  if (!m_curUnit)
   {
-    SetTimer(m_hwnd, TIMER_TIPS, 500, NULL);
-    ::InvalidateRect(m_hwnd, &m_prehittest, FALSE);
-    ::InvalidateRect(m_hwnd, &((*unit)->GetHittest()), FALSE);
+    OnHittest(pt, FALSE, unit);
     if (*unit)
-      m_prehittest = (*unit)->GetHittest();
+    {
+      m_curUnit = *unit;
+      m_curUnit->ActMouseOver();
+      ::InvalidateRect(m_hwnd, &(m_curUnit->GetHittest()), FALSE);
+    }
+//     int blayer = OnHittest(pt, FALSE, unit);
+//     if (blayer == BEHITTEST)
+//     {
+//       SetTimer(m_hwnd, TIMER_TIPS, 500, NULL);
+//       ::InvalidateRect(m_hwnd, &m_prehittest, FALSE);
+//       ::InvalidateRect(m_hwnd, &((*unit)->GetHittest()), FALSE);
+//       if (*unit)
+//         m_prehittest = (*unit)->GetHittest();
+//     }
   }
-
-  HCURSOR hcursor;
-  if (blayer == BEHITTEST || bscroll == ScrollBarHit || bscroll == ScrollBarClick)
-    hcursor = LoadCursor(NULL, IDC_HAND);
   else
-    hcursor = LoadCursor(NULL, IDC_ARROW);
-
-  SetCursor(hcursor);
+  {
+    if (m_curUnit->OnHittest(pt, FALSE))
+    {
+      m_curUnit->ActMouseOver();
+      //::InvalidateRect(m_hwnd, &(m_curUnit->GetHittest()), FALSE);
+    }
+    else
+    {
+      m_curUnit->ActMouseOut();
+      ::InvalidateRect(m_hwnd, &(m_curUnit->GetHittest()), FALSE);
+      m_curUnit = NULL;
+    }
+  }
+//   HCURSOR hcursor;
+//   if (blayer == BEHITTEST || bscroll == ScrollBarHit || bscroll == ScrollBarClick)
+//     hcursor = LoadCursor(NULL, IDC_HAND);
+//   else
+//     hcursor = LoadCursor(NULL, IDC_ARROW);
+// 
+//   SetCursor(hcursor);
 
 }
 
@@ -1037,11 +1117,11 @@ BOOL BlockListView::HandleRButtonUp(POINT pt, BlockUnit** unit, CMenu* menu)
 
 void BlockListView::HandleMouseLeave()
 {
-  POINT pt = {-1, -1};
-  int blayer = OnHittest(pt, FALSE, 0);
-
-  ::InvalidateRect(m_hwnd, &m_prehittest, FALSE);
-  UpdateWindow(m_hwnd);
-  RECT rc = {0, 0, 0, 0};
-  m_prehittest = rc;
+//   POINT pt = {-1, -1};
+//   int blayer = OnHittest(pt, FALSE, 0);
+// 
+//   ::InvalidateRect(m_hwnd, &m_prehittest, FALSE);
+//   UpdateWindow(m_hwnd);
+//   RECT rc = {0, 0, 0, 0};
+//   m_prehittest = rc;
 }
