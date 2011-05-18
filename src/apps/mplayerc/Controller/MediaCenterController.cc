@@ -143,6 +143,11 @@ BlockListView& MediaCenterController::GetBlockListView()
   return m_blocklist;
 }
 
+MCStatusBar& MediaCenterController::GetStatusBar()
+{
+  return m_statusbar;
+}
+
 void MediaCenterController::SetMCCover()
 {
   ResLoader resLoader;
