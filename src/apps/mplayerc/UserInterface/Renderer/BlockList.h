@@ -94,7 +94,11 @@ public:
   boost::signal<void (const MediaData &md)> m_sigPlayback;
   std::wstring m_tipstring;
   int m_viewcapacity;
+
 private:
+  int m_topdistance;
+  int m_bottomdistance;
+
   float m_spacing;
   float m_top;
   float m_scrollbarwidth;
@@ -132,8 +136,8 @@ private:
   int m_scrollbardirection;
   int m_scrollbardirectionpre;
 
-  int m_listendstate;
-  int m_listbeginstate;
+  BOOL m_DBendstate;
+  BOOL m_DBbeginstate;
 
   BOOL m_scrollbarinitialize;
 
