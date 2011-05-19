@@ -6,7 +6,7 @@ public:
   UILayer(std::wstring respath, BOOL display = TRUE);
   virtual ~UILayer();
 
-  // Interface
+// Interface
 public:
   BOOL SetTexture(HBITMAP texture);
   BOOL SetTexturePos(const POINT& pt);
@@ -20,11 +20,13 @@ public:
 
   BOOL DeleteTexture();
 
-  virtual void ActMouseOver() {}
-  virtual void ActMouseOut() {}
-  virtual void ActMouseDown() {}
-  virtual void ActMouseUp() {}
+  void SetState(int stat);
+  int  GetState();
 
+  virtual BOOL ActMouseOver(const POINT& pt) {return FALSE;}
+  virtual BOOL ActMouseOut(const POINT& pt) {return FALSE;}
+  virtual BOOL ActMouseDown(const POINT& pt) {return FALSE;}
+  virtual BOOL ActMouseUp(const POINT& pt) {return FALSE;}
 
 private:
   WTL::CBitmap   m_texture;
@@ -33,4 +35,5 @@ private:
   BOOL           m_display;
   BITMAP         m_bm;
   WTL::CRect     m_texturerect;
+  int            m_stat;
 };

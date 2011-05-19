@@ -3,7 +3,8 @@
 #include <ResLoader.h>
 
 UILayer::UILayer(std::wstring respath, BOOL display /* = TRUE */):
-m_texturerect(0, 0, 0, 0)
+  m_texturerect(0, 0, 0, 0)
+, m_stat(0)
 {
   ResLoader rs;
   SetTexture(rs.LoadBitmap(respath));
@@ -24,7 +25,7 @@ BOOL UILayer::SetTexture(HBITMAP texture)
   m_texture.Attach(texture);
 
   m_texture.GetBitmap(&m_bm);
-
+  
   if(m_bm.bmBitsPixel == 32)
   {
     for (int y=0; y<m_bm.bmHeight; y++)
@@ -39,6 +40,8 @@ BOOL UILayer::SetTexture(HBITMAP texture)
       }
     }
   }
+
+  m_bm.bmHeight /= 2;
 
   return TRUE;
 }
@@ -87,20 +90,20 @@ BOOL UILayer::DoPaint(WTL::CDC& dc)
 
   WTL::CDC texturedc;
   HBITMAP hold_texture;
-
+  
   texturedc.CreateCompatibleDC(dc);
   hold_texture = texturedc.SelectBitmap(m_texture);
 
   BLENDFUNCTION bf = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
   if (m_bm.bmBitsPixel == 32)
     dc.AlphaBlend(m_texturerect.left, m_texturerect.top, m_texturerect.Width(), m_texturerect.Height(),
-    texturedc, 0, 0, m_bm.bmWidth, m_bm.bmHeight, bf);
+    texturedc, 0, m_bm.bmHeight * m_stat, m_bm.bmWidth, m_bm.bmHeight, bf);
   else
   {
     dc.SetStretchBltMode(HALFTONE);
     dc.SetBrushOrg(0, 0);
     dc.StretchBlt(m_texturerect.left, m_texturerect.top, m_texturerect.Width(), m_texturerect.Height(),
-      texturedc, 0, 0, m_bm.bmWidth, m_bm.bmHeight, SRCCOPY);
+      texturedc, 0, m_bm.bmHeight * m_stat, m_bm.bmWidth, m_bm.bmHeight, SRCCOPY);
   }
 
   texturedc.SelectBitmap(hold_texture);
@@ -112,4 +115,14 @@ BOOL UILayer::DoPaint(WTL::CDC& dc)
 BOOL UILayer::DeleteTexture()
 {
   return m_texture.DeleteObject();
+}
+
+void UILayer::SetState(int stat)
+{
+  m_stat = stat;
+}
+
+int UILayer::GetState()
+{
+  return m_stat;
 }

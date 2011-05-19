@@ -19,39 +19,89 @@ m_layer(new UILayerBlock)
 
 BlockUnit::~BlockUnit() {}
 
-void BlockUnit::ActMouseOver()
+BOOL BlockUnit::ActMouseOver(POINT pt)
 {
+  UILayer* bg = NULL;
   UILayer* play = NULL;
   UILayer* hide = NULL;
+  UILayer* favourite = NULL;
+  UILayer* cover = NULL;
 
+  BOOL bbg = m_layer->GetUILayer(L"background", &bg);
   BOOL bplay = m_layer->GetUILayer(L"play", &play);
   BOOL bhide = m_layer->GetUILayer(L"hide", &hide);
-  if (!bplay && !bhide)
-    return;
+  BOOL bfavourite = m_layer->GetUILayer(L"favourite", &favourite);
+  BOOL bcover = m_layer->GetUILayer(L"cover", &cover);
 
-  
-  ((ULPlayback*)play)->ActMouseOver();
-  ((ULDel*)hide)->ActMouseOver();
+  if (!bbg || !bplay || !bhide || !bfavourite || !bcover)
+    return FALSE;
 
-  ((ULPlayback*)play)->SetDisplay(TRUE);
-  ((ULDel*)hide)->SetDisplay(TRUE);
+  play->SetDisplay(TRUE);
+  hide->SetDisplay(TRUE);
+  favourite->SetDisplay(TRUE);
+  cover->SetDisplay(TRUE);
+
+  if (bg->ActMouseOver(pt))
+    return TRUE;
+  if (play->ActMouseOver(pt))
+    return TRUE;
+  if (hide->ActMouseOver(pt))
+    return TRUE;
+  if (favourite->ActMouseOver(pt))
+    return TRUE;
+  if (cover->ActMouseOver(pt))
+    return TRUE;
+
+  return FALSE;
 }
 
-void BlockUnit::ActMouseOut()
+BOOL BlockUnit::ActMouseOut(POINT pt)
+{
+  UILayer* bg = NULL;
+  UILayer* play = NULL;
+  UILayer* hide = NULL;
+  UILayer* favourite = NULL;
+  UILayer* cover = NULL;
+
+  BOOL bbg = m_layer->GetUILayer(L"background", &bg);
+  BOOL bplay = m_layer->GetUILayer(L"play", &play);
+  BOOL bhide = m_layer->GetUILayer(L"hide", &hide);
+  BOOL bfavourite = m_layer->GetUILayer(L"favourite", &favourite);
+  BOOL bcover = m_layer->GetUILayer(L"cover", &cover);
+  if (!bbg || !bplay || !bhide || !bfavourite || !bcover)
+    return FALSE;
+
+  bg->ActMouseOut(pt);
+  play->ActMouseOut(pt);
+  hide->ActMouseOut(pt);
+  favourite->ActMouseOut(pt);
+  cover->ActMouseOut(pt);
+
+  play->SetDisplay(FALSE);
+  hide->SetDisplay(FALSE);
+  favourite->SetDisplay(FALSE);
+  cover->SetDisplay(FALSE);
+
+  return TRUE;
+}
+
+int BlockUnit::ActMouseDown(POINT pt)
 {
   UILayer* play = NULL;
   UILayer* hide = NULL;
 
   BOOL bplay = m_layer->GetUILayer(L"play", &play);
   BOOL bhide = m_layer->GetUILayer(L"hide", &hide);
-  if (!bplay && !bhide)
-    return;
+  if (!bplay || !bhide)
+    return FALSE;
 
-  ((ULPlayback*)play)->ActMouseOut();
-  ((ULDel*)hide)->ActMouseOut();
+  if (play->ActMouseDown(pt))
+    return BEPLAY;
+    
+  if (hide->ActMouseDown(pt))
+    return BEHIDE;
 
-  ((ULPlayback*)play)->SetDisplay(FALSE);
-  ((ULDel*)hide)->SetDisplay(FALSE);
+  return BENORMAL;
 }
 
 void BlockUnit::AddLayer(std::wstring tag, std::wstring Texture, BOOL display)
@@ -61,57 +111,73 @@ void BlockUnit::AddLayer(std::wstring tag, std::wstring Texture, BOOL display)
 
 void BlockUnit::DefLayer()
 {
-  m_layer->AddUILayer(L"mark", new UILayer(L"\\skin\\mark.png"));
-  m_layer->AddUILayer(L"def", new UILayer(L"\\skin\\def.png"));
-  m_layer->AddUILayer(L"play", (UILayer*)new ULPlayback(L"\\skin\\play.png"));
-  m_layer->AddUILayer(L"hide", (UILayer*)new ULDel(L"\\skin\\hide.png"));
+  m_layer->AddUILayer(L"background", new ULBackground(L"\\skin\\mark.png"));
+  //m_layer->AddUILayer(L"def", new UILayer(L"\\skin\\def.png"));
+  m_layer->AddUILayer(L"play", new ULPlayback(L"\\skin\\play.png"));
+  m_layer->AddUILayer(L"hide", new ULDel(L"\\skin\\hide.png"));
+  m_layer->AddUILayer(L"favourite", new ULFavourite(L"\\skin\\favourite.png"));
+  m_layer->AddUILayer(L"cover", new ULCover(L"\\skin\\cover.png"));
 }
 
 void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
 {
   UILayer* layer = NULL;
-  UILayer* def = NULL;
+  //UILayer* def = NULL;
   UILayer* play = NULL;
   UILayer* hide = NULL;
+  UILayer* favourite = NULL;
+  UILayer* cover = NULL;
 
-  BOOL bmark = m_layer->GetUILayer(L"mark", &layer);
-  BOOL bdef = m_layer->GetUILayer(L"def", &def);
+  BOOL bmark = m_layer->GetUILayer(L"background", &layer);
+  //BOOL bdef = m_layer->GetUILayer(L"def", &def);
   BOOL bplay = m_layer->GetUILayer(L"play", &play);
   BOOL bhide = m_layer->GetUILayer(L"hide", &hide);
+  BOOL bfavourite = m_layer->GetUILayer(L"favourite", &favourite);
+  BOOL bcover = m_layer->GetUILayer(L"cover", &cover);
 
-  if (!bmark && !bdef && !bplay && !bhide)
+  if (!bmark || !bplay || !bhide || !bfavourite || !bcover)
     return;
 
   layer->SetDisplay(TRUE);
-  def->SetDisplay(TRUE);
+  //def->SetDisplay(TRUE);
 
-  POINT play_fixpt = {27, 57};
+  POINT layer_fixpt = {pt.x + 10, pt.y};
+  POINT play_fixpt = {40, 16};
   POINT def_fixpt = {6, 6};
-  POINT hide_fixpt = {65, 6};
+  POINT hide_fixpt = {80, 74};
+  POINT favourite_fixpt = {25, 74};
+  POINT cover_fixpt = {53, 74};
 
-  layer->SetTexturePos(pt);
+  //layer->SetTexturePos(pt);
+  layer->SetTexturePos(layer_fixpt);
+//   POINT defpt = {def_fixpt.x+pt.x, def_fixpt.y+pt.y};
+//   def->SetTexturePos(defpt, 90, 103);
 
-  POINT defpt = {def_fixpt.x+pt.x, def_fixpt.y+pt.y};
-  def->SetTexturePos(defpt, 90, 103);
-
-  POINT playpt = {play_fixpt.x+pt.x, play_fixpt.y+pt.y};
+  //POINT playpt = {play_fixpt.x+pt.x, play_fixpt.y+pt.y};
+  POINT playpt = {play_fixpt.x + layer_fixpt.x, play_fixpt.y + layer_fixpt.y};
   play->SetTexturePos(playpt);
 
-  POINT hidept = {hide_fixpt.x+pt.x, hide_fixpt.y+pt.y};
+  //POINT hidept = {hide_fixpt.x+pt.x, hide_fixpt.y+pt.y};
+  POINT hidept = {hide_fixpt.x + layer_fixpt.x, hide_fixpt.y + layer_fixpt.y};
   hide->SetTexturePos(hidept);
 
-  if (!m_mediadata.thumbnailpath.empty() && !m_cove)
-  {
-    std::wstring thumbnailpath = m_mediadata.thumbnailpath;
-    if (GetFileAttributes(thumbnailpath.c_str()) != INVALID_FILE_ATTRIBUTES || 
-      GetLastError() != ERROR_FILE_NOT_FOUND)
-    {
-      ResLoader resLoad;
-      m_cove = resLoad.LoadBitmapFromAppData(thumbnailpath);
-      if (m_cove)
-        def->SetTexture(m_cove);
-    }
-  }
+  POINT favouritept = {favourite_fixpt.x + layer_fixpt.x, favourite_fixpt.y + layer_fixpt.y};
+  favourite->SetTexturePos(favouritept);
+
+  POINT coverpt = {cover_fixpt.x + layer_fixpt.x, cover_fixpt.y + layer_fixpt.y};
+  cover->SetTexturePos(coverpt);
+//   if (!m_mediadata.thumbnailpath.empty() && !m_cove)
+//   {
+//     std::wstring thumbnailpath = m_mediadata.thumbnailpath;
+//     if (GetFileAttributes(thumbnailpath.c_str()) != INVALID_FILE_ATTRIBUTES || 
+//       GetLastError() != ERROR_FILE_NOT_FOUND)
+//     {
+//       ResLoader resLoad;
+//       m_cove = resLoad.LoadBitmapFromAppData(thumbnailpath);
+//       if (m_cove)
+//         def->SetTexture(m_cove);
+//     }
+//   }
 
   m_layer->DoPaint(dc);
 
@@ -123,6 +189,7 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   RECT rc;
   layer->GetTextureRect(rc);
   rc.left = pt.x;
+  rc.right += 10;
   rc.top = pt.y+117;
   rc.bottom = rc.top+20;
 
@@ -157,7 +224,7 @@ int BlockUnit::OnHittest(POINT pt, BOOL blbtndown)
 //   UILayer* play = NULL;
 //   UILayer* hide = NULL;
 
-  BOOL bmark = m_layer->GetUILayer(L"mark", &layer);
+  BOOL bmark = m_layer->GetUILayer(L"background", &layer);
 //   BOOL bdef = m_layer->GetUILayer(L"def", &def);
 //   BOOL bplay = m_layer->GetUILayer(L"play", &play);
 //   BOOL bhide = m_layer->GetUILayer(L"hide", &hide);
@@ -171,31 +238,6 @@ int BlockUnit::OnHittest(POINT pt, BOOL blbtndown)
     return BEHITTEST;
   }
 
-//   RECT rc;
-//   if (blbtndown)
-//   {
-//     play->GetTextureRect(rc);
-//     if (PtInRect(&rc, pt))
-//       return BEPLAY;
-// 
-//     hide->GetTextureRect(rc);
-//     if (PtInRect(&rc, pt))
-//       return BEHIDE;
-//   }
-//   else
-//   {
-//     layer->GetTextureRect(rc);
-//     if (PtInRect(&rc, pt))
-//     {
-//       play->SetDisplay(TRUE);
-//       hide->SetDisplay(TRUE);
-//       return BEHITTEST;
-//     }
-//   }
-// 
-//   play->SetDisplay(FALSE);
-//   hide->SetDisplay(FALSE);
-
   return BENORMAL;
 }
 
@@ -203,7 +245,7 @@ RECT BlockUnit::GetHittest()
 {
   RECT rc;
   UILayer* mark = NULL;
-  m_layer->GetUILayer(L"mark", &mark);
+  m_layer->GetUILayer(L"background", &mark);
   mark->GetTextureRect(rc);
   return rc;
 }
@@ -232,9 +274,9 @@ BlockList::BlockList()
 : m_bSizeChanged(false)
 , m_scrollbarinitialize(FALSE)
 {
-  m_blockw = 102;
-  m_blockh = 115;
-  m_spacing = 10;
+  m_blockw = 140;
+  m_blockh = 130;
+  m_spacing = 34;
   m_scrollbarwidth = 20;
   m_top = 25;
   m_list = &m_list1;
@@ -253,6 +295,7 @@ BlockList::BlockList()
   m_maxcolumn = 0;
   m_maxcolumnpre = 0;
   m_maxrow = 0;
+  m_margin = 22;
   AddScrollBar();
 
   //ModelPtr ptr(new MCBlockModel::added_time_sort_model);
@@ -284,11 +327,6 @@ void BlockList::DoPaint(WTL::CDC& dc)
   int rows = 0;
   float y = .0f;
 
-  //   if (m_scrollbar->GetDisPlay() && !m_scrollbar->GetInitializeFlag())
-  //   {
-  //     SetScrollBarInitializeFlag(TRUE);
-  //     m_scrollbar->SetInitializeFlag(TRUE);
-  //   }
   m_scrollbar->DoPaint(dc);
 
   std::list<BlockUnit*>::iterator it = m_start;
@@ -415,23 +453,33 @@ void BlockList::AlignColumnBlocks()
 {
   m_maxcolumnpre = m_maxcolumn;
   m_x.clear();
-  float x = m_spacing;
+  int x = m_margin;
+  int space = 0;
 
   int scrollbarwidth = 0;
   if (m_scrollbar->GetDisPlay())
     scrollbarwidth = m_scrollbarwidth;
-  int count = (m_winw - 2 * m_spacing - scrollbarwidth) / m_blockw;
-  int totalspacing = (int)(m_winw - 2 * m_spacing - scrollbarwidth) % (int)m_blockw;
-  int spacing;
-  if (totalspacing / (count - 1) >= m_spacing)
-    spacing = totalspacing / (count - 1);
-  else
-    spacing = totalspacing / (count - 2);
+//   int count = (m_winw - 2 * m_spacing - scrollbarwidth) / m_blockw;
+//   int totalspacing = (int)(m_winw - 2 * m_spacing - scrollbarwidth) % (int)m_blockw;
+//   int spacing;
+//   if (totalspacing / (count - 1) >= m_spacing)
+//     spacing = totalspacing / (count - 1);
+//   else
+//     spacing = totalspacing / (count - 2);
+  int count = ((int)m_winw - 2 * m_margin - scrollbarwidth + (int)m_spacing)
+               / ((int)m_blockw + (int)m_spacing);
+  int remainspace = ((int)m_winw - 2 * m_margin - scrollbarwidth + (int)m_spacing)
+                     % ((int)m_blockw + (int)m_spacing);
+  if (remainspace != 0)
+  {
+    space = remainspace / (count - 1);
+    space += m_spacing;
+  }
 
   while (count--)
   {
     m_x.push_back(x);
-    x += m_blockw + spacing;
+    x += m_blockw + space;
   }
 
   m_maxcolumn = m_x.size();
@@ -676,31 +724,6 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
       *unit = *it;
       break;
     }
-//     int state = 0;
-//     if (*it)
-//       state = (*it)->OnHittest(pt, blbtndown);
-// 
-//     switch (state)
-//     {
-//     case BEHIDE:
-//       if ((*unit) == (*it))
-//         *unit = 0;
-//       DeleteBlock(it);
-//       return state;
-//     case BEPLAY:
-//       {
-//         if (!m_sigPlayback.empty())
-//           m_sigPlayback((*it)->m_mediadata); // emit a signal
-//       }
-//       return state;
-//     case  BEHITTEST:
-//       *unit = (*it);
-//       if ((*it)->m_mediadata.filmname.empty())
-//         m_tipstring = (*it)->m_mediadata.filename;
-//       else
-//         m_tipstring = (*it)->m_mediadata.filmname;
-//       stRet = BEHITTEST;
-//     }
   }
   m_tipstring = L"";
   return stRet;
@@ -746,6 +769,19 @@ void BlockList::DeleteBlock(int index)
   std::list<BlockUnit*>::iterator it = m_start;
   while(index--)
     ++it;
+  DeleteBlock(it);
+}
+
+void BlockList::DeleteBlock(BlockUnit* unit)
+{
+  std::list<BlockUnit*>::iterator it = m_start;
+  while(it != m_end)
+  {
+    if ((*it)->m_mediadata.uniqueid == unit->m_mediadata.uniqueid)
+      break;
+    ++it;
+  }
+
   DeleteBlock(it);
 }
 
@@ -952,6 +988,11 @@ BOOL BlockList::IsEmpty()
   return bl;
 }
 
+BOOL BlockList::NeedRepaintScrollbar()
+{
+  return m_scrollbar->NeedRepaint();
+}
+
 //BlockListView
 
 BlockListView::BlockListView():
@@ -991,18 +1032,26 @@ void BlockListView::HandleLButtonDown(POINT pt, BlockUnit** unit)
     m_lbtndown = TRUE;
   }
 
-  if (layerstate == BEPLAY)
+  if (m_curUnit)
   {
-    SendMessage(m_hwnd, WM_LBUTTONUP, 0, 0);
-    SendMessage(m_hwnd, WM_MEDIACENTERPLAYVEDIO, 0, 0);
-  }
+    int stat = m_curUnit->ActMouseDown(pt);
 
-  if (layerstate == BEHIDE)
-  {
-    Update(rcclient.right, rcclient.bottom);
-    InvalidateRect(m_hwnd, &rcclient, FALSE);
-    RECT rc = {0, 0, 0, 0};
-    m_prehittest = rc;
+    if (stat == BEPLAY)
+    {
+      if (!m_sigPlayback.empty())
+        m_sigPlayback(m_curUnit->m_mediadata);
+      SendMessage(m_hwnd, WM_LBUTTONUP, 0, 0);
+      SendMessage(m_hwnd, WM_MEDIACENTERPLAYVEDIO, 0, 0);
+    }
+
+    if (stat == BEHIDE)
+    {
+      DeleteBlock(m_curUnit);
+      m_curUnit = NULL;
+
+      Update(rcclient.right, rcclient.bottom);
+      InvalidateRect(m_hwnd, &rcclient, FALSE);
+    }
   }
 }
 
@@ -1012,7 +1061,7 @@ void BlockListView::HandleLButtonUp(POINT pt, BlockUnit** unit)
   GetClientRect(m_hwnd, &rcclient);
 
   int bscroll = OnScrollBarHittest(pt, FALSE, *m_scrollspeed, m_hwnd);
-  int blayer = OnHittest(pt, FALSE, unit);
+  //int blayer = OnHittest(pt, FALSE, unit);
 
   if (m_lbtndown)
   {
@@ -1039,16 +1088,30 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
   if (bscroll == ScrollBarClick)
     ::InvalidateRect(m_hwnd, &rcclient, FALSE);
 
-  if (bscroll == ScrollBarHit && m_lbtndown)
-    PostMessage(m_hwnd, WM_LBUTTONUP, 0, 0);
-
+//   if (bscroll == ScrollBarHit && m_lbtndown)
+//     PostMessage(m_hwnd, WM_LBUTTONUP, 0, 0);
+  
   if (bscroll == NoScrollBarHit && m_lbtndown)
   {
     RECT rc = GetScrollBarHittest();
     rc.top = 0;
     rc.bottom = rcclient.bottom;
     InvalidateRect(m_hwnd, &rc, FALSE);
-    m_lbtndown = FALSE;
+    PostMessage(m_hwnd, WM_LBUTTONUP, 0, 0);
+  }
+
+  if (bscroll == ScrollBarHit || bscroll == NoScrollBarHit)
+  {
+    if (NeedRepaintScrollbar())
+    {
+      if (bscroll == ScrollBarHit)
+        SetClassLong(m_hwnd, GCL_HCURSOR, (LONG)::LoadCursor(NULL, IDC_HAND));
+      else
+        SetClassLong(m_hwnd, GCL_HCURSOR, (LONG)::LoadCursor(NULL, IDC_ARROW));
+
+      RECT rc = GetScrollBarHittest();
+      InvalidateRect(m_hwnd, &rc, FALSE);
+    }
   }
 
   *unit = NULL;
@@ -1059,58 +1122,44 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
     if (*unit)
     {
       m_curUnit = *unit;
-      m_curUnit->ActMouseOver();
+      m_curUnit->ActMouseOver(pt);
+      SetClassLong(m_hwnd, GCL_HCURSOR, (LONG)::LoadCursor(NULL, IDC_HAND));
       ::InvalidateRect(m_hwnd, &(m_curUnit->GetHittest()), FALSE);
     }
-//     int blayer = OnHittest(pt, FALSE, unit);
-//     if (blayer == BEHITTEST)
-//     {
-//       SetTimer(m_hwnd, TIMER_TIPS, 500, NULL);
-//       ::InvalidateRect(m_hwnd, &m_prehittest, FALSE);
-//       ::InvalidateRect(m_hwnd, &((*unit)->GetHittest()), FALSE);
-//       if (*unit)
-//         m_prehittest = (*unit)->GetHittest();
-//     }
   }
   else
   {
     if (m_curUnit->OnHittest(pt, FALSE))
     {
-      m_curUnit->ActMouseOver();
-      //::InvalidateRect(m_hwnd, &(m_curUnit->GetHittest()), FALSE);
+      BOOL bl = m_curUnit->ActMouseOver(pt);
+      if (bl)
+        ::InvalidateRect(m_hwnd, &(m_curUnit->GetHittest()), FALSE);
     }
     else
     {
-      m_curUnit->ActMouseOut();
+      m_curUnit->ActMouseOut(pt);
+      SetClassLong(m_hwnd, GCL_HCURSOR, (LONG)::LoadCursor(NULL, IDC_ARROW));
       ::InvalidateRect(m_hwnd, &(m_curUnit->GetHittest()), FALSE);
       m_curUnit = NULL;
     }
   }
-//   HCURSOR hcursor;
-//   if (blayer == BEHITTEST || bscroll == ScrollBarHit || bscroll == ScrollBarClick)
-//     hcursor = LoadCursor(NULL, IDC_HAND);
-//   else
-//     hcursor = LoadCursor(NULL, IDC_ARROW);
-// 
-//   SetCursor(hcursor);
-
 }
 
 BOOL BlockListView::HandleRButtonUp(POINT pt, BlockUnit** unit, CMenu* menu)
 {
   BOOL bhit = FALSE;
 
-  int blayer = OnHittest(pt, FALSE, unit);
-
-  if (blayer == BEHITTEST)
-  {
-    RECT rc;
-    GetWindowRect(m_hwnd, &rc);
-    pt.x += rc.left;
-    pt.y += rc.top;
-    menu->GetSubMenu(0)->TrackPopupMenu(TPM_RIGHTBUTTON|TPM_NOANIMATION, pt.x, pt.y, CWnd::FromHandle(m_hwnd));
-    bhit = TRUE;
-  }
+//   int blayer = OnHittest(pt, FALSE, unit);
+// 
+//   if (blayer == BEHITTEST)
+//   {
+//     RECT rc;
+//     GetWindowRect(m_hwnd, &rc);
+//     pt.x += rc.left;
+//     pt.y += rc.top;
+//     menu->GetSubMenu(0)->TrackPopupMenu(TPM_RIGHTBUTTON|TPM_NOANIMATION, pt.x, pt.y, CWnd::FromHandle(m_hwnd));
+//     bhit = TRUE;
+//   }
 
   return bhit;
 }

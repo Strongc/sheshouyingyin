@@ -1,6 +1,55 @@
 #include "stdafx.h"
 #include "MCUILayer.h"
 
+
+ULBackground::ULBackground(std::wstring respath, BOOL display) :
+  UILayer(respath, display)
+{
+
+}
+
+ULBackground::~ULBackground()
+{
+
+}
+
+BOOL ULBackground::ActMouseOver(const POINT& pt)
+{
+  RECT rc;
+  GetTextureRect(rc);
+
+  int prestat = GetState();
+  int stat = 0;
+  BOOL bl = FALSE;
+
+  if (PtInRect(&rc, pt))
+    stat = 1;
+
+  if (prestat != stat)
+    bl = TRUE;
+
+  SetState(stat);
+  
+  return bl;
+}
+
+BOOL ULBackground::ActMouseOut(const POINT& pt)
+{
+  SetState(0);
+
+  return TRUE;
+}
+
+BOOL ULBackground::ActMouseDown(const POINT& pt)
+{
+  return FALSE;
+}
+
+BOOL ULBackground::ActMouseUp(const POINT& pt)
+{
+  return FALSE;
+}
+
 ULDel::ULDel(std::wstring respath, BOOL display) :
   UILayer(respath, display)
 {
@@ -12,24 +61,49 @@ ULDel::~ULDel()
 
 }
 
-void ULDel::ActMouseOver()
+BOOL ULDel::ActMouseOver(const POINT& pt)
 {
+  RECT rc;
+  GetTextureRect(rc);
 
+  int prestat = GetState();
+  int stat = 0;
+  BOOL bl = FALSE;
+
+  if (PtInRect(&rc, pt))
+    stat = 1;
+
+  if (prestat != stat)
+    bl = TRUE;
+
+  SetState(stat);
+
+  return bl;
 }
 
-void ULDel::ActMouseOut()
+BOOL ULDel::ActMouseOut(const POINT& pt)
 {
+  SetState(0);
 
+  return TRUE;
 }
 
-void ULDel::ActMouseDown()
+BOOL ULDel::ActMouseDown(const POINT& pt)
 {
+  RECT rc;
+  GetTextureRect(rc);
 
+  BOOL bl = FALSE;
+
+  if (PtInRect(&rc, pt))
+    bl = TRUE;
+
+  return bl;
 }
 
-void ULDel::ActMouseUp()
+BOOL ULDel::ActMouseUp(const POINT& pt)
 {
-
+  return FALSE;
 }
 
 
@@ -44,22 +118,143 @@ ULPlayback::~ULPlayback()
 
 }
 
-void ULPlayback::ActMouseOver()
+BOOL ULPlayback::ActMouseOver(const POINT& pt)
+{
+  RECT rc;
+  GetTextureRect(rc);
+
+  int prestat = GetState();
+  int stat = 0;
+  BOOL bl = FALSE;
+
+  if (PtInRect(&rc, pt))
+    stat = 1;
+
+  if (prestat != stat)
+    bl = TRUE;
+
+  SetState(stat);
+
+  return bl;
+}
+
+BOOL ULPlayback::ActMouseOut(const POINT& pt)
+{
+  SetState(0);
+
+  return TRUE;
+}
+
+BOOL ULPlayback::ActMouseDown(const POINT& pt)
+{
+  RECT rc;
+  GetTextureRect(rc);
+
+  BOOL bl = FALSE;
+
+  if (PtInRect(&rc, pt))
+    bl = TRUE;
+
+  return bl;
+}
+
+BOOL ULPlayback::ActMouseUp(const POINT& pt)
+{
+  return FALSE;
+}
+
+ULFavourite::ULFavourite(std::wstring respath, BOOL display):
+  UILayer(respath, display)
+{
+  
+}
+ 
+ULFavourite::~ULFavourite()
 {
 
 }
 
-void ULPlayback::ActMouseOut()
+BOOL ULFavourite::ActMouseOver(const POINT& pt)
+{
+  RECT rc;
+  GetTextureRect(rc);
+
+  int prestat = GetState();
+  int stat = 0;
+  BOOL bl = FALSE;
+
+  if (PtInRect(&rc, pt))
+    stat = 1;
+
+  if (prestat != stat)
+    bl = TRUE;
+
+  SetState(stat);
+
+  return bl;
+}
+
+BOOL ULFavourite::ActMouseOut(const POINT& pt)
+{
+  SetState(0);
+
+  return TRUE;
+}
+
+BOOL ULFavourite::ActMouseDown(const POINT& pt)
+{
+  return FALSE;
+}
+
+BOOL ULFavourite::ActMouseUp(const POINT& pt)
+{
+  return FALSE;
+}
+
+ULCover::ULCover(std::wstring respath, BOOL display):
+  UILayer(respath, display)
 {
 
 }
 
-void ULPlayback::ActMouseDown()
+ULCover::~ULCover()
 {
 
 }
 
-void ULPlayback::ActMouseUp()
+BOOL ULCover::ActMouseOver(const POINT& pt)
 {
+  RECT rc;
+  GetTextureRect(rc);
 
+  int prestat = GetState();
+  int stat = 0;
+  BOOL bl = FALSE;
+
+  if (PtInRect(&rc, pt))
+    stat = 1;
+
+  if (prestat != stat)
+    bl = TRUE;
+
+  SetState(stat);
+
+  return bl;
+}
+
+BOOL ULCover::ActMouseOut(const POINT& pt)
+{
+  SetState(0);
+
+  return TRUE;
+}
+
+BOOL ULCover::ActMouseDown(const POINT& pt)
+{
+  return FALSE;
+}
+
+BOOL ULCover::ActMouseUp(const POINT& pt)
+{
+  return FALSE;
 }
