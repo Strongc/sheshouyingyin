@@ -10,8 +10,10 @@
 #define  NoScrollBarHit 23
 
 MediaCenterScrollBar::MediaCenterScrollBar(void):
-m_lastlbtstate(FALSE)
+ m_lastlbtstate(FALSE)
 ,m_binitialize(FALSE)
+,m_stat(0)
+,m_prestat(0)
 {
   m_prepos.x = 0;
   m_prepos.y = 0;
@@ -42,6 +44,8 @@ void MediaCenterScrollBar::CreatScrollBar(std::wstring respath)
       }
     }
   }
+
+  m_bm.bmHeight /= 2;
 }
 
 void MediaCenterScrollBar::SetPosition(POINT pt)
@@ -74,7 +78,7 @@ BOOL MediaCenterScrollBar::DoPaint(WTL::CDC& dc)
 
   BLENDFUNCTION bf = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
   dc.AlphaBlend(m_pos.x, m_pos.y, m_bm.bmWidth, m_bm.bmHeight,
-    dcMem, 0, 0, m_bm.bmWidth, m_bm.bmHeight, bf);
+    dcMem, 0, m_stat * m_bm.bmHeight, m_bm.bmWidth, m_bm.bmHeight, bf);
 
   dcMem.SelectBitmap(oldHbm);
   dcMem.DeleteDC();
@@ -86,6 +90,8 @@ BOOL MediaCenterScrollBar::OnHittest(POINT pt, int bLbtdown, int& offsetspeed, H
 {
   if (m_winh - m_bm.bmHeight < 0)
     return FALSE;
+
+  m_prestat = m_stat;
 
   int bhit = 0;
   if (bLbtdown == 1)
@@ -122,13 +128,21 @@ BOOL MediaCenterScrollBar::OnHittest(POINT pt, int bLbtdown, int& offsetspeed, H
     SetTimer(hwnd, TIMER_OFFSET, timer, NULL);
 
     bhit = ScrollBarClick;
+
+    m_stat = 1;
   }
   else //if (PtInRect(&m_hittest, pt) && ((m_pos.x != m_prepos.x) || (m_pos.y != m_prepos.y)))
   { 
     if (PtInRect(&m_hittest, pt))//&& ((m_pos.x != m_prepos.x) || (m_pos.y != m_prepos.y)))
+    {
       bhit = ScrollBarHit;
+      m_stat = 1;
+    }
     else
+    {
       bhit = NoScrollBarHit;
+      m_stat = 0;
+    }
 
     KillTimer(hwnd, TIMER_OFFSET);
     KillTimer(hwnd, TIMER_SLOWOFFSET);
@@ -179,4 +193,9 @@ void MediaCenterScrollBar::SetInitializeFlag(BOOL bl)
 BOOL MediaCenterScrollBar::GetInitializeFlag()
 {
   return m_binitialize;
+}
+
+BOOL MediaCenterScrollBar::NeedRepaint()
+{
+  return m_prestat == m_stat? FALSE : TRUE;
 }

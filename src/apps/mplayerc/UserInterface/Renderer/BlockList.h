@@ -26,8 +26,9 @@ public:
   RECT GetHittest();
   void ResetCover();
 
-  void ActMouseOver();
-  void ActMouseOut();
+  BOOL ActMouseOver(POINT pt);
+  BOOL ActMouseOut(POINT pt);
+  int ActMouseDown(POINT pt);
 
 public:
   MediaData m_mediadata;
@@ -45,6 +46,7 @@ public:
   ~BlockList();
 
   void AddBlock(BlockUnit* unit);  
+  void DeleteBlock(BlockUnit* unit);
   void DeleteBlock(std::list<BlockUnit*>::iterator it);
   void DeleteBlock(int i);
   BOOL AddScrollBar();
@@ -85,6 +87,7 @@ public:
   int GetListCapacity();
   void SetSizeChanged();
   BOOL IsEmpty();
+  BOOL NeedRepaintScrollbar();
 
   // signals
 public:
@@ -103,6 +106,8 @@ private:
   float m_winh;
 
   float m_offsettotal;
+
+  int m_margin;
 
   int m_maxrow;
   int m_maxcolumnpre;
