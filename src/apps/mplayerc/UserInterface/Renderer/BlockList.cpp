@@ -317,7 +317,7 @@ BlockList::~BlockList()
 void BlockList::DoPaint(HDC hdc, RECT rcclient)
 {
   WTL::CMemoryDC dc(hdc, rcclient);
-  HBRUSH hbrush = ::CreateSolidBrush(COLORREF(0x313131));
+  HBRUSH hbrush = ::CreateSolidBrush(COLORREF(0xb3b3b3));
   dc.FillRect(&rcclient, hbrush);
   DoPaint(dc);
   DeleteObject(hbrush);
@@ -332,7 +332,7 @@ void BlockList::DoPaint(WTL::CDC& dc)
   float y = .0f;
 
   m_scrollbar->DoPaint(dc);
-
+  
   std::list<BlockUnit*>::iterator it = m_start;
   std::vector<float>::iterator itx =  m_x.begin();
   std::vector<float>::iterator ity =  m_y.begin();
@@ -349,6 +349,9 @@ void BlockList::DoPaint(WTL::CDC& dc)
     (*it)->DoPaint(dc, pt);
     ++itx;
   } 
+
+  m_statusbar.SetBKColor(COLORREF(0xd6d6d6));
+  m_statusbar.Update(dc);
 }
 
 void BlockList::AddBlock(BlockUnit* unit)
@@ -532,6 +535,18 @@ void BlockList::AlignScrollBar()
   }
 }
 
+void BlockList::AlignStatusBar()
+{
+  RECT rc = {0, m_winh, m_winw, m_winh + m_bottomdistance};
+  m_statusbar.SetVisible(true);
+  m_statusbar.SetRect(rc);
+}
+
+RECT BlockList::GetStatusBarHittest()
+{
+  return m_statusbar.GetRect();
+}
+
 void BlockList::Update(float winw, float winh)
 {
   m_winw = winw;
@@ -541,6 +556,7 @@ void BlockList::Update(float winw, float winh)
   AlignColumnBlocks();
   AlignRowBlocks();
   AlignScrollBar();
+  AlignStatusBar();
   CalculateViewCapacity();
   
   if (!m_list->empty())
@@ -997,6 +1013,11 @@ BOOL BlockList::NeedRepaintScrollbar()
   return m_scrollbar->NeedRepaint();
 }
 
+void BlockList::SetStatusBarTip(const std::wstring& str)
+{
+  m_statusbar.SetText(str);
+}
+
 //BlockListView
 
 BlockListView::BlockListView():
@@ -1127,8 +1148,12 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
     {
       m_curUnit = *unit;
       m_curUnit->ActMouseOver(pt);
+      std::wstring tip = m_curUnit->m_mediadata.path + m_curUnit->m_mediadata.filename;
+      SetStatusBarTip(tip);
       SetClassLong(m_hwnd, GCL_HCURSOR, (LONG)::LoadCursor(NULL, IDC_HAND));
-      ::InvalidateRect(m_hwnd, &(m_curUnit->GetHittest()), FALSE);
+      RECT unionRc;
+      UnionRect(&unionRc, &m_curUnit->GetHittest(), &GetStatusBarHittest());
+      ::InvalidateRect(m_hwnd, &unionRc, FALSE);
     }
   }
   else
@@ -1141,9 +1166,15 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
     }
     else
     {
+      if (!m_curUnit)
+        return;
+
       m_curUnit->ActMouseOut(pt);
+      SetStatusBarTip(L"");
       SetClassLong(m_hwnd, GCL_HCURSOR, (LONG)::LoadCursor(NULL, IDC_ARROW));
-      ::InvalidateRect(m_hwnd, &(m_curUnit->GetHittest()), FALSE);
+      RECT unionRc;
+      UnionRect(&unionRc, &m_curUnit->GetHittest(), &GetStatusBarHittest());
+      ::InvalidateRect(m_hwnd, &unionRc, FALSE);
       m_curUnit = NULL;
     }
   }

@@ -10,6 +10,7 @@
 #include "CoverDownloadController.h"
 #include "CoverUploadController.h"
 #include "LoadMediaDataFromDB.h"
+#include "..\UserInterface\Renderer\MCStatusBar.h"
 
 class MediaCenterController:
   public LazyInstanceImpl<MediaCenterController>
@@ -42,7 +43,7 @@ public:
    void SetPlaneState(BOOL bl);
 
    BlockListView& GetBlockListView();
-
+   
    HRGN CalculateUpdateRgn(WTL::CRect& rc);
 
    void SetCover(BlockUnit* unit, std::wstring orgpath);
