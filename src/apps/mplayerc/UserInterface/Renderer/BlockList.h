@@ -8,6 +8,7 @@
 #include "../../Model/MediaTreeModel.h"
 #include <boost/signals.hpp>
 #include <boost/shared_ptr.hpp>
+#include "MCStatusBar.h"
 
 /* 
  * Class BlockUnit implements block UI and UnitData
@@ -68,6 +69,9 @@ public:
   void AlignScrollBar();
   void UpdateScrollBar(POINT pt);
   RECT GetScrollBarHittest();
+  void AlignStatusBar();
+  void SetStatusBarTip(const std::wstring& str);
+  RECT GetStatusBarHittest();
   BOOL ContiniuPaint();
   void GetLastBlockPosition(RECT& rc);
   int  GetEnableShowAmount();
@@ -88,8 +92,8 @@ public:
   void SetSizeChanged();
   BOOL IsEmpty();
   BOOL NeedRepaintScrollbar();
-
-  // signals
+  
+// signals
 public:
   boost::signal<void (const MediaData &md)> m_sigPlayback;
   std::wstring m_tipstring;
@@ -135,6 +139,8 @@ private:
   MediaCenterScrollBar* m_scrollbar;
   int m_scrollbardirection;
   int m_scrollbardirectionpre;
+
+  MCStatusBar m_statusbar;
 
   BOOL m_DBendstate;
   BOOL m_DBbeginstate;
