@@ -274,6 +274,8 @@ BlockList::BlockList()
 : m_bSizeChanged(false)
 , m_scrollbarinitialize(FALSE)
 {
+  m_topdistance = 26;
+  m_topdistance = 22;
   m_blockw = 140;
   m_blockh = 130;
   m_spacing = 34;
@@ -296,6 +298,8 @@ BlockList::BlockList()
   m_maxcolumnpre = 0;
   m_maxrow = 0;
   m_margin = 22;
+  m_DBendstate = FALSE;
+  m_DBbeginstate = TRUE;
   AddScrollBar();
 
   //ModelPtr ptr(new MCBlockModel::added_time_sort_model);
@@ -459,13 +463,7 @@ void BlockList::AlignColumnBlocks()
   int scrollbarwidth = 0;
   if (m_scrollbar->GetDisPlay())
     scrollbarwidth = m_scrollbarwidth;
-//   int count = (m_winw - 2 * m_spacing - scrollbarwidth) / m_blockw;
-//   int totalspacing = (int)(m_winw - 2 * m_spacing - scrollbarwidth) % (int)m_blockw;
-//   int spacing;
-//   if (totalspacing / (count - 1) >= m_spacing)
-//     spacing = totalspacing / (count - 1);
-//   else
-//     spacing = totalspacing / (count - 2);
+
   int count = ((int)m_winw - 2 * m_margin - scrollbarwidth + (int)m_spacing)
                / ((int)m_blockw + (int)m_spacing);
   int remainspace = ((int)m_winw - 2 * m_margin - scrollbarwidth + (int)m_spacing)
@@ -490,7 +488,7 @@ void BlockList::AlignRowBlocks()
 {
   float y;
   if (m_y.empty())
-    y = 0;
+    y = m_topdistance;
   else
     y = m_y.front();
   m_y.clear();
@@ -611,10 +609,12 @@ int BlockList::SetStartOffset(float offset)
   int height = (int)m_blockh + (int)m_top;
   int column = m_maxcolumn;
   int distance;
-  //   if (m_start == m_list->begin())
-  //     distance = m_top;
-  //   else
-  distance = 0;
+  if (m_start == m_list->begin() && m_DBbeginstate)
+  {
+    distance = m_topdistance;
+  }
+  else
+    distance = 0;
 
   int minoffset = (int)(m_winh - distance) % height == 0? 0:height - (int)(m_winh - distance) % height; 
   m_offsettotal += offset;
@@ -628,6 +628,7 @@ int BlockList::SetStartOffset(float offset)
 
     if (listState == DOWNOFFSETSUCCESS && m_offsettotal >= height + distance)
     { 
+      Logging("---------------------SetStartOffset distance %d", distance);
       while (column--)
         ++start;
       SwapListBuff(start, TRUE);
@@ -642,7 +643,10 @@ int BlockList::SetStartOffset(float offset)
     listState = IsListBegin(start);
 
     if (listState == UPOFFSETONE)
+    {
+      m_DBbeginstate = TRUE;
       m_offsettotal = max(m_offsettotal, 0);
+    }
 
     if (listState == UPOFFSETSUCCESS && m_offsettotal < 0)
     {
@@ -655,15 +659,17 @@ int BlockList::SetStartOffset(float offset)
       }
 
       m_offsettotal += height; 
-      //        if (start == m_list->begin())
-      //          distance = m_top;
-      //        else
-      distance = 0;
+      if (m_start == m_list->begin() && m_DBbeginstate)
+        distance = m_topdistance;
+      else
+        distance = 0;
       m_offsettotal += distance;
     }
   }
 
   m_start = start;
+  if (m_start != m_list->begin())
+    m_DBbeginstate = FALSE;
   return listState;
 }
 
@@ -672,10 +678,10 @@ void BlockList::SetYOffset(float offset, int result)
   float y = m_y.front();
   int height = (int)m_blockh + (int)m_top;
   int distance;
-  //   if (m_start == m_list->begin())
-  //     distance = m_top;
-  //   else
-  distance = 0;
+  if (m_start == m_list->begin() && m_DBbeginstate)
+    distance = m_topdistance;
+  else
+    distance = 0;
   int ymin =  ((int)(m_winh - distance) % height == 0? 0 : (int)(m_winh - distance) % height - height);
   y = y - offset;
 
@@ -857,7 +863,7 @@ void BlockList::SwapListBuff(std::list<BlockUnit*>::iterator& it, BOOL upordown)
 {
   if (GetIdleList()->empty())
     return;
-
+  
   if (MediaCenterController::GetInstance()->LoadMediaDataAlive())
     return;
 
