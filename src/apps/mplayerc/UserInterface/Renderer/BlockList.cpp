@@ -275,7 +275,7 @@ BlockList::BlockList()
 , m_scrollbarinitialize(FALSE)
 {
   m_topdistance = 26;
-  m_topdistance = 22;
+  m_bottomdistance = 22;
   m_blockw = 140;
   m_blockh = 130;
   m_spacing = 34;
@@ -536,6 +536,7 @@ void BlockList::Update(float winw, float winh)
 {
   m_winw = winw;
   m_winh = winh;
+  m_winh -= m_bottomdistance;
 
   AlignColumnBlocks();
   AlignRowBlocks();
@@ -610,9 +611,7 @@ int BlockList::SetStartOffset(float offset)
   int column = m_maxcolumn;
   int distance;
   if (m_start == m_list->begin() && m_DBbeginstate)
-  {
     distance = m_topdistance;
-  }
   else
     distance = 0;
 
@@ -628,7 +627,6 @@ int BlockList::SetStartOffset(float offset)
 
     if (listState == DOWNOFFSETSUCCESS && m_offsettotal >= height + distance)
     { 
-      Logging("---------------------SetStartOffset distance %d", distance);
       while (column--)
         ++start;
       SwapListBuff(start, TRUE);

@@ -59,7 +59,7 @@ void MediaSpiderFolderTree::_Thread()
 {
   using std::wstring;
   using std::vector;
-
+  return;
   time_t tCur = ::time(0);
   std::wstringstream ssSQL;
 
