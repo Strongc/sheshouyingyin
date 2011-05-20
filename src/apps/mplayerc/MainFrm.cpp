@@ -9336,6 +9336,8 @@ void CMainFrame::OnRecentFile(UINT nID)
     }
   }
 
+  if (MediaCenterController::GetInstance()->GetPlaneState())
+    ShowToolBar();
 }
 
 void CMainFrame::OnUpdateRecentFile(CCmdUI* pCmdUI)
