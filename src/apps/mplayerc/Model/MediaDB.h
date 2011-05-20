@@ -25,7 +25,7 @@ public:
   {
     if (g_sDBType == L"sqlite")
     {
-      MediaSQLite<T1, T2, T3, T4, T5, T6, T7, T8, T9 >::exec(sql, pRet1, pRet2, pRet3, pRet4, pRet5, pRet6);
+      MediaSQLite<T1, T2, T3, T4, T5, T6, T7, T8, T9 >::exec(sql, pRet1, pRet2, pRet3, pRet4, pRet5, pRet6, pRet7, pRet8, pRet9);
     }
   }
 
@@ -42,7 +42,7 @@ public:
   {
     if (g_sDBType == L"sqlite")
     {
-      MediaSQLite<T1, T2, T3, T4, T5, T6, T7, T8, T9 >::exec(sql, pRet1, pRet2, pRet3, pRet4, pRet5, pRet6);
+      MediaSQLite<T1, T2, T3, T4, T5, T6, T7, T8, T9 >::exec(sql, pRet1, pRet2, pRet3, pRet4, pRet5, pRet6, pRet7, pRet8, pRet9);
     }
   }
 

@@ -125,8 +125,6 @@ void media_tree::model::addFolder(const std::wstring &sFolder, bool bIncreaseMer
 
 void media_tree::model::addFile(const MediaData &md)
 {
-  using namespace boost::lambda;
-
   m_cs.lock();
   TreeIterator itFolder = findFolder(md.path, true);
   TreeIterator itEnd;
@@ -148,6 +146,7 @@ void media_tree::model::addFile(const MediaData &md)
     {
       media_tree::file fe;
       fe.file_data.filename = md.filename;
+      fe.file_data.filmname = md.filmname;
       fe.file_data.path = fullFolderPath(itFolder.node());
       fe.file_data.thumbnailpath = md.thumbnailpath;
       //fe.sFileHash = ;
@@ -169,7 +168,7 @@ void media_tree::model::save2DB()
 
   m_cs.lock();
 
-  MediaSQLite<>::exec(L"begin transaction");
+  //MediaSQLite<>::exec(L"begin transaction");
   MediaTreeFolders::tree_type::pre_order_iterator it = m_lsFolderTree.pre_order_begin();
   while (it != m_lsFolderTree.pre_order_end())
   {
@@ -194,6 +193,7 @@ void media_tree::model::save2DB()
           md.path = sFolderPath;
           md.filename = itFile->file_data.filename;
           md.thumbnailpath = itFile->file_data.thumbnailpath;
+          md.filmname = itFile->file_data.filmname;
           md.videotime = itFile->file_data.videotime;
           md.bHide = itFile->file_data.bHide;
 
@@ -206,7 +206,7 @@ void media_tree::model::save2DB()
 
     ++it;
   }
-  MediaSQLite<>::exec(L"end transaction");
+  //MediaSQLite<>::exec(L"end transaction");
 
   m_cs.unlock();
 }

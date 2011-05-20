@@ -89,6 +89,7 @@ BOOL CChildView::PreCreateWindow(CREATESTRUCT& cs)
 		return FALSE;
 
 	cs.style &= ~WS_BORDER;
+  cs.style |= WS_CLIPCHILDREN;
 	
 	cs.lpszClass = AfxRegisterWndClass(CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS, 
 		::LoadCursor(NULL, IDC_HAND), HBRUSH(COLOR_WINDOW+1), NULL);
@@ -99,6 +100,12 @@ BOOL CChildView::PreCreateWindow(CREATESTRUCT& cs)
 
 BOOL CChildView::PreTranslateMessage(MSG* pMsg)
 {
+  HWND hFilmNameEdit = m_mediacenter->GetFilmNameEdit();
+  if (hFilmNameEdit && (pMsg->hwnd == hFilmNameEdit))
+  {
+    return CWnd::PreTranslateMessage(pMsg);
+  }
+
 	  if(pMsg->message >= WM_MOUSEFIRST && pMsg->message <= WM_MYMOUSELAST)
 	  {
 		  CWnd* pParent = GetParent();
@@ -635,6 +642,7 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
     m_menu.LoadMenu(IDR_MEDIACENTERMENU);
 
     SetMenu(&m_menu);
+
 	return 0;
 }
 
@@ -769,7 +777,10 @@ BOOL CChildView::OnLButtonDBCLK(UINT nFlags, CPoint point)
   BOOL bl = FALSE;
 
   if (m_mediacenter->GetPlaneState())
+  {
     bl = TRUE;
+    m_blocklistview->HandleLButtonDblClk(point);
+  }
 
   return bl;
 }

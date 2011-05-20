@@ -2069,7 +2069,6 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 
 BOOL CMainFrame::PreTranslateMessage(MSG* pMsg)
 {
-
   if(pMsg->message == WM_KEYDOWN)
   {
     /*		if(m_fShockwaveGraph

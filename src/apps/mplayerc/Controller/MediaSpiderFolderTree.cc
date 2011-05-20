@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "MediaSpiderFolderTree.h"
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
@@ -150,18 +150,20 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
     // First, fetch all db's data to tree
     vector<wstring> vtPath;
     vector<wstring> vtFilename;
+    vector<wstring> vtFilmname;
     vector<wstring> vtThumbnailPath;
     vector<bool> vtHide;
 
     std::wstringstream ssSQL;
     ssSQL.str(L"");
-    ssSQL << L"SELECT path, filename, thumbnailpath, hide FROM media_data WHERE path='" << sFolder << L"'";
-    MediaDB<wstring, wstring, wstring, bool>::exec(ssSQL.str(), &vtPath, &vtFilename, &vtThumbnailPath, &vtHide);
+    ssSQL << L"SELECT path, filename, filmname, thumbnailpath, hide FROM media_data WHERE path='" << sFolder << L"'";
+    MediaDB<wstring, wstring, wstring, wstring, bool>::exec(ssSQL.str(), &vtPath, &vtFilename, &vtFilmname, &vtThumbnailPath, &vtHide);
     for (int i = 0; i < vtPath.size(); ++i)
     {
       MediaData md;
       md.path = vtPath[i];
       md.filename = vtFilename[i];
+      md.filmname = vtFilmname[i];
       md.thumbnailpath = vtThumbnailPath[i];
       md.bHide = vtHide[i];
       m_treeModel.addFile(md);
@@ -189,6 +191,8 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
       ++it;
     }
 
+    MediaDB<>::exec(L"begin transaction");
+
     // delete related media data before save info to db
     ssSQL.str(L"");
     ssSQL << L"DELETE FROM media_data WHERE path='" << sFolder << L"'";
@@ -199,6 +203,8 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
 
     // delete tree
     m_treeModel.delTree();
+
+    MediaDB<>::exec(L"end transaction");
   }
   catch (const filesystem_error &err)
   {

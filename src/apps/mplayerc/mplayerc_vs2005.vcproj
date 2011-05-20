@@ -1672,11 +1672,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\res\ecio.icons\video.ico"
+				RelativePath=".\res\icon\video.ico"
 				>
 			</File>
 			<File
-				RelativePath=".\res\icon\video.ico"
+				RelativePath=".\res\ecio.icons\video.ico"
 				>
 			</File>
 			<File
@@ -2599,23 +2599,27 @@
 					>
 				</File>
 				<File
-					RelativePath=".\UserInterface\Renderer\MCUILayer.cc"
-					
+					RelativePath=".\UserInterface\Renderer\MCStatusBar.cc"
 					>
 				</File>
-			
+				<File
+					RelativePath=".\UserInterface\Renderer\MCStatusBar.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Renderer\MCUILayer.cc"
+					>
+				</File>
 				<File
 					RelativePath=".\UserInterface\Renderer\MCUILayer.h"
 					>
 				</File>
-							<File
-					RelativePath=".\UserInterface\Renderer\MCStatusBar.cc"
-					
-                                        >
+				<File
+					RelativePath=".\UserInterface\Renderer\MCTextEdit.cc"
+                         	>
 				</File>
-							<File
-					RelativePath=".\UserInterface\Renderer\MCStatusBar.h"
-
+				<File
+					RelativePath=".\UserInterface\Renderer\MCTextEdit.h"
 					>
 				</File>
 
