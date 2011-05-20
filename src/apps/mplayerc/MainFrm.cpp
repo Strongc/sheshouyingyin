@@ -13832,8 +13832,8 @@ LRESULT CMainFrame::OnNcCalcSizeNewUI(   WPARAM wParam, LPARAM lParam){
         return 0;
       }else if(wp.showCmd!=SW_MAXIMIZE ){
         rc.InflateRect( GetSystemMetrics(SM_CXFRAME) - 4,  GetSystemMetrics(SM_CXFRAME) - 8,   GetSystemMetrics(SM_CXFRAME) - 4, GetSystemMetrics(SM_CXFRAME) - 3  );
-        if(!m_wndToolBar.IsVisible())	{
-          //rc.bottom -= 2;
+        if (!m_wndToolBar.IsVisible())	{
+          rc.bottom += 1;
         }
         rc.bottom -= 4;
         rc.top -=1 ;
