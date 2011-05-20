@@ -860,10 +860,26 @@ void BlockList::OnLButtonDblClk(POINT pt)
       pFrame->m_hAccelTable = 0;        // temp destroy the accelerate table
 
       m_pFilmNameEditor = new MCTextEdit;
-      m_pFilmNameEditor->Create(m_hwnd, (*it)->GetTextRect(), 0, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL);
+      m_pFilmNameEditor->Create(m_hwnd, (*it)->GetTextRect(), 0, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_MULTILINE);
       std::wstring sFilmName = (*it)->m_mediadata.filmname;
       if (sFilmName.empty())
         sFilmName = (*it)->m_mediadata.filename;
+
+      CRect rc = CRect(0,0,0,0);
+      m_pFilmNameEditor->GetClientRect(&rc);
+
+      HDC dc = m_pFilmNameEditor->GetDC();
+      CDC pDC;
+      pDC.Attach(dc);
+      TEXTMETRIC tm;
+      pDC.GetTextMetrics(&tm);
+      pDC.Detach();
+      int nFontHeight = tm.tmHeight + tm.tmExternalLeading;
+      int nMargin = (rc.Height() - nFontHeight) / 2;
+
+      rc.DeflateRect(0,nMargin);
+      m_pFilmNameEditor->SetRectNP(&rc);
+      m_pFilmNameEditor->ReleaseDC(dc);
 
       m_pFilmNameEditor->SetWindowText(sFilmName.c_str());
       m_pFilmNameEditor->SetFocus();
