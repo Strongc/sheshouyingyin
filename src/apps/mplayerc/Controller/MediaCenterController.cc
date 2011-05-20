@@ -80,6 +80,9 @@ void MediaCenterController::SpiderStop()
    m_spider._Stop(1000);
   
    m_coverdown._Stop();
+
+   m_treeModel.save2DB();
+   m_treeModel.delTree();
 }
 
 void MediaCenterController::LoadMediaData(int direction, std::list<BlockUnit*>* list,

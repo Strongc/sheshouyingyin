@@ -834,8 +834,6 @@ void BlockList::OnSetFilmName()
   // store info to database
   media_tree::model &tree_model = MediaCenterController::GetInstance()->GetMediaTree();
   tree_model.addFile((*m_itCurEdit)->m_mediadata);
-  tree_model.save2DB();
-  tree_model.delTree();
 }
 
 void BlockList::OnLButtonDblClk(POINT pt)
@@ -867,7 +865,8 @@ void BlockList::OnLButtonDblClk(POINT pt)
 
       m_pFilmNameEditor->SetWindowText(sFilmName.c_str());
       m_pFilmNameEditor->SetFocus();
-      m_pFilmNameEditor->SetSel(0, -1);
+
+      m_pFilmNameEditor->SetSel(0, sFilmName.find_last_of('.')); // only focus on filename, exclude the ext
 
       m_itCurEdit = it;
 
