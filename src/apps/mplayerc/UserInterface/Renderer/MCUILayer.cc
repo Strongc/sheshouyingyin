@@ -251,7 +251,15 @@ BOOL ULCover::ActMouseOut(const POINT& pt)
 
 BOOL ULCover::ActMouseDown(const POINT& pt)
 {
-  return FALSE;
+  RECT rc;
+  GetTextureRect(rc);
+
+  BOOL bl = FALSE;
+
+  if (PtInRect(&rc, pt))
+    bl = TRUE;
+
+  return bl;
 }
 
 BOOL ULCover::ActMouseUp(const POINT& pt)

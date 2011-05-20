@@ -45,6 +45,7 @@ static char THIS_FILE[] = __FILE__;
 #define TIMER_TIPS 15
 
 #define WM_MEDIACENTERPLAYVEDIO 16
+#define WM_CHANGECOVE 17
 
 CChildView::CChildView() :
 m_vrect(0,0,0,0)
@@ -289,8 +290,7 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_COMMAND_EX(ID_PLAY_PLAY, OnPlayPlayPauseStop)
 	ON_COMMAND_EX(ID_PLAY_PAUSE, OnPlayPlayPauseStop)
 	ON_COMMAND_EX(ID_PLAY_STOP, OnPlayPlayPauseStop)
-  ON_COMMAND_EX(IDR_MENU_SETCOVER, OnSetCover)
-	ON_WM_SETCURSOR()
+  ON_WM_SETCURSOR()
 	ON_WM_NCCALCSIZE()
 	ON_WM_NCPAINT()
 	ON_WM_SETFOCUS()
@@ -305,6 +305,7 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
   ON_WM_TIMER()
   ON_WM_MOUSELEAVE()
   ON_MESSAGE(WM_MEDIACENTERPLAYVEDIO, OnMediaCenterPlayVedio)
+  ON_MESSAGE(WM_CHANGECOVE, OnSetCover)
 END_MESSAGE_MAP()
 
 static COLORREF colorNextLyricColor(COLORREF lastColor)
@@ -909,7 +910,7 @@ void CChildView::ShowMediaCenter(BOOL bl)
   InvalidateRect(0, FALSE);
 }
 
-BOOL CChildView::OnSetCover(UINT nID)
+LRESULT CChildView::OnSetCover(WPARAM wParam, LPARAM lParam)
 {
   CFileDialog filedlg(TRUE, L"jpg", 0, OFN_READONLY, L"JPEG Files (*.jpg)|*.jpg||", this);
   filedlg.DoModal();

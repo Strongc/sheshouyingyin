@@ -13,6 +13,7 @@
 #define  BEHITTEST 13
 #define  BEHIDE   14
 #define  BEPLAY    15
+#define  BECOVER 16
 
 BlockUnit::BlockUnit()
 : m_layer(new UILayerBlock)
@@ -92,10 +93,12 @@ int BlockUnit::ActMouseDown(POINT pt)
 {
   UILayer* play = NULL;
   UILayer* hide = NULL;
+  UILayer* cover = NULL;
 
   BOOL bplay = m_layer->GetUILayer(L"play", &play);
   BOOL bhide = m_layer->GetUILayer(L"hide", &hide);
-  if (!bplay || !bhide)
+  BOOL bcover = m_layer->GetUILayer(L"cover", &cover);
+  if (!bplay || !bhide || !bcover)
     return FALSE;
 
   if (play->ActMouseDown(pt))
@@ -103,6 +106,9 @@ int BlockUnit::ActMouseDown(POINT pt)
     
   if (hide->ActMouseDown(pt))
     return BEHIDE;
+
+  if (cover->ActMouseDown(pt))
+    return BECOVER;
 
   return BENORMAL;
 }
@@ -1149,6 +1155,8 @@ void BlockList::SetStatusBarTip(const std::wstring& str)
 
 //BlockListView
 
+#define WM_CHANGECOVE 17
+
 BlockListView::BlockListView():
 m_lbtndown(FALSE),
 m_curUnit(NULL)
@@ -1206,6 +1214,9 @@ void BlockListView::HandleLButtonDown(POINT pt, BlockUnit** unit)
       Update(rcclient.right, rcclient.bottom);
       InvalidateRect(m_hwnd, &rcclient, FALSE);
     }
+
+    if (stat == BECOVER)
+      PostMessage(m_hwnd, WM_CHANGECOVE, 0, 0);
   }
 }
 

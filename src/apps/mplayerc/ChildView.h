@@ -108,7 +108,7 @@ public:
 
   afx_msg void OnMouseLeave();
 
-  afx_msg BOOL OnSetCover(UINT nID);
+  afx_msg LRESULT OnSetCover(WPARAM wParam, LPARAM lParam);
 
   afx_msg LRESULT OnMediaCenterPlayVedio(WPARAM wParam, LPARAM lParam);
 
