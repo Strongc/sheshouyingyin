@@ -1152,13 +1152,13 @@ void CMainFrame::OnMouseMove(UINT nFlags, CPoint point)
   if( m_iMediaLoadState == MLS_CLOSED )
     bMediaCenterState = m_wndView.OnMouseMove(nFlags,point);
 
-
   CRect CVideoRect = m_wndView.GetVideoRect();
   if(m_iPlaybackMode == PM_DVD)
   {
     CPoint vp = point - CVideoRect.TopLeft();
     pDVDC->SelectAtPosition(vp);
   }
+
   CPoint point_on_screen = point;
   MapWindowPoints(NULL, &point_on_screen, 1);
   CSize diff = m_lastMouseMove - point_on_screen;
@@ -1181,9 +1181,12 @@ void CMainFrame::OnMouseMove(UINT nFlags, CPoint point)
     }
   }
 
+  if (!m_btoolbardisplay)
+    return;
+
   int iDistance = sqrt( pow( (double)abs(point.x - m_pLastClickPoint.x) , 2)  + pow( (double)abs( point.y - m_pLastClickPoint.y ) , 2) );
   int idisplacement = sqrt(pow((double)abs(point.x - m_pDragFuncStartPoint.x), 2) + pow((double)abs( point.y - m_pDragFuncStartPoint.y ) , 2));
-  if( ( iDistance > 30 || s_mDragFucOn) && bMouseMoved && s_mDragFuc && !bMediaCenterState){
+  if( ( iDistance > 30 || s_mDragFucOn) && bMouseMoved && s_mDragFuc){
     if(!s_mDragFucOn){
       m_pDragFuncStartPoint = point;
       SetAlwaysOnTop(s.iOnTop , FALSE);
@@ -1331,7 +1334,7 @@ void CMainFrame::OnMouseMove(UINT nFlags, CPoint point)
   }
 
 
-  if( bMouseMoved && m_btoolbardisplay){ //&& IsSomethingLoaded()
+  if( bMouseMoved){ //&& IsSomethingLoaded()
     if(m_nomoretopbarforawhile > 0){
       m_nomoretopbarforawhile --;
     }else{
@@ -1362,13 +1365,11 @@ void CMainFrame::OnMouseMove(UINT nFlags, CPoint point)
 
 
 
-  if(bSomethingChanged && m_btoolbardisplay){
+  if(bSomethingChanged){
     rePosOSD();
  }
 
   __super::OnMouseMove(nFlags, point);
-
-
 
 }
 
@@ -14933,12 +14934,13 @@ void CMainFrame::HideToolBar()
 
 void CMainFrame::ShowToolBar()
 {
-  m_btoolbardisplay = TRUE;
+   m_btoolbardisplay = TRUE;
 
-  m_wndToolTopBar.ShowWindow(SW_SHOWNOACTIVATE);
-  m_wndToolBar.ShowWindow(SW_SHOWNOACTIVATE);
+   m_wndToolTopBar.ShowWindow(SW_SHOWNOACTIVATE);
+   
+   m_wndToolBar.ShowWindow(SW_SHOWNOACTIVATE);
 
-  // show seek bar only when the media is loaded
-  if (m_iMediaLoadState == MLS_LOADED)
-    m_wndSeekBar.ShowWindow(SW_SHOWNOACTIVATE);
+   // show seek bar only when the media is loaded
+   if (m_iMediaLoadState == MLS_LOADED)
+     m_wndSeekBar.ShowWindow(SW_SHOWNOACTIVATE);
 }
