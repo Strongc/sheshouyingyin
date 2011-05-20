@@ -911,7 +911,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
   //////////////////////////////////////////////////////////////////////////
   // an alternative way of pre-multiplying bitmap data
-  CRect btnMargin(3,5,15,3);
+  CRect btnMargin(3,-56,15,3);
   CSize btnSize(21,17);//IDM_CLOSE_PNG
   CSUIButton* bClose = new CSUIButton( L"CLOSE.BMP",ALIGN_TOPRIGHT, btnMargin  , 0,  MYHTCLOSE);
   m_btnList.AddTail(bClose );
@@ -1376,6 +1376,7 @@ void CMainFrame::OnMouseMove(UINT nFlags, CPoint point)
 
 void CMainFrame::OnMove(int x, int y)
 {
+  AppSettings& s = AfxGetAppSettings();
   m_lTransparentToolbarPosStat = 0;
 
   HMONITOR hMonitor = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
@@ -1395,6 +1396,12 @@ void CMainFrame::OnMove(int x, int y)
 
   CRect rc;
   GetWindowRect(&rc);
+  int captionHeight = 0;
+  if (s.skinid == ID_SKIN_FIRST)
+    captionHeight = GetSystemMetrics(SM_CYCAPTION)+GetSystemMetrics(SM_CYFRAME)+( (8 - GetSystemMetrics(SM_CYFRAME) ) /2 );
+  else
+    captionHeight = FrameCfgFileManage::m_captionheight;
+  rc.bottom = rc.top + captionHeight;
   m_btnList.OnSize( rc);
 
   m_wndToolBar.ReCalcBtnPos();
@@ -13199,8 +13206,14 @@ void CMainFrame::OnSize(UINT nType, int cx, int cy)
       m_btnList.SetHideStat(L"BTN_FULLSCREEN.BMP", false);
       m_btnList.SetHideStat(L"RESTORE.BMP", true);
     }
-
-    m_btnList.OnSize( rc);
+    
+    int captionHeight = 0;
+    if (s.skinid == ID_SKIN_FIRST)
+      captionHeight = GetSystemMetrics(SM_CYCAPTION)+GetSystemMetrics(SM_CYFRAME)+( (8 - GetSystemMetrics(SM_CYFRAME) ) /2 );
+    else
+      captionHeight = FrameCfgFileManage::m_captionheight;
+    rc.bottom = rc.top + captionHeight;
+    m_btnList.OnSize(rc);
   }
 
   CRect r,cr;
@@ -13651,6 +13664,7 @@ LRESULT CMainFrame::OnNcPaint(  WPARAM wParam, LPARAM lParam )
       if(wp.showCmd==SW_MAXIMIZE || m_fFullScreen){
         //rc.top -= 8;
       }
+
       m_btnList.PaintAll(&hdc, rc);
     }
     /*
@@ -14868,7 +14882,6 @@ BOOL CMainFrame::LoadRes(int id, std::wstring folder)
     FrameCfgFileManage fmCfg;
     fmCfg.SetCfgFilePath(bmpathtmp);
     fmCfg.ReadFromCfgFile();
-    // Logging("---------------%d,%d",fmCfg.m_lcaptionthickwidth, fmCfg.m_rcaptionthickwidth);
   }
   
   bloadsuccess1 = m_btnList.ResReload(folder, bload, L"");
