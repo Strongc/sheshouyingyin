@@ -2,6 +2,9 @@
 #include "BlockList.h"
 #include "..\..\Controller\MediaCenterController.h"
 #include "ResLoader.h"
+#include <boost/filesystem.hpp>
+#include "../../mplayerc.h"
+#include "../../MainFrm.h"
 
 // BlockOne
 
@@ -10,13 +13,15 @@
 #define  BEHIDE   14
 #define  BEPLAY    15
 
-BlockUnit::BlockUnit() :
-m_layer(new UILayerBlock)
+BlockUnit::BlockUnit()
+: m_layer(new UILayerBlock)
 , m_cove(0)
 {
 }
 
-BlockUnit::~BlockUnit() {}
+BlockUnit::~BlockUnit()
+{
+}
 
 void BlockUnit::AddLayer(std::wstring tag, std::wstring Texture, BOOL display)
 {
@@ -89,6 +94,8 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   rc.left = pt.x;
   rc.top = pt.y+117;
   rc.bottom = rc.top+20;
+
+  m_rcText = rc;
 
   std::wstring fmnm;
   if (m_mediadata.filmname.empty())
@@ -165,6 +172,11 @@ void BlockUnit::ResetCover()
   m_cove = NULL;
 }
 
+CRect BlockUnit::GetTextRect()
+{
+  return m_rcText;
+}
+
 // BlockList
 
 #define DOWNOFFSETONE 1
@@ -183,6 +195,8 @@ void BlockUnit::ResetCover()
 BlockList::BlockList()
 : m_bSizeChanged(false)
 , m_scrollbarinitialize(FALSE)
+, m_pFilmNameEditor(0)
+, m_hOldAccel(0)
 {
   m_blockw = 102;
   m_blockh = 115;
@@ -214,6 +228,13 @@ BlockList::BlockList()
 
 BlockList::~BlockList()
 {
+  if (m_pFilmNameEditor)
+  {
+    m_pFilmNameEditor->DestroyWindow();
+    delete m_pFilmNameEditor;
+    m_pFilmNameEditor = 0;
+  }
+
   delete m_scrollbar;
   ClearList(&m_list1);
   ClearList(&m_list2);
@@ -440,6 +461,25 @@ void BlockList::AlignScrollBar()
 
 void BlockList::Update(float winw, float winh)
 {
+  // set filmname if the child view's size is changed
+  // determine whether destroy the filmname editor
+  if ((m_winw != winw) || (m_winh != winh))
+  {
+    CRect rcEditor;
+    if (m_pFilmNameEditor)
+    {
+      m_pFilmNameEditor->GetClientRect(&rcEditor);
+
+      // modify the block's filmname
+      OnSetFilmName();
+
+      // destroy the editor
+      m_pFilmNameEditor->DestroyWindow();
+      delete m_pFilmNameEditor;
+      m_pFilmNameEditor = 0;
+    }
+  }
+
   m_winw = winw;
   m_winh = winh;
 
@@ -617,6 +657,27 @@ int BlockList::OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetspeed, HW
 
 int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
 {
+  // determine whether destroy the filmname editor
+  if (blbtndown)
+  {
+    CRect rcEditor;
+    if (m_pFilmNameEditor)
+    {
+      m_pFilmNameEditor->GetClientRect(&rcEditor);
+      if (!rcEditor.PtInRect(pt))
+      {
+        // modify the block's filmname
+        OnSetFilmName();
+
+        // destroy the editor
+        m_pFilmNameEditor->DestroyWindow();
+        delete m_pFilmNameEditor;
+        m_pFilmNameEditor = 0;
+      }
+    }
+  }
+
+  // other things
   int stRet = BENORMAL;  // state will return
 
   std::list<BlockUnit*>::iterator it = m_start;
@@ -650,6 +711,76 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
   }
   m_tipstring = L"";
   return stRet;
+}
+
+void BlockList::OnSetFilmName()
+{
+  // restore the accelerate table
+  CMainFrame *pFrame = (CMainFrame *)(AfxGetMyApp()->GetMainWnd());
+  pFrame->m_hAccelTable = m_hOldAccel;
+
+  // set filmname
+  CString sNewFilmName;
+  m_pFilmNameEditor->GetWindowText(sNewFilmName);
+  (*m_itCurEdit)->m_mediadata.filmname = sNewFilmName;
+
+  // rename file
+  std::wstring sPath = (*m_itCurEdit)->m_mediadata.path;
+  std::wstring sOldFilename = (*m_itCurEdit)->m_mediadata.filename;
+  boost::system::error_code err;
+  boost::filesystem::rename(sPath + sOldFilename, sPath + (LPCTSTR)sNewFilmName, err);
+
+  if (err == boost::system::errc::success)
+  {
+    // set new filename
+    (*m_itCurEdit)->m_mediadata.filename = sNewFilmName;
+  }
+
+  // store info to database
+  media_tree::model &tree_model = MediaCenterController::GetInstance()->GetMediaTree();
+  tree_model.addFile((*m_itCurEdit)->m_mediadata);
+  tree_model.save2DB();
+  tree_model.delTree();
+}
+
+void BlockList::OnLButtonDblClk(POINT pt)
+{
+  std::list<BlockUnit*>::iterator it = m_start;
+  while (it != m_end)
+  {
+    CRect rcText = (*it)->GetTextRect();
+    if (rcText.PtInRect(pt))
+    {
+      // delete editor if is exist
+      if (m_pFilmNameEditor)
+      {
+        m_pFilmNameEditor->DestroyWindow();
+        delete m_pFilmNameEditor;
+        m_pFilmNameEditor = 0;
+      }
+
+      // create new editor for block unit
+      CMainFrame *pFrame = (CMainFrame *)(AfxGetMyApp()->GetMainWnd());
+      m_hOldAccel = pFrame->m_hAccelTable;
+      pFrame->m_hAccelTable = 0;        // temp destroy the accelerate table
+
+      m_pFilmNameEditor = new MCTextEdit;
+      m_pFilmNameEditor->Create(m_hwnd, (*it)->GetTextRect(), 0, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL);
+      std::wstring sFilmName = (*it)->m_mediadata.filmname;
+      if (sFilmName.empty())
+        sFilmName = (*it)->m_mediadata.filename;
+
+      m_pFilmNameEditor->SetWindowText(sFilmName.c_str());
+      m_pFilmNameEditor->SetFocus();
+      m_pFilmNameEditor->SetSel(0, -1);
+
+      m_itCurEdit = it;
+
+      return;
+    }
+
+    ++it;
+  }
 }
 
 RECT BlockList::GetScrollBarHittest()
@@ -1044,4 +1175,21 @@ void BlockListView::HandleMouseLeave()
   UpdateWindow(m_hwnd);
   RECT rc = {0, 0, 0, 0};
   m_prehittest = rc;
+}
+
+void BlockListView::HandleLButtonDblClk(POINT pt)
+{
+  OnLButtonDblClk(pt);
+}
+
+HWND BlockListView::GetFilmNameEdit()
+{
+  if (m_pFilmNameEditor)
+  {
+    return m_pFilmNameEditor->m_hWnd;
+  }
+  else
+  {
+    return 0;
+  }
 }

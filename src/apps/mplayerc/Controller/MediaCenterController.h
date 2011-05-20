@@ -44,6 +44,8 @@ public:
 
    BlockListView& GetBlockListView();
    MCStatusBar& GetStatusBar();
+   media_tree::model& GetMediaTree();
+   HWND GetFilmNameEdit();
 
    HRGN CalculateUpdateRgn(WTL::CRect& rc);
 

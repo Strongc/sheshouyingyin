@@ -4,6 +4,7 @@
 #include <boost/bind.hpp>
 #include "../MainFrm.h"
 #include "ResLoader.h"
+#include "../Model/MediaDB.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // normal part
@@ -27,9 +28,13 @@ void MediaCenterController::Playback(std::wstring file)
   if (!m_spider.IsSupportExtension(file))
     return;
 
+  MediaDB<>::exec(L"begin transaction");
+
   m_treeModel.addFolder(file, true);
   m_treeModel.save2DB();
   m_treeModel.delTree();
+
+  MediaDB<>::exec(L"end transaction");
 }
 
 void MediaCenterController::SetFrame(HWND hwnd)
@@ -72,7 +77,7 @@ void MediaCenterController::SpiderStart()
 
 void MediaCenterController::SpiderStop()
 {
-   m_spider._Stop();
+   m_spider._Stop(1000);
   
    m_coverdown._Stop();
 }
@@ -148,6 +153,16 @@ MCStatusBar& MediaCenterController::GetStatusBar()
   return m_statusbar;
 }
 
+media_tree::model& MediaCenterController::GetMediaTree()
+{
+  return m_treeModel;
+}
+
+HWND MediaCenterController::GetFilmNameEdit()
+{
+  return m_blocklist.GetFilmNameEdit();
+}
+
 void MediaCenterController::SetMCCover()
 {
   ResLoader resLoader;
@@ -193,9 +208,13 @@ void MediaCenterController::SetCover(BlockUnit* unit, std::wstring orgpath)
 {
   m_coverup.SetCover(unit, orgpath);
   
+  MediaDB<>::exec(L"begin transaction");
+
   m_treeModel.addFile(unit->m_mediadata);
   m_treeModel.save2DB();
   m_treeModel.delTree();
+
+  MediaDB<>::exec(L"end transaction");
 
   CRect rc;
   rc = unit->GetHittest();
