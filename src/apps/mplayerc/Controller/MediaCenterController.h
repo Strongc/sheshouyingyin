@@ -43,6 +43,8 @@ public:
    void SetPlaneState(BOOL bl);
 
    BlockListView& GetBlockListView();
+   media_tree::model& GetMediaTree();
+   HWND GetFilmNameEdit();
    
    HRGN CalculateUpdateRgn(WTL::CRect& rc);
 

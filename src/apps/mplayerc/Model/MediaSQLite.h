@@ -389,7 +389,7 @@ protected:
         g_dbMediaSQLite << L"CREATE TABLE IF NOT EXISTS detect_path (" \
           L"uniqueid integer PRIMARY KEY, path text, merit integer default 0, lastspidetime integer default 0, breakpoint integer default 0)";
         g_dbMediaSQLite << L"CREATE TABLE IF NOT EXISTS media_data ("
-          L"uniqueid integer PRIMARY KEY, path text, filename text,"
+          L"uniqueid integer PRIMARY KEY, path text, filename text, filmname text, "
           L"thumbnailpath text, videotime integer default 0, hide integer default 0)";
       }
       catch (std::runtime_error const& err)
