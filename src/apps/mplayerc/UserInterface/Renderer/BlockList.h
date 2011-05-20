@@ -8,6 +8,7 @@
 #include "../../Model/MediaTreeModel.h"
 #include <boost/signals.hpp>
 #include <boost/shared_ptr.hpp>
+#include "MCTextEdit.h"
 
 /* 
  * Class BlockUnit implements block UI and UnitData
@@ -26,6 +27,8 @@ public:
   RECT GetHittest();
   void ResetCover();
 
+  CRect GetTextRect();
+
 public:
   MediaData m_mediadata;
 
@@ -33,6 +36,8 @@ private:
   UILayerBlock* m_layer;
   POINT m_pt;
   HBITMAP m_cove;
+
+  CRect m_rcText;
 };
 
 class BlockList
@@ -49,6 +54,8 @@ public:
   void DoPaint(WTL::CDC& dc);
   int OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetspeed, HWND hwnd);
   int OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit);
+  void OnLButtonDblClk(POINT pt);
+  void OnSetFilmName();  // set filmname by the edit control
 
   // logic
   void SetOffset(float offset);
@@ -130,6 +137,12 @@ private:
   BOOL m_scrollbarinitialize;
 
   bool m_bSizeChanged;
+
+protected:
+  HWND m_hwnd;
+  MCTextEdit *m_pFilmNameEditor;
+  std::list<BlockUnit*>::iterator m_itCurEdit;
+  HACCEL m_hOldAccel;
 };
 
 class BlockListView : public BlockList
@@ -143,13 +156,15 @@ public:
   void HandleMouseMove(POINT pt, BlockUnit** unit);
   BOOL HandleRButtonUp(POINT pt, BlockUnit** unit, CMenu* menu);
   void HandleMouseLeave();
+  void HandleLButtonDblClk(POINT pt);
 
   void SetFrameHwnd(HWND hwnd);
   void SetScrollSpeed(int* speed);
   void SetOffsetBool(BOOL* bl);
 
+  HWND GetFilmNameEdit();
+
 private:
-  HWND m_hwnd;
   int*  m_scrollspeed;
   BOOL* m_boffset; 
   BOOL m_lbtndown;
