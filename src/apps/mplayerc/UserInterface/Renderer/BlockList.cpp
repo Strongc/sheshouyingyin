@@ -161,7 +161,7 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   layer->SetTexturePos(layer_fixpt);
 
   POINT defpt = {def_fixpt.x+layer_fixpt.x, def_fixpt.y+layer_fixpt.y};
-  def->SetTexturePos(defpt);
+  def->SetTexturePos(defpt, 96, 96);
 
   //POINT playpt = {play_fixpt.x+pt.x, play_fixpt.y+pt.y};
   POINT playpt = {play_fixpt.x + layer_fixpt.x, play_fixpt.y + layer_fixpt.y};
@@ -176,18 +176,19 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
 
   POINT coverpt = {cover_fixpt.x + layer_fixpt.x, cover_fixpt.y + layer_fixpt.y};
   cover->SetTexturePos(coverpt);
-//   if (!m_mediadata.thumbnailpath.empty() && !m_cove)
-//   {
-//     std::wstring thumbnailpath = m_mediadata.thumbnailpath;
-//     if (GetFileAttributes(thumbnailpath.c_str()) != INVALID_FILE_ATTRIBUTES || 
-//       GetLastError() != ERROR_FILE_NOT_FOUND)
-//     {
-//       ResLoader resLoad;
-//       m_cove = resLoad.LoadBitmapFromAppData(thumbnailpath);
-//       if (m_cove)
-//         def->SetTexture(m_cove);
-//     }
-//   }
+
+  if (!m_mediadata.thumbnailpath.empty() && !m_cove)
+  {
+    std::wstring thumbnailpath = m_mediadata.thumbnailpath;
+    if (GetFileAttributes(thumbnailpath.c_str()) != INVALID_FILE_ATTRIBUTES || 
+      GetLastError() != ERROR_FILE_NOT_FOUND)
+    {
+      ResLoader resLoad;
+      m_cove = resLoad.LoadBitmapFromAppData(thumbnailpath);
+      if (m_cove)
+        def->SetTexture(m_cove, FALSE);
+    }
+  }
 
   m_layer->DoPaint(dc);
 
@@ -1367,3 +1368,7 @@ HWND BlockListView::GetFilmNameEdit()
   }
 }
 
+BlockUnit* BlockListView::GetCurrentUnit()
+{
+  return m_curUnit;
+}

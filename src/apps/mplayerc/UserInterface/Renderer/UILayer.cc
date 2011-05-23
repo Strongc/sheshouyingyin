@@ -17,7 +17,7 @@ UILayer::~UILayer()
 
 }
 
-BOOL UILayer::SetTexture(HBITMAP texture)
+BOOL UILayer::SetTexture(HBITMAP texture, BOOL bMultily)
 {
   if (texture == NULL)
     return FALSE;
@@ -41,7 +41,8 @@ BOOL UILayer::SetTexture(HBITMAP texture)
     }
   }
 
-  m_bm.bmHeight /= 2;
+  if (bMultily)
+    m_bm.bmHeight /= 2;
 
   return TRUE;
 }
