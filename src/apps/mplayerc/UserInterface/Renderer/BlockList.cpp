@@ -1348,17 +1348,6 @@ BOOL BlockListView::HandleRButtonUp(POINT pt, BlockUnit** unit, CMenu* menu)
   return bhit;
 }
 
-void BlockListView::HandleMouseLeave()
-{
-//   POINT pt = {-1, -1};
-//   int blayer = OnHittest(pt, FALSE, 0);
-// 
-//   ::InvalidateRect(m_hwnd, &m_prehittest, FALSE);
-//   UpdateWindow(m_hwnd);
-//   RECT rc = {0, 0, 0, 0};
-//   m_prehittest = rc;
-}
-
 void BlockListView::HandleLButtonDblClk(POINT pt)
 {
   OnLButtonDblClk(pt);
