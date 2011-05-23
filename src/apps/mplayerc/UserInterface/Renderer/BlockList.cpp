@@ -35,7 +35,7 @@ BOOL BlockUnit::ActMouseOver(POINT pt)
   BOOL bplay = m_layer->GetUILayer(L"play", &play);
   BOOL bhide = m_layer->GetUILayer(L"hide", &hide);
   BOOL bfavourite = m_layer->GetUILayer(L"favourite", &favourite);
-  BOOL bcover = m_layer->GetUILayer(L"cover", &cover);
+  BOOL bcover = m_layer->GetUILayer(L"insertcover", &cover);
 
   if (!bbg || !bplay || !bhide || !bfavourite || !bcover)
     return FALSE;
@@ -71,7 +71,7 @@ BOOL BlockUnit::ActMouseOut(POINT pt)
   BOOL bplay = m_layer->GetUILayer(L"play", &play);
   BOOL bhide = m_layer->GetUILayer(L"hide", &hide);
   BOOL bfavourite = m_layer->GetUILayer(L"favourite", &favourite);
-  BOOL bcover = m_layer->GetUILayer(L"cover", &cover);
+  BOOL bcover = m_layer->GetUILayer(L"insertcover", &cover);
   if (!bbg || !bplay || !bhide || !bfavourite || !bcover)
     return FALSE;
 
@@ -97,7 +97,7 @@ int BlockUnit::ActMouseDown(POINT pt)
 
   BOOL bplay = m_layer->GetUILayer(L"play", &play);
   BOOL bhide = m_layer->GetUILayer(L"hide", &hide);
-  BOOL bcover = m_layer->GetUILayer(L"cover", &cover);
+  BOOL bcover = m_layer->GetUILayer(L"insertcover", &cover);
   if (!bplay || !bhide || !bcover)
     return FALSE;
 
@@ -121,46 +121,47 @@ void BlockUnit::AddLayer(std::wstring tag, std::wstring Texture, BOOL display)
 void BlockUnit::DefLayer()
 {
   m_layer->AddUILayer(L"background", new ULBackground(L"\\skin\\mark.png"));
-  //m_layer->AddUILayer(L"def", new UILayer(L"\\skin\\def.png"));
+  m_layer->AddUILayer(L"def", new UILayer(L"\\skin\\def.png"));
   m_layer->AddUILayer(L"play", new ULPlayback(L"\\skin\\play.png"));
   m_layer->AddUILayer(L"hide", new ULDel(L"\\skin\\hide.png"));
   m_layer->AddUILayer(L"favourite", new ULFavourite(L"\\skin\\favourite.png"));
-  m_layer->AddUILayer(L"cover", new ULCover(L"\\skin\\cover.png"));
+  m_layer->AddUILayer(L"insertcover", new ULCover(L"\\skin\\cover.png"));
 }
 
 void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
 {
   UILayer* layer = NULL;
-  //UILayer* def = NULL;
+  UILayer* def = NULL;
   UILayer* play = NULL;
   UILayer* hide = NULL;
   UILayer* favourite = NULL;
   UILayer* cover = NULL;
 
   BOOL bmark = m_layer->GetUILayer(L"background", &layer);
-  //BOOL bdef = m_layer->GetUILayer(L"def", &def);
+  BOOL bdef = m_layer->GetUILayer(L"def", &def);
   BOOL bplay = m_layer->GetUILayer(L"play", &play);
   BOOL bhide = m_layer->GetUILayer(L"hide", &hide);
   BOOL bfavourite = m_layer->GetUILayer(L"favourite", &favourite);
-  BOOL bcover = m_layer->GetUILayer(L"cover", &cover);
+  BOOL bcover = m_layer->GetUILayer(L"insertcover", &cover);
 
-  if (!bmark || !bplay || !bhide || !bfavourite || !bcover)
+  if (!bmark || !bdef || !bplay || !bhide || !bfavourite || !bcover)
     return;
 
   layer->SetDisplay(TRUE);
-  //def->SetDisplay(TRUE);
+  def->SetDisplay(TRUE);
 
   POINT layer_fixpt = {pt.x + 10, pt.y};
   POINT play_fixpt = {40, 16};
-  POINT def_fixpt = {6, 6};
+  POINT def_fixpt = {15, 4};
   POINT hide_fixpt = {80, 74};
   POINT favourite_fixpt = {25, 74};
   POINT cover_fixpt = {53, 74};
 
   //layer->SetTexturePos(pt);
   layer->SetTexturePos(layer_fixpt);
-//   POINT defpt = {def_fixpt.x+pt.x, def_fixpt.y+pt.y};
-//   def->SetTexturePos(defpt, 90, 103);
+
+  POINT defpt = {def_fixpt.x+layer_fixpt.x, def_fixpt.y+layer_fixpt.y};
+  def->SetTexturePos(defpt);
 
   //POINT playpt = {play_fixpt.x+pt.x, play_fixpt.y+pt.y};
   POINT playpt = {play_fixpt.x + layer_fixpt.x, play_fixpt.y + layer_fixpt.y};
