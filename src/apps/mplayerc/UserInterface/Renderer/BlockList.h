@@ -8,7 +8,7 @@
 #include "../../Model/MediaTreeModel.h"
 #include <boost/signals.hpp>
 #include <boost/shared_ptr.hpp>
-#include "MCTextEdit.h"
+#include "TextEdit.h"
 #include "MCStatusBar.h"
 
 /* 
@@ -157,7 +157,7 @@ private:
 
 protected:
   HWND m_hwnd;
-  MCTextEdit *m_pFilmNameEditor;
+  TextEdit *m_pFilmNameEditor;
   std::list<BlockUnit*>::iterator m_itCurEdit;
   HACCEL m_hOldAccel;
 };
@@ -176,6 +176,7 @@ public:
   void HandleLButtonDblClk(POINT pt);
 
   void SetFrameHwnd(HWND hwnd);
+  void CreateTextEdit();
   void SetScrollSpeed(int* speed);
   void SetOffsetBool(BOOL* bl);
 
