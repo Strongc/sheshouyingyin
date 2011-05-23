@@ -213,8 +213,11 @@ void CPlayerToolBar::ArrangeControls()
       m_btnList.SetHideStat(ID_NAVIGATE_SKIPBACK , 0);
       m_btnList.SetHideStat(ID_NAVIGATE_SKIPFORWARD , 0);
       m_btnList.SetHideStat(ID_MOVIESHARE, 1);
+      m_btnList.SetHideStat(ID_SUBTOOLBARBUTTON, 1);
     }
-  }
+    else
+      m_btnList.SetHideStat(ID_SUBTOOLBARBUTTON, 0);
+  }  
 
   m_btnList.OnSize(rc);
 
@@ -379,26 +382,39 @@ void CPlayerToolBar::OnPaint()
 
   if (!sTimeBtnString.empty())
   {
+    int prom_margin = 8;
+    //prom_margin = -10;
     CSize size = dc.GetTextExtent(sTimeBtnString.c_str());
 
     CSUIButton* cbtn = m_btnList.GetButton(L"SHARE");
-    int prom_margin = 8;
+    
     if (cbtn->m_currenthide)
-    {
       cbtn = m_btnList.GetButton(L"LOGO");
-      prom_margin = -10;
+    if (cbtn->m_currenthide)
+      cbtn = NULL;
+    
+    CRect btnrc(prom_margin, 0, 0, 0);
+    if (cbtn)
+    {
+      btnrc = cbtn->m_rcHitest - rc.TopLeft();
+      btnrc.left = btnrc.right + prom_margin;
     }
-    CRect btnrc = cbtn->m_rcHitest - rc.TopLeft();
-    btnrc.left = btnrc.right + prom_margin;
-    int width = m_btnList.GetRelativeMinLength(rc, cbtn) - cbtn->m_rcHitest.Width() - 8;
+    
+    int width = m_btnList.GetRelativeMinLength(rc, cbtn) - prom_margin;
+    if (cbtn)
+      width -= cbtn->m_rcHitest.Width();
+
+    if (width < 30)
+      width = 0;
+   
     if (size.cx > 0)
       btnrc.right = btnrc.left + min(width, size.cx);
     else
       btnrc.right = btnrc.left;
-    btnrc.right -= 5;
+    //btnrc.right -= 5;
     btnrc.top = (rc.Height() - size.cy) / 2;
     btnrc.bottom = btnrc.top + size.cy;
-
+    
     m_adctrl.SetRect(btnrc, &hdc);
     m_adctrl.Paint(&hdc);  
   }
@@ -412,11 +428,12 @@ void CPlayerToolBar::UpdateButtonStat(){
   //m_btnList.SetHideStat( ID_PLAY_MANUAL_STOP , !fShow );
   //m_btnList.SetHideStat( ID_PLAY_FRAMESTEP , !fShow );
   m_btnList.SetHideStat( ID_PLAY_PAUSE , !fShow );
-  BOOL bLoaded = pFrame->IsSomethingLoaded() ;
+  BOOL bLoaded = pFrame->IsSomethingLoaded();
+  BOOL bAutio = pFrame->m_fAudioOnly;
   m_btnList.SetHideStat(_T("SPLAYER.BMP"), bLoaded);
   m_btnList.SetHideStat( ID_MOVIESHARE , m_movieshare_hidestat);
 
-  m_btnList.SetHideStat( ID_SUBTOOLBARBUTTON, !bLoaded);
+  m_btnList.SetHideStat(ID_SUBTOOLBARBUTTON, !bLoaded);
   m_btnList.SetHideStat( ID_SUBDELAYINC, !bLoaded);
   m_btnList.SetHideStat( ID_SUBDELAYDEC, !bLoaded);
 
