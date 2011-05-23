@@ -28,7 +28,7 @@ void CoverUploadController::SetCover(BlockUnit* unit, std::wstring orgpath)
   CSVPToolBox csvptb;
   csvptb.GetAppDataPath(destpath);
   destpath += L"\\mc\\cover\\";
-  destpath += GetSystemTimeString(szFileHash) + L".jpg";
+  destpath += GetCoverNameString(szFileHash) + L".jpg";
   bsuccess = ::CopyFile(orgpath.c_str(), destpath.c_str(), TRUE);
 
   if (unit != 0 && bsuccess)
@@ -40,28 +40,17 @@ void CoverUploadController::SetCover(BlockUnit* unit, std::wstring orgpath)
   }
 }
 
-std::wstring CoverUploadController::GetSystemTimeString(std::string szFileHash)
+std::wstring CoverUploadController::GetCoverNameString(std::string szFileHash)
 {
   std::wstring szJpgName = HashController::GetInstance()->GetMD5Hash(szFileHash.c_str(), szFileHash.length());
   return szJpgName;
-
-  //SYSTEMTIME time;
-  //GetSystemTime(&time);
-
-  //wchar_t* buff = new wchar_t[1024];
-  //wsprintf(buff, L"%d%d%d%d%d%d%d", time.wYear, time.wMonth, time.wDay, time.wHour,
-  //  time.wMinute, time.wSecond, time.wMilliseconds);
-
-  //std::wstring timestr = buff;
-  //delete[] buff;
-  //return timestr;
 }
 
 void CoverUploadController::_Thread()
 {
   std::wstring uploadurl = L"http://zz.webpj.com:8888/api/medias/add_sfScreenshot";
   std::list<BlockUnit*>::iterator it = m_list.begin();
-
+  
   while(it != m_list.end())
   {
     if (_Exit_state(0))
@@ -96,7 +85,7 @@ void CoverUploadController::UploadCover(BlockUnit* unit, std::wstring url)
   pelem1->set_name(L"sphash");
   pelem1->setto_text(szFileHash.c_str());
   pd->add_elem(pelem1);
-
+  
   refptr<postdataelem> pelem2 = postdataelem::create_instance();
   pelem2->set_name(L"img");
   pelem2->setto_file(coverPath.c_str());

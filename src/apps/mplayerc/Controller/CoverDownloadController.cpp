@@ -159,7 +159,7 @@ BOOL CoverDownloadController::HttpDownloadCover(std::string szFileHash, std::wst
   CSVPToolBox csvptb;
   csvptb.GetAppDataPath(downloadpath);
   downloadpath += L"\\mc\\cover\\";
-  downloadpath += GetSystemTimeString(szFileHash) + L".jpg";
+  downloadpath += GetCoverNameString(szFileHash) + L".jpg";
 
   req->set_request_url(url.c_str());
   req->set_request_method(REQ_GET);
@@ -183,18 +183,8 @@ BOOL CoverDownloadController::HttpDownloadCover(std::string szFileHash, std::wst
   return TRUE;
 }
 
-std::wstring CoverDownloadController::GetSystemTimeString(std::string szFileHash)
+std::wstring CoverDownloadController::GetCoverNameString(std::string szFileHash)
 {
   std::wstring szJpgName = HashController::GetInstance()->GetMD5Hash(szFileHash.c_str(), szFileHash.length());
   return szJpgName;
-  //SYSTEMTIME time;
-  //GetSystemTime(&time);
-
-  //wchar_t* buff = new wchar_t[1024];
-  //wsprintf(buff, L"%d%d%d%d%d%d%d", time.wYear, time.wMonth, time.wDay, time.wHour,
-  //  time.wMinute, time.wSecond, time.wMilliseconds);
-
-  //std::wstring timestr = buff;
-  //delete[] buff;
-  //return timestr;
 }

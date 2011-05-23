@@ -22,7 +22,7 @@ public:
   BOOL ParseRespondString(std::string& parsestr, std::wstring& title, std::wstring& cover);
   BOOL HttpDownloadCover(std::string szFileHash, std::wstring downloadurl, std::wstring& downloadpath,
     std::wstring cover);
-  std::wstring GetSystemTimeString(std::string szFileHash);
+  std::wstring GetCoverNameString(std::string szFileHash);
 
 private:
   std::list<BlockUnit*> m_list;
