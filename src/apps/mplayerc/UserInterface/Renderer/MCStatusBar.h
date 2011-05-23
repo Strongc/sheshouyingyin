@@ -1,5 +1,7 @@
 #pragma once
 
+#include <atlimage.h>
+
 class MCStatusBar
 {
 /* Normal part */
@@ -29,10 +31,13 @@ protected:
 
 /* Private data */
 private:
-  //HWND m_hwnd;
   CRect m_rc;  // this rect is relative to the m_hwnd's client area!!!
   bool m_bVisible;
   
   std::wstring m_str;
   COLORREF m_crBKColor;
+
+  Gdiplus::Font *m_pfnText;
+  Gdiplus::SolidBrush *m_pbrText;
+  Gdiplus::StringFormat *m_pstrfm;
 };

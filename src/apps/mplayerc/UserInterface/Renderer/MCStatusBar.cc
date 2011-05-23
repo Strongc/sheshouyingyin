@@ -1,17 +1,25 @@
 #include "stdafx.h"
 #include "MCStatusBar.h"
-#include <atlimage.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 // Normal part
 MCStatusBar::MCStatusBar()
-: 
-  m_rc(0, 0, 0, 0)
+: m_rc(0, 0, 0, 0)
 , m_crBKColor(0)    // default color is black
+, m_pfnText(0)
+, m_pbrText(0)
+, m_pstrfm(0)
 {
   // Start GDI+ and load the background image
   CImage igForInit;    // Used only for start up GDI+
   igForInit.Load(L"");
+
+  // settings for font
+  m_pfnText = new Gdiplus::Font(L"Tahoma", 9);
+  m_pbrText = new Gdiplus::SolidBrush(Gdiplus::Color(125, 125, 125));
+  m_pstrfm = new Gdiplus::StringFormat(Gdiplus::StringFormatFlags::StringFormatFlagsNoWrap);
+  m_pstrfm->SetAlignment(Gdiplus::StringAlignment::StringAlignmentNear);
+  m_pstrfm->SetLineAlignment(Gdiplus::StringAlignment::StringAlignmentCenter);
 }
 
 MCStatusBar::~MCStatusBar()
@@ -20,34 +28,24 @@ MCStatusBar::~MCStatusBar()
 
 ////////////////////////////////////////////////////////////////////////////////
 // Properties
-// void MCStatusBar::SetFrame(HWND hwnd)
-// {
-//   m_hwnd = hwnd;
-//   //Update();
-// }
-
 void MCStatusBar::SetRect(const CRect &rc)
 {
   m_rc = rc;
-  //Update();
 }
 
 void MCStatusBar::SetText(const std::wstring &str)
 {
   m_str = str;
-  //Update();
 }
 
 void MCStatusBar::SetVisible(bool bVisible)
 {
   m_bVisible = bVisible;
-  //Update();
 }
 
 void MCStatusBar::SetBKColor(COLORREF cr)
 {
   m_crBKColor = cr;
-  //Update();
 }
 
 CRect MCStatusBar::GetRect() const
@@ -83,9 +81,6 @@ void MCStatusBar::OnPaint(WTL::CDC& dc)
   using Gdiplus::Color;
   using Gdiplus::Font;
   using Gdiplus::PointF;
-  using Gdiplus::StringFormat;
-  using Gdiplus::StringAlignment;
-  using Gdiplus::StringFormatFlags;
 
   // Check the internal variable
   if (m_rc.IsRectEmpty() || !m_bVisible)
@@ -93,12 +88,7 @@ void MCStatusBar::OnPaint(WTL::CDC& dc)
 
   // Determine the update rect
   CRect rcParentUpdateArea(m_rc);
-  //::GetUpdateRect(m_hwnd, &rcParentUpdateArea, FALSE);
-
   CRect rcThisUpdateArea(rcParentUpdateArea);
-  //BOOL bRet = rcThisUpdateArea.IntersectRect(&rcParentUpdateArea, &m_rc);
-  //if (!bRet)
-  //  return;  // this step means no area need to be updated
 
   // Using double buffer and GDI+
   Bitmap bmMem(m_rc.Width(), m_rc.Height());
@@ -109,14 +99,8 @@ void MCStatusBar::OnPaint(WTL::CDC& dc)
   gpMem.FillRectangle(&brBK, 0, 0, m_rc.Width(), m_rc.Height());
 
   // Text
-  Font fnText(L"Tahoma", 9);
-  SolidBrush brText(Color(125, 125, 125));
-  StringFormat strfm(StringFormatFlags::StringFormatFlagsNoWrap);
-  strfm.SetAlignment(StringAlignment::StringAlignmentNear);
-  strfm.SetLineAlignment(StringAlignment::StringAlignmentCenter);
   Gdiplus::RectF rc(0, 0, m_rc.Width(), m_rc.Height());
-  gpMem.DrawString(m_str.c_str(), -1, &fnText, rc, &strfm, &brText);
-  //gpMem.DrawString(m_str.c_str(), -1, &fnText, PointF(0, 0), &brText);
+  gpMem.DrawString(m_str.c_str(), -1, m_pfnText, rc, m_pstrfm, m_pbrText);
 
   // Bitblt the mem dc to real dc
   CPoint piStart;
@@ -125,7 +109,4 @@ void MCStatusBar::OnPaint(WTL::CDC& dc)
   Graphics gpReal(dc.m_hDC);
   gpReal.DrawImage(&bmMem, rcThisUpdateArea.left, rcThisUpdateArea.top, piStart.x, piStart.y,
                    rcThisUpdateArea.Width(), rcThisUpdateArea.Height(), Gdiplus::UnitPixel);
-
-  // Validate the window
-  //::ValidateRect(m_hwnd, &rcThisUpdateArea);
 }

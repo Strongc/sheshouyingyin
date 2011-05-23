@@ -638,6 +638,7 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 
     m_blocklistview->SetFrameHwnd(m_hWnd);
+    m_blocklistview->CreateTextEdit();  // create the film name editor
     m_blocklistview->SetScrollSpeed(&m_offsetspeed);
 
     m_menu.LoadMenu(IDR_MEDIACENTERMENU);

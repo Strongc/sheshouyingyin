@@ -569,18 +569,14 @@ void BlockList::Update(float winw, float winh)
   // determine whether destroy the filmname editor
   if ((m_winw != winw) || (m_winh != winh))
   {
-    CRect rcEditor;
     if (m_pFilmNameEditor)
     {
-      m_pFilmNameEditor->GetClientRect(&rcEditor);
-
       // modify the block's filmname
       OnSetFilmName();
 
-      // destroy the editor
-      m_pFilmNameEditor->DestroyWindow();
-      delete m_pFilmNameEditor;
-      m_pFilmNameEditor = 0;
+      // hide the editor
+      m_pFilmNameEditor->SetWindowText(L"");
+      m_pFilmNameEditor->ShowWindow(SW_HIDE);
     }
   }
 
@@ -791,10 +787,9 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
         // modify the block's filmname
         OnSetFilmName();
 
-        // destroy the editor
-        m_pFilmNameEditor->DestroyWindow();
-        delete m_pFilmNameEditor;
-        m_pFilmNameEditor = 0;
+        // hide the editor
+        m_pFilmNameEditor->SetWindowText(L"");
+        m_pFilmNameEditor->ShowWindow(SW_HIDE);
       }
     }
   }
@@ -818,32 +813,33 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
 
 void BlockList::OnSetFilmName()
 {
-  // restore the accelerate table
-  CMainFrame *pFrame = (CMainFrame *)(AfxGetMyApp()->GetMainWnd());
-  pFrame->m_hAccelTable = m_hOldAccel;
-
-  // set filmname
-  CString sNewFilmName;
-  m_pFilmNameEditor->GetWindowText(sNewFilmName);
-  (*m_itCurEdit)->m_mediadata.filmname = sNewFilmName;
-
-  // rename file
-  std::wstring sPath = (*m_itCurEdit)->m_mediadata.path;
-  std::wstring sOldFilename = (*m_itCurEdit)->m_mediadata.filename;
-  boost::system::error_code err;
-  boost::filesystem::rename(sPath + sOldFilename, sPath + (LPCTSTR)sNewFilmName, err);
-
-  if (err == boost::system::errc::success)
+  if (m_pFilmNameEditor && (m_pFilmNameEditor->IsWindowVisible()))
   {
-    // set new filename
-    (*m_itCurEdit)->m_mediadata.filename = sNewFilmName;
-  }
+    // restore the accelerate table
+    CMainFrame *pFrame = (CMainFrame *)(AfxGetMyApp()->GetMainWnd());
+    pFrame->m_hAccelTable = m_hOldAccel;
 
-  // store info to database
-  media_tree::model &tree_model = MediaCenterController::GetInstance()->GetMediaTree();
-  tree_model.addFile((*m_itCurEdit)->m_mediadata);
-  tree_model.save2DB();
-  tree_model.delTree();
+    // set filmname
+    CString sNewFilmName;
+    m_pFilmNameEditor->GetWindowText(sNewFilmName);
+    (*m_itCurEdit)->m_mediadata.filmname = sNewFilmName;
+
+    // rename file
+    std::wstring sPath = (*m_itCurEdit)->m_mediadata.path;
+    std::wstring sOldFilename = (*m_itCurEdit)->m_mediadata.filename;
+    boost::system::error_code err;
+    boost::filesystem::rename(sPath + sOldFilename, sPath + (LPCTSTR)sNewFilmName, err);
+
+    if (err == boost::system::errc::success)
+    {
+      // set new filename
+      (*m_itCurEdit)->m_mediadata.filename = sNewFilmName;
+    }
+
+    // store info to database
+    media_tree::model &tree_model = MediaCenterController::GetInstance()->GetMediaTree();
+    tree_model.addFile((*m_itCurEdit)->m_mediadata);
+  }
 }
 
 void BlockList::OnLButtonDblClk(POINT pt)
@@ -852,30 +848,25 @@ void BlockList::OnLButtonDblClk(POINT pt)
   while (it != m_end)
   {
     CRect rcText = (*it)->GetTextRect();
-    if (rcText.PtInRect(pt))
+    if (rcText.PtInRect(pt) && m_pFilmNameEditor)
     {
-      // delete editor if is exist
-      if (m_pFilmNameEditor)
-      {
-        m_pFilmNameEditor->DestroyWindow();
-        delete m_pFilmNameEditor;
-        m_pFilmNameEditor = 0;
-      }
+      m_pFilmNameEditor->MoveWindow(rcText);
+      m_pFilmNameEditor->ShowWindow(SW_SHOW);
 
-      // create new editor for block unit
       CMainFrame *pFrame = (CMainFrame *)(AfxGetMyApp()->GetMainWnd());
       m_hOldAccel = pFrame->m_hAccelTable;
       pFrame->m_hAccelTable = 0;        // temp destroy the accelerate table
 
-      m_pFilmNameEditor = new MCTextEdit;
-      m_pFilmNameEditor->Create(m_hwnd, (*it)->GetTextRect(), 0, WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL);
       std::wstring sFilmName = (*it)->m_mediadata.filmname;
       if (sFilmName.empty())
         sFilmName = (*it)->m_mediadata.filename;
 
+      m_pFilmNameEditor->SetTextVCenter();
+
       m_pFilmNameEditor->SetWindowText(sFilmName.c_str());
       m_pFilmNameEditor->SetFocus();
-      m_pFilmNameEditor->SetSel(0, -1);
+
+      m_pFilmNameEditor->SetSel(0, sFilmName.find_last_of('.')); // only focus on filename, exclude the ext
 
       m_itCurEdit = it;
 
@@ -1175,6 +1166,22 @@ BlockListView::~BlockListView()
 void BlockListView::SetFrameHwnd(HWND hwnd)
 {
   m_hwnd = hwnd;
+}
+
+void BlockListView::CreateTextEdit()
+{
+  // delete editor if is exist
+  if (m_pFilmNameEditor)
+  {
+    m_pFilmNameEditor->DestroyWindow();
+    delete m_pFilmNameEditor;
+    m_pFilmNameEditor = 0;
+  }
+
+  // create new editor
+  m_pFilmNameEditor = new TextEdit;
+  m_pFilmNameEditor->Create(m_hwnd, CRect(0, 0, 0, 0), 0, WS_CHILD | ES_AUTOHSCROLL | ES_MULTILINE);
+  m_pFilmNameEditor->SetTextVCenter();
 }
 
 void BlockListView::SetScrollSpeed(int* speed)
