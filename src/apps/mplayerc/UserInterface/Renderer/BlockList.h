@@ -181,6 +181,7 @@ public:
 
   HWND GetFilmNameEdit();
 
+  BlockUnit* GetCurrentUnit();
 private:
   int*  m_scrollspeed;
   BOOL* m_boffset; 

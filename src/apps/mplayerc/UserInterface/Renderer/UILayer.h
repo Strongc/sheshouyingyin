@@ -8,7 +8,7 @@ public:
 
 // Interface
 public:
-  BOOL SetTexture(HBITMAP texture);
+  BOOL SetTexture(HBITMAP texture, BOOL bMultily = TRUE);
   BOOL SetTexturePos(const POINT& pt);
   BOOL SetTexturePos(const POINT& pt, int width, int height);
   BOOL SetDisplay(BOOL display = TRUE);

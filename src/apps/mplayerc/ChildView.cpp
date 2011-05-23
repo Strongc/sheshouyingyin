@@ -916,7 +916,8 @@ LRESULT CChildView::OnSetCover(WPARAM wParam, LPARAM lParam)
   filedlg.DoModal();
 
   std::wstring orgpath = filedlg.GetPathName().GetString();
-  m_mediacenter->SetCover(m_blockunit, orgpath);
+
+  m_mediacenter->SetCover(m_blocklistview->GetCurrentUnit(), orgpath);
 
   return TRUE;
 }
