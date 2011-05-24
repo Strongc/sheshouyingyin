@@ -840,11 +840,14 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
 
       m_blocklistview->SetOffset(m_offsetspeed);
 
-      RECT rc;
-      GetClientRect(&rc);
-      m_blocklistview->Update(rc.right - rc.left, rc.bottom - rc.top);
-      InvalidateRect(&rc);
-      return;
+      if (m_blocklistview->ContiniuPaint())
+      {
+        RECT rc;
+        GetClientRect(&rc);
+        m_blocklistview->Update(rc.right - rc.left, rc.bottom - rc.top);
+        InvalidateRect(&rc);
+        return;
+      }
     }
 
     if (nIDEvent == TIMER_TIPS)
