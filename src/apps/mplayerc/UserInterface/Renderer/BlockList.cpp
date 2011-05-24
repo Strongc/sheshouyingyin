@@ -376,7 +376,9 @@ void BlockList::DoPaint(WTL::CDC& dc)
     (*it)->DoPaint(dc, pt);
     ++itx;
   } 
-
+ 
+  if (m_statusbar.GetText().empty())
+    m_statusbar.SetText(L"射手生活 影音相伴");
   m_statusbar.SetBKColor(COLORREF(0xd6d6d6));
   m_statusbar.Update(dc);
 }
