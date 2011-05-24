@@ -1332,18 +1332,9 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
 BOOL BlockListView::HandleRButtonUp(POINT pt, BlockUnit** unit, CMenu* menu)
 {
   BOOL bhit = FALSE;
-
-//   int blayer = OnHittest(pt, FALSE, unit);
-// 
-//   if (blayer == BEHITTEST)
-//   {
-//     RECT rc;
-//     GetWindowRect(m_hwnd, &rc);
-//     pt.x += rc.left;
-//     pt.y += rc.top;
-//     menu->GetSubMenu(0)->TrackPopupMenu(TPM_RIGHTBUTTON|TPM_NOANIMATION, pt.x, pt.y, CWnd::FromHandle(m_hwnd));
-//     bhit = TRUE;
-//   }
+  
+  if (m_curUnit)
+    bhit = TRUE;
 
   return bhit;
 }
