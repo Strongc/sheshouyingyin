@@ -20,6 +20,7 @@ public:
   CRect GetRect() const;
   bool GetVisible() const;
   COLORREF GetBKColor() const;
+  std::wstring GetText() const;
 
 /* Operations */
 public:
