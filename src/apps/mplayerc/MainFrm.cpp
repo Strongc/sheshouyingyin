@@ -9335,9 +9335,6 @@ void CMainFrame::OnRecentFile(UINT nID)
       OpenCurPlaylistItem();
     }
   }
-
-  if (MediaCenterController::GetInstance()->GetPlaneState())
-    ShowToolBar();
 }
 
 void CMainFrame::OnUpdateRecentFile(CCmdUI* pCmdUI)
@@ -12407,6 +12404,9 @@ void CMainFrame::OpenCurPlaylistItem(REFERENCE_TIME rtStart)
 
   MediaCenterController::GetInstance()->Playback(pli.m_fns.GetHead().GetString());
   if(p) OpenMedia(p);
+
+  if (MediaCenterController::GetInstance()->GetPlaneState())
+    ShowToolBar();
 
 }
 
