@@ -878,6 +878,9 @@ void CChildView::ShowMediaCenter(BOOL bl)
     return;
   }
 
+  if (!m_blocklistview->IsEmpty())
+    return;
+
   RECT rc;
   GetClientRect(&rc);
   m_mediacenter->UpdateBlock(rc);
@@ -894,7 +897,7 @@ void CChildView::ShowMediaCenter(BOOL bl)
   SetCursor(oldcursor);
 
   SetClassLong(m_hWnd, GCL_HCURSOR, (LONG)::LoadCursor(NULL, IDC_ARROW));
-
+  
   if (!m_blocklistview->IsEmpty())
     m_mediacenter->UpdateBlock(rc);
   InvalidateRect(0, FALSE);
