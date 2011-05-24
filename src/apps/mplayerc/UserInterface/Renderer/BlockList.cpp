@@ -937,11 +937,15 @@ void BlockList::DeleteBlock(BlockUnit* unit)
 
 BOOL BlockList::ContiniuPaint()
 {
-  int count = 0;
-  std::list<BlockUnit*>::iterator it = m_start;
-  for (; it != m_end; ++it)
-    ++count;
-  return count <= m_y.size() * m_x.size()? TRUE:FALSE;
+  BOOL bpaint = TRUE;
+
+  BOOL bend = m_y.back() + m_blockh + m_top == m_winh? TRUE : FALSE;
+  BOOL bbegin = m_y.front() - m_topdistance ==  0? TRUE : FALSE;
+  if ((m_end == m_list->end() && GetEmptyList() && bend)
+      || (m_start == m_list->begin() && GetEmptyList() && bbegin))
+    bpaint = FALSE;
+
+  return bpaint;
 }
 
 int  BlockList::GetEnableShowAmount()
