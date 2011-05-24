@@ -984,6 +984,20 @@ std::list<BlockUnit*>* BlockList::GetIdleList()
   return m_list == &m_list1 ? &m_list2 : &m_list1;
 }
 
+std::vector<MediaData> BlockList::GetCurrentMediaDatas()
+{
+  std::vector<MediaData> vtMD;
+  std::list<BlockUnit*>::iterator start = m_start;
+  while (start != m_end)
+  {
+    vtMD.push_back((*start)->m_mediadata);
+
+    ++start;
+  }
+
+  return vtMD;
+}
+
 void BlockList::SetScrollBarDragDirection(int offset)
 {
   m_scrollbardirectionpre = m_scrollbardirection;

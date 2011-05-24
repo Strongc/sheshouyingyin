@@ -87,6 +87,7 @@ public:
   BOOL BeDirectionChange();
   std::list<BlockUnit*>* GetEmptyList();
   std::list<BlockUnit*>* GetIdleList();
+  std::vector<MediaData> GetCurrentMediaDatas();
   void SwapListBuff(std::list<BlockUnit*>::iterator& it, BOOL upordown);
   void ClearList(std::list<BlockUnit*>* list);
   void NewStartIterator();

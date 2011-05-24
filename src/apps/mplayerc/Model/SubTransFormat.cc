@@ -897,14 +897,23 @@ std::wstring SubTransFormat::GetShortFileNameForSearch2(std::wstring szFn)
 
 std::wstring SubTransFormat::GetShortFileNameForSearch(std::wstring szFnPath)
 {
-  std::wstring szFileName = szFnPath.substr(szFnPath.find_last_of(L'\\'));
+  try
+  {
+    std::wstring szFileName = szFnPath.substr(szFnPath.find_last_of(L'\\'));
 
-  std::wstring::size_type pos = szFileName.find_last_of(L'.');
-  std::wstring szFileName2 = szFileName.substr(0, pos);
+    std::wstring::size_type pos = szFileName.find_last_of(L'.');
 
-  szFileName = GetShortFileNameForSearch2(szFileName2);
-  if(!szFileName.empty())
-    return szFileName;
+    std::wstring szFileName2 = szFileName.substr(0, pos);
+
+    szFileName = GetShortFileNameForSearch2(szFileName2);
+
+    if(!szFileName.empty())
+      return szFileName;
+  }
+  catch (const std::exception &err)
+  {
+    Logging(err.what());
+  }
 
   return szFnPath;
 }

@@ -385,5 +385,8 @@ std::wstring MediaModel::EscapeSQL(std::wstring sSQL)
 {
   using namespace boost;
 
-  return regex_replace(sSQL, wregex(L"'"), L"''");
+  if (sSQL.empty())
+    return L"";
+  else
+    return regex_replace(sSQL, wregex(L"'"), L"''");
 }

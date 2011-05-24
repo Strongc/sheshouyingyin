@@ -40,7 +40,7 @@ void MediaCenterController::Playback(std::wstring file)
 void MediaCenterController::SetFrame(HWND hwnd)
 {
   m_hwnd = hwnd;
-  m_coverdown.SetFrame(hwnd);
+  m_cover.SetFrame(hwnd);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,15 +71,17 @@ void MediaCenterController::CreateMCFolder()
 void MediaCenterController::SpiderStart()
 {
   m_spider._Stop();
-  
   m_spider._Start();
+
+  m_cover._Stop();
+  m_cover._Start();
 }
 
 void MediaCenterController::SpiderStop()
 {
    m_spider._Stop(1000);
   
-   m_coverdown._Stop();
+   m_cover._Stop();
 
    m_treeModel.save2DB();
    m_treeModel.delTree();
@@ -89,6 +91,8 @@ void MediaCenterController::LoadMediaData(int direction, std::list<BlockUnit*>* 
                                           int viewcapacity, int listcapacity, 
                                           int remain, int times)
 {
+  m_cover.SetListBuff(list);
+
   m_loaddata._Stop();
   m_loaddata.SetList(list);
   m_loaddata.SetDirection(direction);
@@ -161,6 +165,11 @@ HWND MediaCenterController::GetFilmNameEdit()
   return m_blocklist.GetFilmNameEdit();
 }
 
+CoverController& MediaCenterController::GetCoverDownload()
+{
+  return m_cover;
+}
+
 void MediaCenterController::SetMCCover()
 {
   ResLoader resLoader;
@@ -204,19 +213,30 @@ void MediaCenterController::DelBlock(int index)
 
 void MediaCenterController::SetCover(BlockUnit* unit, std::wstring orgpath)
 {
-  m_coverup.SetCover(unit, orgpath);
-  
-  MediaDB<>::exec(L"begin transaction");
+  std::vector<MediaData> vtMD = m_blocklist.GetCurrentMediaDatas();
+  std::vector<MediaData>::iterator it = vtMD.begin();
+  while (it != vtMD.end())
+  {
+    m_cover.SetBlockUnit(*it);
+    
+    ++it;
+  }
 
-  m_treeModel.addFile(unit->m_mediadata);
-  m_treeModel.save2DB();
-  m_treeModel.delTree();
+  m_cover._Start();
 
-  MediaDB<>::exec(L"end transaction");
+  //m_coverup.SetCover(unit, orgpath);
+  //
+  //MediaDB<>::exec(L"begin transaction");
 
-  CRect rc;
-  rc = unit->GetHittest();
-  InvalidateRect(m_hwnd, &rc, FALSE);
+  //m_treeModel.addFile(unit->m_mediadata);
+  //m_treeModel.save2DB();
+  //m_treeModel.delTree();
+
+  //MediaDB<>::exec(L"end transaction");
+
+  //CRect rc;
+  //rc = unit->GetHittest();
+  //InvalidateRect(m_hwnd, &rc, FALSE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "LoadMediaDataFromDB.h"
+#include "MediaCenterController.h"
 
 LoadMediaDataFromDB::LoadMediaDataFromDB(void):
 m_limitstart(0)
@@ -90,6 +91,8 @@ void LoadMediaDataFromDB::AddDataToList()
     one->m_mediadata = *it;
     one->DefLayer();
     m_listbuff->push_back(one);
+
+    //MediaCenterController::GetInstance()->GetCoverDownload().SetBlockUnit(one->m_mediadata);
     ++it;
   }
 
@@ -122,4 +125,9 @@ void LoadMediaDataFromDB::ClearList()
 void LoadMediaDataFromDB::SetListRemainItem(int remain)
 {
   m_remain = remain;
+}
+
+std::list<BlockUnit*>* LoadMediaDataFromDB::GetListBuff()
+{
+  return m_listbuff;
 }

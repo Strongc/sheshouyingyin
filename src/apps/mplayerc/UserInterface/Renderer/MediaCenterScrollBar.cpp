@@ -1,6 +1,7 @@
 ﻿#include "StdAfx.h"
 #include "MediaCenterScrollBar.h"
 #include <ResLoader.h>
+#include "..\..\Controller\MediaCenterController.h"
 
 #define  TIMER_OFFSET 11
 #define  TIMER_SLOWOFFSET 12
@@ -148,9 +149,20 @@ BOOL MediaCenterScrollBar::OnHittest(POINT pt, int bLbtdown, int& offsetspeed, H
     KillTimer(hwnd, TIMER_SLOWOFFSET);
     m_pos = m_prepos;
     m_lastlbtstate = FALSE;
+    offsetspeed = 0;
   }
 
   UpdataHittest(m_pos);
+
+  if (abs(offsetspeed) < 5)
+  {
+    MediaCenterController::GetInstance()->SetCover(0, L"");
+  } 
+  else
+  {
+    MediaCenterController::GetInstance()->GetCoverDownload()._Stop();
+    MediaCenterController::GetInstance()->GetCoverDownload().ClearBlockUnit();
+  }
 
   return bhit;
 }

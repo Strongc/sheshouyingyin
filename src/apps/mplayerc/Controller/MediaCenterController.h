@@ -7,10 +7,9 @@
 #include "MediaSpiderFolderTree.h"
 #include <map>
 #include "..\UserInterface\Renderer\BlockList.h"
-#include "CoverDownloadController.h"
-#include "CoverUploadController.h"
 #include "LoadMediaDataFromDB.h"
 #include "..\UserInterface\Renderer\MCStatusBar.h"
+#include "CoverController.h"
 
 class MediaCenterController:
   public LazyInstanceImpl<MediaCenterController>
@@ -45,6 +44,7 @@ public:
    BlockListView& GetBlockListView();
    media_tree::model& GetMediaTree();
    HWND GetFilmNameEdit();
+   CoverController& GetCoverDownload();
    
    HRGN CalculateUpdateRgn(WTL::CRect& rc);
 
@@ -76,8 +76,7 @@ private:
   BlockListView m_blocklist;
   WTL::CBitmap m_mccover;
   BITMAP  m_mccoverbm;
-  CoverDownloadController m_coverdown;
-  CoverUploadController m_coverup;
+  CoverController m_cover;
   BOOL m_initiablocklist;
   LoadMediaDataFromDB m_loaddata;
   

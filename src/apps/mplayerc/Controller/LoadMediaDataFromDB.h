@@ -24,6 +24,7 @@ public:
   void AddDataToList();
   void ClearList();
   BOOL CalculateStartAndEnd();
+  std::list<BlockUnit*>* GetListBuff();
 
 private:
   MediaModel m_model;
