@@ -764,7 +764,7 @@ BOOL CChildView::OnRButtonUP(UINT nFlags, CPoint point)
   BOOL bmenutrack = FALSE;
 
   if (m_mediacenter->GetPlaneState())
-    bmenutrack = TRUE;
+    bmenutrack = m_blocklistview->HandleRButtonUp(point);
   
   return bmenutrack;
 }
