@@ -1345,6 +1345,16 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
   }
 }
 
+BOOL BlockListView::HandleRButtonUp(POINT pt)
+{
+  BOOL bl = FALSE;
+
+  if (m_curUnit)
+    bl = TRUE;
+
+  return bl;
+}
+
 void BlockListView::HandleLButtonDblClk(POINT pt)
 {
   OnLButtonDblClk(pt);

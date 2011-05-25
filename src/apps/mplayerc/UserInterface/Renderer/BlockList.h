@@ -173,6 +173,7 @@ public:
   void HandleLButtonUp(POINT pt, BlockUnit** unit);
   void HandleMouseMove(POINT pt, BlockUnit** unit);
   void HandleLButtonDblClk(POINT pt);
+  BOOL HandleRButtonUp(POINT pt);
 
   void SetFrameHwnd(HWND hwnd);
   void CreateTextEdit();
