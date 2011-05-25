@@ -376,7 +376,9 @@ void BlockList::DoPaint(WTL::CDC& dc)
     (*it)->DoPaint(dc, pt);
     ++itx;
   } 
-
+ 
+  if (m_statusbar.GetText().empty())
+    m_statusbar.SetText(L"射手生活 影音相伴");
   m_statusbar.SetBKColor(COLORREF(0xd6d6d6));
   m_statusbar.Update(dc);
 }
@@ -935,11 +937,15 @@ void BlockList::DeleteBlock(BlockUnit* unit)
 
 BOOL BlockList::ContiniuPaint()
 {
-  int count = 0;
-  std::list<BlockUnit*>::iterator it = m_start;
-  for (; it != m_end; ++it)
-    ++count;
-  return count <= m_y.size() * m_x.size()? TRUE:FALSE;
+  BOOL bpaint = TRUE;
+
+  BOOL bend = m_y.back() + m_blockh + m_top == m_winh? TRUE : FALSE;
+  BOOL bbegin = m_y.front() - m_topdistance ==  0? TRUE : FALSE;
+  if ((m_end == m_list->end() && GetEmptyList() && bend)
+      || (m_start == m_list->begin() && GetEmptyList() && bbegin))
+    bpaint = FALSE;
+
+  return bpaint;
 }
 
 int  BlockList::GetEnableShowAmount()
@@ -1346,31 +1352,11 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
 BOOL BlockListView::HandleRButtonUp(POINT pt, BlockUnit** unit, CMenu* menu)
 {
   BOOL bhit = FALSE;
-
-//   int blayer = OnHittest(pt, FALSE, unit);
-// 
-//   if (blayer == BEHITTEST)
-//   {
-//     RECT rc;
-//     GetWindowRect(m_hwnd, &rc);
-//     pt.x += rc.left;
-//     pt.y += rc.top;
-//     menu->GetSubMenu(0)->TrackPopupMenu(TPM_RIGHTBUTTON|TPM_NOANIMATION, pt.x, pt.y, CWnd::FromHandle(m_hwnd));
-//     bhit = TRUE;
-//   }
+  
+  if (m_curUnit)
+    bhit = TRUE;
 
   return bhit;
-}
-
-void BlockListView::HandleMouseLeave()
-{
-//   POINT pt = {-1, -1};
-//   int blayer = OnHittest(pt, FALSE, 0);
-// 
-//   ::InvalidateRect(m_hwnd, &m_prehittest, FALSE);
-//   UpdateWindow(m_hwnd);
-//   RECT rc = {0, 0, 0, 0};
-//   m_prehittest = rc;
 }
 
 void BlockListView::HandleLButtonDblClk(POINT pt)

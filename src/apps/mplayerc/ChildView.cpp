@@ -303,7 +303,6 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_WM_NCHITTEST()
 	ON_WM_KEYUP()
   ON_WM_TIMER()
-  ON_WM_MOUSELEAVE()
   ON_MESSAGE(WM_MEDIACENTERPLAYVEDIO, OnMediaCenterPlayVedio)
   ON_MESSAGE(WM_CHANGECOVE, OnSetCover)
 END_MESSAGE_MAP()
@@ -787,16 +786,6 @@ BOOL CChildView::OnLButtonDBCLK(UINT nFlags, CPoint point)
   return bl;
 }
 
-void CChildView::OnMouseLeave()
-{
-  if (m_mediacenter->GetPlaneState())
-  {
-    m_blocklistview->HandleMouseLeave();
-    return;
-  }
-}
-
-
 LRESULT CChildView::OnNcHitTest(CPoint point)
 {
 	// TODO: Add your message handler code here and/or call default
@@ -851,11 +840,14 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
 
       m_blocklistview->SetOffset(m_offsetspeed);
 
-      RECT rc;
-      GetClientRect(&rc);
-      m_blocklistview->Update(rc.right - rc.left, rc.bottom - rc.top);
-      InvalidateRect(&rc);
-      return;
+      if (m_blocklistview->ContiniuPaint())
+      {
+        RECT rc;
+        GetClientRect(&rc);
+        m_blocklistview->Update(rc.right - rc.left, rc.bottom - rc.top);
+        InvalidateRect(&rc);
+        return;
+      }
     }
 
     if (nIDEvent == TIMER_TIPS)
@@ -889,6 +881,9 @@ void CChildView::ShowMediaCenter(BOOL bl)
     return;
   }
 
+  if (!m_blocklistview->IsEmpty())
+    return;
+
   RECT rc;
   GetClientRect(&rc);
   m_mediacenter->UpdateBlock(rc);
@@ -905,7 +900,7 @@ void CChildView::ShowMediaCenter(BOOL bl)
   SetCursor(oldcursor);
 
   SetClassLong(m_hWnd, GCL_HCURSOR, (LONG)::LoadCursor(NULL, IDC_ARROW));
-
+  
   if (!m_blocklistview->IsEmpty())
     m_mediacenter->UpdateBlock(rc);
   InvalidateRect(0, FALSE);

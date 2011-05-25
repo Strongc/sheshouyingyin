@@ -173,7 +173,6 @@ public:
   void HandleLButtonUp(POINT pt, BlockUnit** unit);
   void HandleMouseMove(POINT pt, BlockUnit** unit);
   BOOL HandleRButtonUp(POINT pt, BlockUnit** unit, CMenu* menu);
-  void HandleMouseLeave();
   void HandleLButtonDblClk(POINT pt);
 
   void SetFrameHwnd(HWND hwnd);
