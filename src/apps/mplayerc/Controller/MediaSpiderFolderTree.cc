@@ -170,6 +170,8 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
       MediaCenterController::GetInstance()->GetCoverDownload().SetBlockUnit(md);
       md.bHide = vtHide[i];
       m_treeModel.addFile(md);
+
+      ::Sleep(300);
     }
 
     // Second, search media in the path
@@ -191,6 +193,7 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
         m_treeModel.addFile(md);
       }
 
+      ::Sleep(300);
       ++it;
     }
 

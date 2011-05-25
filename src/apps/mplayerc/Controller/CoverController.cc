@@ -112,7 +112,7 @@ void CoverController::_Thread()
     }
 
     // sleep for a while
-    ::Sleep(80);
+    ::Sleep(300);
   }
 }
 
