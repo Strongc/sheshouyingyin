@@ -9,6 +9,7 @@ MCStatusBar::MCStatusBar()
 , m_pfnText(0)
 , m_pbrText(0)
 , m_pstrfm(0)
+, m_str(L"")
 {
   // Start GDI+ and load the background image
   CImage igForInit;    // Used only for start up GDI+
@@ -61,6 +62,11 @@ bool MCStatusBar::GetVisible() const
 COLORREF MCStatusBar::GetBKColor() const
 {
   return m_crBKColor;
+}
+
+std::wstring MCStatusBar::GetText() const
+{
+  return m_str;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
