@@ -858,13 +858,16 @@ void BlockList::OnLButtonDblClk(POINT pt)
       std::wstring sFilmName = (*it)->m_mediadata.filmname;
       if (sFilmName.empty())
         sFilmName = (*it)->m_mediadata.filename;
+      int pos = sFilmName.find_last_of('.');
+      if (pos != std::wstring::npos)
+        sFilmName = sFilmName.substr(0, pos);
 
       m_pFilmNameEditor->SetTextVCenter();
 
       m_pFilmNameEditor->SetWindowText(sFilmName.c_str());
       m_pFilmNameEditor->SetFocus();
 
-      m_pFilmNameEditor->SetSel(0, sFilmName.find_last_of('.')); // only focus on filename, exclude the ext
+      m_pFilmNameEditor->SetSel(0, -1); // only focus on filename, exclude the ext
 
       m_itCurEdit = it;
 
