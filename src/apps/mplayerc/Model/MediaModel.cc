@@ -381,12 +381,9 @@ void MediaModel::DeleteAll()
   MediaDB<>::exec(ss.str());
 }
 
-std::wstring MediaModel::EscapeSQL(std::wstring sSQL)
+std::wstring MediaModel::EscapeSQL(const std::wstring &sSQL)
 {
   using namespace boost;
 
-  if (sSQL.empty())
-    return L"";
-  else
-    return regex_replace(sSQL, wregex(L"'"), L"''");
+  return regex_replace(sSQL, wregex(L"'"), L"''");
 }

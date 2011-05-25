@@ -65,9 +65,13 @@ HBITMAP ResLoader::LoadBitmap(const std::wstring& sBitmapPath,
   return 0;
 }
 
-HBITMAP ResLoader::LoadBitmapFromDisk(const std::wstring& sBitmapPath)
+HBITMAP ResLoader::LoadBitmapFromDisk(const std::wstring& sBitmapPath, bool bPathRelToSplayer /* = true */)
 {
-  std::wstring sFullPath = GetModuleFolder() + sBitmapPath;
+  std::wstring sFullPath;
+  if (bPathRelToSplayer)
+    sFullPath = GetModuleFolder() + sBitmapPath;
+  else
+    sFullPath = sBitmapPath;
 
   CImage igImage;
   igImage.Load(sFullPath.c_str());
@@ -86,23 +90,6 @@ HBITMAP ResLoader::LoadBitmapFromModule(const std::wstring& sBitmapName,
   HBITMAP hBitmap = 0;
   hBitmap = (HBITMAP)::LoadImage(::GetModuleHandle(pcsz),
     sBitmapName.c_str(), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR | LR_CREATEDIBSECTION);
-
-  return hBitmap;
-}
-
-HBITMAP ResLoader::LoadBitmapFromAppData(const std::wstring& sBitmapPath)
-{
-  std::wstring sFullPath;
-  CSVPToolBox csvptb;
-  csvptb.GetAppDataPath(sFullPath);
-  sFullPath += L"\\" + sBitmapPath;
-
-  CImage igImage;
-  igImage.Load(sFullPath.c_str());
-
-  HBITMAP hBitmap = (HBITMAP)igImage;
-
-  igImage.Detach();
 
   return hBitmap;
 }

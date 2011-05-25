@@ -4,6 +4,7 @@
 #include <boost/regex.hpp>
 #include "../Model/MediaDB.h"
 #include "../Utils/SPlayerGUID.h"
+#include "MediaCenterController.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Normal part
@@ -164,7 +165,9 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
       md.path = vtPath[i];
       md.filename = vtFilename[i];
       md.filmname = vtFilmname[i];
-      md.thumbnailpath = vtThumbnailPath[i];
+      //md.thumbnailpath = vtThumbnailPath[i];
+      md.thumbnailpath = MediaCenterController::GetCoverPath(md.path + md.filename);
+      MediaCenterController::GetInstance()->GetCoverDownload().SetBlockUnit(md);
       md.bHide = vtHide[i];
       m_treeModel.addFile(md);
     }
@@ -191,20 +194,11 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
       ++it;
     }
 
-    MediaDB<>::exec(L"begin transaction");
-
-    // delete related media data before save info to db
-    ssSQL.str(L"");
-    ssSQL << L"DELETE FROM media_data WHERE path='" << sFolder << L"'";
-    MediaDB<>::exec(ssSQL.str());
-
     // store info to db
     m_treeModel.save2DB();
 
     // delete tree
     m_treeModel.delTree();
-
-    MediaDB<>::exec(L"end transaction");
   }
   catch (const filesystem_error &err)
   {

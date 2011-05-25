@@ -5,6 +5,8 @@
 #include "../MainFrm.h"
 #include "ResLoader.h"
 #include "../Model/MediaDB.h"
+#include "Strings.h"
+#include "HashController.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // normal part
@@ -28,19 +30,14 @@ void MediaCenterController::Playback(std::wstring file)
   if (!m_spider.IsSupportExtension(file))
     return;
 
-  MediaDB<>::exec(L"begin transaction");
-
   m_treeModel.addFolder(file, true);
   m_treeModel.save2DB();
   m_treeModel.delTree();
-
-  MediaDB<>::exec(L"end transaction");
 }
 
 void MediaCenterController::SetFrame(HWND hwnd)
 {
   m_hwnd = hwnd;
-  m_cover.SetFrame(hwnd);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,6 +62,32 @@ void MediaCenterController::CreateMCFolder()
   create_directories(sPath + L"\\mc\\cover");
 }
 
+std::wstring MediaCenterController::GetMCFolder()
+{
+  // create mc folder if needed
+  if (!IsMCFolderExist())
+    CreateMCFolder();
+
+  // return mc folder
+  CSVPToolBox toolbox;
+  std::wstring sPath;
+  toolbox.GetAppDataPath(sPath);
+  sPath += L"\\mc\\cover\\";
+
+  return sPath;
+}
+
+std::wstring MediaCenterController::GetCoverPath(const std::wstring &sFilePath)
+{
+  std::string szFileHash = Strings::WStringToUtf8String(HashController::GetInstance()->GetSPHash(sFilePath.c_str()));
+  std::wstring szJpgName = HashController::GetInstance()->GetMD5Hash(szFileHash.c_str(), szFileHash.length());
+
+  std::wstring sCoverPath;
+  sCoverPath = GetMCFolder();
+  sCoverPath += szJpgName + L".jpg";
+
+  return sCoverPath;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // data control
@@ -91,8 +114,6 @@ void MediaCenterController::LoadMediaData(int direction, std::list<BlockUnit*>* 
                                           int viewcapacity, int listcapacity, 
                                           int remain, int times)
 {
-  m_cover.SetListBuff(list);
-
   m_loaddata._Stop();
   m_loaddata.SetList(list);
   m_loaddata.SetDirection(direction);
@@ -223,20 +244,6 @@ void MediaCenterController::SetCover(BlockUnit* unit, std::wstring orgpath)
   }
 
   m_cover._Start();
-
-  //m_coverup.SetCover(unit, orgpath);
-  //
-  //MediaDB<>::exec(L"begin transaction");
-
-  //m_treeModel.addFile(unit->m_mediadata);
-  //m_treeModel.save2DB();
-  //m_treeModel.delTree();
-
-  //MediaDB<>::exec(L"end transaction");
-
-  //CRect rc;
-  //rc = unit->GetHittest();
-  //InvalidateRect(m_hwnd, &rc, FALSE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

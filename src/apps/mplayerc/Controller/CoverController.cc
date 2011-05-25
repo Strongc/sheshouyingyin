@@ -11,7 +11,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Normal part
 CoverController::CoverController()
-: m_hwnd(0)
 {
   // create folder if MC folder is not existed
   MediaCenterController::CreateMCFolder();
@@ -27,38 +26,6 @@ CoverController::~CoverController()
 void CoverController::SetBlockUnit(const MediaData &md)
 {
   m_list.push_back(md);
-}
-
-void CoverController::SetFrame(HWND hwnd)
-{
-  m_hwnd = hwnd;
-}
-
-void CoverController::SetListBuff(std::list<BlockUnit*>* listbuff)
-{
-  std::vector<std::list<BlockUnit*>* >::iterator it = m_vtDualListbuff.begin();
-  while (it != m_vtDualListbuff.end())
-  {
-    if (*it == listbuff)
-    {
-      break;
-    }
-
-    ++it;
-  }
-
-  if (it == m_vtDualListbuff.end())
-  {
-    if (listbuff != 0)
-    {
-      m_vtDualListbuff.push_back(listbuff);
-    }
-  }
-}
-
-void CoverController::ClearBlockUnit()
-{
-  m_list.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,26 +51,20 @@ void CoverController::_Thread()
       // common
       std::wstring szFilePath = it->path + it->filename; 
       std::string szFileHash = Strings::WStringToUtf8String(HashController::GetInstance()->GetSPHash(szFilePath.c_str()));
-      std::wstring sAppData;
-      CSVPToolBox csvptb;
-      csvptb.GetAppDataPath(sAppData);
 
       // if already has thumbnail then continue
       std::wstring thumbnailpath = it->thumbnailpath;
-      thumbnailpath = sAppData + L"\\" + thumbnailpath;
       if (exists(thumbnailpath) && !is_directory(thumbnailpath))
       {
-        ChangeCover(thumbnailpath, *it, false);
+        //UploadCover(*it);
         m_list.pop_front();
         continue;
       }
 
-      thumbnailpath = sAppData;
-      thumbnailpath += L"\\mc\\cover\\";
-      thumbnailpath += GetCoverSaveName(szFileHash) + L".jpg";
+      thumbnailpath = MediaCenterController::GetCoverPath(it->path + it->filename);
       if (exists(thumbnailpath) && !is_directory(thumbnailpath))
       {
-        ChangeCover(thumbnailpath, *it, false);
+        //UploadCover(*it);
         m_list.pop_front();
         continue;
       }
@@ -133,7 +94,8 @@ void CoverController::_Thread()
         else
         {
           // Download cover
-          BOOL bDownload = HttpDownloadCover(szFileHash, downloadurl, coverdownloadpath, cover);
+          coverdownloadpath = MediaCenterController::GetCoverPath(it->path + it->filename);
+          BOOL bDownload = HttpDownloadCover(downloadurl, coverdownloadpath, cover);
           if (!bDownload)
           {
             // if no cover on the server, then get the snapshot by ourself
@@ -142,8 +104,8 @@ void CoverController::_Thread()
         }
       }
 
-      // Change and upload cover
-      ChangeCover(coverdownloadpath, *it);
+      // Upload cover
+      UploadCover(*it);
 
       // pop the front media data even if fail to get the cover
       m_list.pop_front();
@@ -156,56 +118,6 @@ void CoverController::_Thread()
 
 ////////////////////////////////////////////////////////////////////////////////
 // Helper functions
-// For common use
-void CoverController::ChangeCover(const std::wstring &coverdownloadpath, MediaData &md, bool bUpload /* = true */)
-{
-  // Change and upload cover
-  std::wstring cover;
-  std::wstring::size_type nFind = coverdownloadpath.find(L"mc");
-  if (nFind != std::wstring::npos)
-    cover = coverdownloadpath.substr(nFind);
-
-  if (!cover.empty())
-  {
-    for (size_t i = 0; i < m_vtDualListbuff.size(); ++i)
-    {
-      std::list<BlockUnit*>* listbuff = m_vtDualListbuff[i];
-      std::list<BlockUnit*>::iterator itListBuff = listbuff->begin();
-      while (itListBuff != listbuff->end())
-      {
-        // reset cover
-        if (((*itListBuff)->m_mediadata.path == md.path)
-          && ((*itListBuff)->m_mediadata.filename == md.filename))
-        {
-          md.thumbnailpath = cover;
-          (*itListBuff)->m_mediadata.thumbnailpath = cover;
-
-          // upload the cover
-          if (bUpload)
-            SetCover(*itListBuff, coverdownloadpath);
-
-          // save thumbnail path to db
-          MediaDB<>::exec(L"begin transaction");
-
-          media_tree::model &treeModel = MediaCenterController::GetInstance()->GetMediaTree();
-          treeModel.addFile((*itListBuff)->m_mediadata);
-          treeModel.save2DB();
-          treeModel.delTree();
-
-          MediaDB<>::exec(L"end transaction");
-
-          // invalidate
-          CRect rc;
-          rc = (*itListBuff)->GetHittest();
-          InvalidateRect(m_hwnd, &rc, FALSE);
-        }
-
-        ++itListBuff;
-      }
-    }
-  }
-}
-
 // For download
 BOOL CoverController::HttpGetResponse(std::string szFileHash, std::wstring szFilePath, std::wstring requesturl, std::string& responsestr)
 {
@@ -263,7 +175,7 @@ BOOL CoverController::ParseRespondString(std::string& parsestr, std::wstring& ti
   return TRUE;
 }
 
-BOOL CoverController::HttpDownloadCover(std::string szFileHash, std::wstring downloadurl, std::wstring& downloadpath, std::wstring cover)
+BOOL CoverController::HttpDownloadCover(std::wstring downloadurl, std::wstring& downloadpath, std::wstring cover)
 {
   refptr<pool> pool = pool::create_instance();
   refptr<task> task = task::create_instance();
@@ -275,11 +187,6 @@ BOOL CoverController::HttpDownloadCover(std::string szFileHash, std::wstring dow
   url += cover.substr(cover.size() - 4, 2) + L"/";
   url += cover.substr(cover.size() -2) + L"/";
   url += cover + L"_100x0.jpg";
-
-  CSVPToolBox csvptb;
-  csvptb.GetAppDataPath(downloadpath);
-  downloadpath += L"\\mc\\cover\\";
-  downloadpath += GetCoverSaveName(szFileHash) + L".jpg";
 
   req->set_request_url(url.c_str());
   req->set_request_method(REQ_GET);
@@ -303,12 +210,6 @@ BOOL CoverController::HttpDownloadCover(std::string szFileHash, std::wstring dow
   return TRUE;
 }
 
-std::wstring CoverController::GetCoverSaveName(std::string szFileHash)
-{
-  std::wstring szJpgName = HashController::GetInstance()->GetMD5Hash(szFileHash.c_str(), szFileHash.length());
-  return szJpgName;
-}
-
 std::wstring CoverController::GetSnapshot(const MediaData &md, const std::string &szFileHash)
 {
   CSVPToolBox toolbox;
@@ -325,52 +226,30 @@ std::wstring CoverController::GetSnapshot(const MediaData &md, const std::string
   shExecInfo.lpDirectory = 0;
   shExecInfo.nShow = SW_HIDE;
   shExecInfo.hInstApp = 0;
-  ::ShellExecuteEx(&shExecInfo);
-  ::WaitForSingleObject(shExecInfo.hProcess, INFINITE);
+  BOOL bRet = ::ShellExecuteEx(&shExecInfo);
+  if (bRet)
+  {
+    ::WaitForSingleObject(shExecInfo.hProcess, INFINITE);
+    ::CloseHandle(shExecInfo.hProcess);
+  }
 
-  std::wstring sRet;
-  toolbox.GetAppDataPath(sRet);
-  sRet += L"\\mc\\cover\\";
-  sRet += GetCoverSaveName(szFileHash) + L".jpg";
+  std::wstring sRet = MediaCenterController::GetCoverPath(md.path + md.filename);
+
   return sRet;
 }
 
 // For upload
-void CoverController::SetCover(BlockUnit* unit, std::wstring orgpath)
+void CoverController::UploadCover(const MediaData &md)
 {
-  using namespace boost::filesystem;
-  using namespace boost::system;
+  std::wstring url = L"http://zz.webpj.com:8888/api/medias/add_sfScreenshot";
 
-  std::wstring uploadurl = L"http://zz.webpj.com:8888/api/medias/add_sfScreenshot";
-  std::wstring szFilePath = unit->m_mediadata.path + unit->m_mediadata.filename;
-  std::string szFileHash = Strings::WStringToUtf8String(HashController::GetInstance()->GetSPHash(szFilePath.c_str()));
-
-  CSVPToolBox csvptb;
-  std::wstring destpath;
-  csvptb.GetAppDataPath(destpath);
-  destpath += L"\\mc\\cover\\";
-  destpath += GetCoverSaveName(szFileHash) + L".jpg";
-
-  error_code err;
-  copy_file(orgpath, destpath, copy_option::overwrite_if_exists, err);
-
-  if (unit != 0 && (err == errc::success))
-  {
-    unit->m_mediadata.thumbnailpath = destpath.substr(destpath.find(L"mc"));
-    unit->ResetCover();
-    UploadCover(unit, uploadurl);
-  }
-}
-
-void CoverController::UploadCover(BlockUnit* unit, std::wstring url)
-{
-  std::wstring szFilePath = unit->m_mediadata.path + unit->m_mediadata.filename; 
+  std::wstring szFilePath = md.path + md.filename; 
   std::wstring szFileHash = HashController::GetInstance()->GetSPHash(szFilePath.c_str());
 
   std::wstring coverPath;
   CSVPToolBox csvptb;
   csvptb.GetAppDataPath(coverPath);
-  coverPath += L"\\" + unit->m_mediadata.thumbnailpath;
+  coverPath += L"\\" + md.thumbnailpath;
 
   refptr<pool> pool = pool::create_instance();
   refptr<task> task = task::create_instance();

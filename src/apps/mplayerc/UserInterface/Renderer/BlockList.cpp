@@ -184,7 +184,7 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
       GetLastError() != ERROR_FILE_NOT_FOUND)
     {
       ResLoader resLoad;
-      m_cove = resLoad.LoadBitmapFromAppData(thumbnailpath);
+      m_cove = resLoad.LoadBitmapFromDisk(thumbnailpath, false);
       if (m_cove)
         def->SetTexture(m_cove, FALSE);
     }

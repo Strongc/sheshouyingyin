@@ -154,16 +154,6 @@ BOOL MediaCenterScrollBar::OnHittest(POINT pt, int bLbtdown, int& offsetspeed, H
 
   UpdataHittest(m_pos);
 
-  if (abs(offsetspeed) < 5)
-  {
-    MediaCenterController::GetInstance()->SetCover(0, L"");
-  } 
-  else
-  {
-    MediaCenterController::GetInstance()->GetCoverDownload()._Stop();
-    MediaCenterController::GetInstance()->GetCoverDownload().ClearBlockUnit();
-  }
-
   return bhit;
 }
 

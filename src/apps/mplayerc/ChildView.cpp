@@ -908,12 +908,12 @@ void CChildView::ShowMediaCenter(BOOL bl)
 
 LRESULT CChildView::OnSetCover(WPARAM wParam, LPARAM lParam)
 {
-  CFileDialog filedlg(TRUE, L"jpg", 0, OFN_READONLY, L"JPEG Files (*.jpg)|*.jpg||", this);
-  filedlg.DoModal();
+  //CFileDialog filedlg(TRUE, L"jpg", 0, OFN_READONLY, L"JPEG Files (*.jpg)|*.jpg||", this);
+  //filedlg.DoModal();
 
-  std::wstring orgpath = filedlg.GetPathName().GetString();
+  //std::wstring orgpath = filedlg.GetPathName().GetString();
 
-  m_mediacenter->SetCover(m_blocklistview->GetCurrentUnit(), orgpath);
+  //m_mediacenter->SetCover(m_blocklistview->GetCurrentUnit(), orgpath);
 
   return TRUE;
 }

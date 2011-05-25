@@ -89,10 +89,15 @@ void LoadMediaDataFromDB::AddDataToList()
   {
     BlockUnit* one = new BlockUnit;
     one->m_mediadata = *it;
+
+    if (one->m_mediadata.thumbnailpath.empty())
+    {
+      std::wstring sFilePath = one->m_mediadata.path + one->m_mediadata.filename;
+      one->m_mediadata.thumbnailpath = MediaCenterController::GetCoverPath(sFilePath);
+    }
     one->DefLayer();
     m_listbuff->push_back(one);
 
-    //MediaCenterController::GetInstance()->GetCoverDownload().SetBlockUnit(one->m_mediadata);
     ++it;
   }
 

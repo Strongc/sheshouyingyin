@@ -5622,10 +5622,14 @@ BOOL CMainFrame::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCDS)
   if (s.nCLSwitches&CLSW_SNAPSHOT)
   {
     if (s.slFiles.GetCount() > 0)
+    {
+      MediaCenterController::GetInstance()->SpiderStop();
       GetSnapShotSliently(s.slFiles.GetHead());
+    }
 
     // not safe exit, but save a lot coding, so sue me
     exit(0);
+    //PostMessage(WM_CLOSE);
     return FALSE;
   }
 

@@ -5,6 +5,7 @@
 #include <boost/lambda/bind.hpp>
 #include <boost/foreach.hpp>
 #include "MediaSQLite.h"
+#include "MediaDB.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // normal part
@@ -168,8 +169,10 @@ void media_tree::model::save2DB()
 
   m_cs.lock();
 
-  //MediaSQLite<>::exec(L"begin transaction");
+  MediaSQLite<>::exec(L"begin transaction");
+
   MediaTreeFolders::tree_type::pre_order_iterator it = m_lsFolderTree.pre_order_begin();
+  std::wstringstream ssSQL;
   while (it != m_lsFolderTree.pre_order_end())
   {
     // store path info
@@ -199,14 +202,32 @@ void media_tree::model::save2DB()
 
           m_model.Add(md);
         }
+        else
+        {
+          ssSQL.str(L"");
+          ssSQL << L"DELETE FROM media_data WHERE path='" << mp.path << L"'"
+            << L" and filename='" << itFile->file_data.filename << L"'";
+          MediaDB<>::exec(ssSQL.str());
+        }
 
         ++itFile;
       }
     }
+    else
+    {
+      ssSQL.str(L"");
+      ssSQL << L"DELETE FROM detect_path WHERE path='" << sFolderPath << L"'";
+      MediaDB<>::exec(ssSQL.str());
+
+      ssSQL.str(L"");
+      ssSQL << L"DELETE FROM media_data WHERE path='" << sFolderPath << L"'";
+      MediaDB<>::exec(ssSQL.str());
+    }
 
     ++it;
   }
-  //MediaSQLite<>::exec(L"end transaction");
+
+  MediaSQLite<>::exec(L"end transaction");
 
   m_cs.unlock();
 }

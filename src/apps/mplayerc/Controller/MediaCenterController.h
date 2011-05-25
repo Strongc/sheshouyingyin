@@ -22,6 +22,9 @@ public:
   // Maintenance for MC folder
   static bool IsMCFolderExist();
   static void CreateMCFolder();
+  static std::wstring GetMCFolder();
+
+  static std::wstring GetCoverPath(const std::wstring &sFilePath);
 
 public:
   // Gui control, should not for other use

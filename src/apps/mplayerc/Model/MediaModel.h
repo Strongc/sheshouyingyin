@@ -33,5 +33,5 @@ public:
     void Delete(const MediaFindCondition& condition);
     void DeleteAll();
 
-    static std::wstring EscapeSQL(std::wstring sSQL);
+    static std::wstring EscapeSQL(const std::wstring &sSQL);
 };
