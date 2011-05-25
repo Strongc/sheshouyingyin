@@ -180,14 +180,10 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   if (!m_mediadata.thumbnailpath.empty() && !m_cove)
   {
     std::wstring thumbnailpath = m_mediadata.thumbnailpath;
-    if (GetFileAttributes(thumbnailpath.c_str()) != INVALID_FILE_ATTRIBUTES || 
-      GetLastError() != ERROR_FILE_NOT_FOUND)
-    {
-      ResLoader resLoad;
-      m_cove = resLoad.LoadBitmapFromAppData(thumbnailpath);
-      if (m_cove)
-        def->SetTexture(m_cove, FALSE);
-    }
+    ResLoader resLoad;
+    m_cove = resLoad.LoadBitmapFromAppData(thumbnailpath);
+    if (m_cove)
+      def->SetTexture(m_cove, FALSE);
   }
 
   m_layer->DoPaint(dc);
