@@ -153,9 +153,9 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   POINT layer_fixpt = {pt.x + 10, pt.y};
   POINT play_fixpt = {40, 16};
   POINT def_fixpt = {15, 4};
-  POINT hide_fixpt = {80, 74};
-  POINT favourite_fixpt = {25, 74};
-  POINT cover_fixpt = {53, 74};
+  POINT hide_fixpt = {83, 74};
+  POINT favourite_fixpt = {28, 74};
+  POINT cover_fixpt = {56, 74};
 
   //layer->SetTexturePos(pt);
   layer->SetTexturePos(layer_fixpt);
