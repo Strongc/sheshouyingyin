@@ -6619,7 +6619,10 @@ void CMainFrame::OnFileCloseMedia()
   CloseMedia();
 
   if (MediaCenterController::GetInstance()->GetPlaneState())
+  {
+    m_wndView.ShowMediaCenter(TRUE);
     HideToolBar();
+  }
 }
 
 void CMainFrame::OnFileClosePlaylist()
@@ -9336,8 +9339,6 @@ void CMainFrame::OnRecentFile(UINT nID)
     }
   }
 
-  if (MediaCenterController::GetInstance()->GetPlaneState())
-    ShowToolBar();
 }
 
 void CMainFrame::OnUpdateRecentFile(CCmdUI* pCmdUI)
@@ -12407,6 +12408,9 @@ void CMainFrame::OpenCurPlaylistItem(REFERENCE_TIME rtStart)
 
   MediaCenterController::GetInstance()->Playback(pli.m_fns.GetHead().GetString());
   if(p) OpenMedia(p);
+
+  if (MediaCenterController::GetInstance()->GetPlaneState())
+    ShowToolBar();
 
 }
 
