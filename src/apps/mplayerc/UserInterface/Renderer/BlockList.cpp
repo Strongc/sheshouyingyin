@@ -180,6 +180,7 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   if (!m_mediadata.thumbnailpath.empty() && !m_cove)
   {
     std::wstring thumbnailpath = m_mediadata.thumbnailpath;
+    //std::wstring thumbnailpath = L"C:\\Users\\Staff\\AppData\\Roaming\\SPlayer\\mc\\cover\\1111.jpg";
     ResLoader resLoad;
       m_cove = resLoad.LoadBitmapFromDisk(thumbnailpath, false);
     if (m_cove)
@@ -1278,8 +1279,14 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
   
   int bscroll = OnScrollBarHittest(pt, -1, *m_scrollspeed, m_hwnd);
 
-  if (bscroll == ScrollBarClick)
-    ::InvalidateRect(m_hwnd, &rcclient, FALSE);
+  if (bscroll == ScrollBarClick && NeedRepaintScrollbar())
+  {
+    RECT rc = GetScrollBarHittest();
+    RECT invalrc = rc;
+    invalrc.top = 0;
+    invalrc.bottom = rcclient.bottom;
+    ::InvalidateRect(m_hwnd, &invalrc, FALSE);
+  }
 
 //   if (bscroll == ScrollBarHit && m_lbtndown)
 //     PostMessage(m_hwnd, WM_LBUTTONUP, 0, 0);

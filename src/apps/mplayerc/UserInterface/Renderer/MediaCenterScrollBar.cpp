@@ -15,9 +15,9 @@ MediaCenterScrollBar::MediaCenterScrollBar(void):
 ,m_binitialize(FALSE)
 ,m_stat(0)
 ,m_prestat(0)
+,m_intpos(0, 0)
+,m_prepos(0, 0)
 {
-  m_prepos.x = 0;
-  m_prepos.y = 0;
 }
 
 MediaCenterScrollBar::~MediaCenterScrollBar(void)
@@ -53,6 +53,7 @@ void MediaCenterScrollBar::SetPosition(POINT pt)
 {
   m_pos = pt;
   m_prepos = m_pos;
+  m_intpos = m_pos;
   UpdataHittest(pt);
 }
 
@@ -106,11 +107,12 @@ BOOL MediaCenterScrollBar::OnHittest(POINT pt, int bLbtdown, int& offsetspeed, H
 
   if (bLbtdown && PtInRect(&m_hittest, pt))
   {
-    m_pos.y = m_prepos.y + pt.y - m_prelbtpos.y;
+    m_prepos = m_pos;
+    m_pos.y = m_intpos.y + pt.y - m_prelbtpos.y;
     m_pos.y = max(0, m_pos.y);
     m_pos.y = min(m_pos.y, m_winh - m_bm.bmHeight);
 
-    int offset = m_pos.y - m_prepos.y;
+    int offset = m_pos.y - m_intpos.y;
     int i = (m_winh - m_bm.bmHeight) / 2 / 20 + 1;
     /*    int j = (m_winh - m_bm.bmHeight) / 2 / 20;*/
 
@@ -147,7 +149,7 @@ BOOL MediaCenterScrollBar::OnHittest(POINT pt, int bLbtdown, int& offsetspeed, H
 
     KillTimer(hwnd, TIMER_OFFSET);
     KillTimer(hwnd, TIMER_SLOWOFFSET);
-    m_pos = m_prepos;
+    m_pos = m_intpos;
     m_lastlbtstate = FALSE;
     offsetspeed = 0;
   }
@@ -170,7 +172,7 @@ RECT MediaCenterScrollBar::GetRect()
 }
 POINT MediaCenterScrollBar::GetPosition()
 {
-  return m_prepos;
+  return m_intpos;
 }
 float MediaCenterScrollBar::GetOffset()
 {
@@ -180,6 +182,11 @@ float MediaCenterScrollBar::GetOffset()
 void  MediaCenterScrollBar::SetScrollBarRange(float winh)
 {
   m_winh = winh;
+}
+
+float MediaCenterScrollBar::GetScrollBarRange()
+{
+  return m_winh;
 }
 
 RECT  MediaCenterScrollBar::GetHittest()
@@ -199,5 +206,9 @@ BOOL MediaCenterScrollBar::GetInitializeFlag()
 
 BOOL MediaCenterScrollBar::NeedRepaint()
 {
-  return m_prestat == m_stat? FALSE : TRUE;
+  BOOL bl =  m_prestat == m_stat? FALSE : TRUE;
+  if (!bl)
+    bl = m_prepos == m_pos? FALSE : TRUE;
+
+  return bl;
 }

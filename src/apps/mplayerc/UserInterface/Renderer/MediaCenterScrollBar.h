@@ -11,6 +11,7 @@ public:
   void  SetDisPlay(BOOL dp);
   BOOL  GetDisPlay();
   void  SetScrollBarRange(float winh);
+  float GetScrollBarRange();
   BOOL  DoPaint(WTL::CDC& dc);
   BOOL  OnHittest(POINT pt, BOOL bLbtdown, int& offsetspeed, HWND hwnd);
   void  UpdataHittest(POINT pt);
@@ -24,8 +25,12 @@ public:
 
 private:
   WTL::CBitmap m_hbitmap;
-  POINT   m_pos;
-  POINT   m_prepos;
+  // scrollbar current position
+  WTL::CPoint   m_pos;
+  // scrollbar initialize position
+  WTL::CPoint   m_intpos;
+  // scrollbar prvious position
+  WTL::CPoint   m_prepos;
   POINT   m_prelbtpos;
   BOOL    m_display;
   BITMAP  m_bm;
