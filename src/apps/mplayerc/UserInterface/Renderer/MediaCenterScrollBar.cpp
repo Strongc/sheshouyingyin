@@ -113,8 +113,8 @@ BOOL MediaCenterScrollBar::OnHittest(POINT pt, int bLbtdown, int& offsetspeed, H
     m_pos.y = min(m_pos.y, m_winh - m_bm.bmHeight);
 
     int offset = m_pos.y - m_intpos.y;
-    int i = (m_winh - m_bm.bmHeight) / 2 / 20 + 1;
-    /*    int j = (m_winh - m_bm.bmHeight) / 2 / 20;*/
+    int i = (m_winh - m_bm.bmHeight) / 2 / 13;
+    //int j = (m_winh - m_bm.bmHeight) / 2 / 20;
 
     if (i == 0)
       i = 1;    // if i equal to 0 then changed it to 1
@@ -124,8 +124,8 @@ BOOL MediaCenterScrollBar::OnHittest(POINT pt, int bLbtdown, int& offsetspeed, H
     else
       offsetspeed = (offset - i + 1) / i;
     /*    DWORD timer = max(63 - (abs(offset) + j - 1) / j * 3, 1);*/
-    DWORD timer = 42 - (abs(offset) + i - 1) / i * 2;
-
+    DWORD timer = 20 - (abs(offset) + i - 1) / i;
+    //DWORD timer = 10;
     SetTimer(hwnd, TIMER_OFFSET, 1, NULL);
     KillTimer(hwnd, TIMER_OFFSET);
     SetTimer(hwnd, TIMER_OFFSET, timer, NULL);

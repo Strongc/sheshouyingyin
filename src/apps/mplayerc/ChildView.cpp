@@ -843,8 +843,10 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
         GetClientRect(&rc);
         m_blocklistview->Update(rc.right - rc.left, rc.bottom - rc.top);
 
-        RECT minusrc = m_blocklistview->GetStatusBarHittest();
-        rc.bottom -= (minusrc.bottom - minusrc.top);
+        RECT statusbarrc = m_blocklistview->GetStatusBarHittest();
+        RECT scrollbarrc = m_blocklistview->GetScrollBarHittest();
+        rc.right -= (scrollbarrc.right - scrollbarrc.left);
+        rc.bottom -= (statusbarrc.bottom - statusbarrc.top);
         InvalidateRect(&rc);
         return;
       }

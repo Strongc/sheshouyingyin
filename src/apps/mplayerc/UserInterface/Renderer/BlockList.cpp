@@ -1277,15 +1277,14 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
   RECT rcclient;
   GetClientRect(m_hwnd, &rcclient);
   
+  RECT prerc = GetScrollBarHittest();
   int bscroll = OnScrollBarHittest(pt, -1, *m_scrollspeed, m_hwnd);
 
   if (bscroll == ScrollBarClick && NeedRepaintScrollbar())
   {
     RECT rc = GetScrollBarHittest();
-    RECT invalrc = rc;
-    invalrc.top = 0;
-    invalrc.bottom = rcclient.bottom;
-    ::InvalidateRect(m_hwnd, &invalrc, FALSE);
+    UnionRect(&rc, &prerc, &rc);
+    ::InvalidateRect(m_hwnd, &rc, FALSE);
   }
 
 //   if (bscroll == ScrollBarHit && m_lbtndown)
@@ -1294,8 +1293,7 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
   if (bscroll == NoScrollBarHit && m_lbtndown)
   {
     RECT rc = GetScrollBarHittest();
-    rc.top = 0;
-    rc.bottom = rcclient.bottom;
+    UnionRect(&rc, &prerc, &rc);
     InvalidateRect(m_hwnd, &rc, FALSE);
     PostMessage(m_hwnd, WM_LBUTTONUP, 0, 0);
   }
