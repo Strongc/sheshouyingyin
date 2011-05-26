@@ -150,6 +150,7 @@ BOOL MediaCenterScrollBar::OnHittest(POINT pt, int bLbtdown, int& offsetspeed, H
     KillTimer(hwnd, TIMER_OFFSET);
     KillTimer(hwnd, TIMER_SLOWOFFSET);
     m_pos = m_intpos;
+    m_prepos = m_intpos;
     m_lastlbtstate = FALSE;
     offsetspeed = 0;
   }
