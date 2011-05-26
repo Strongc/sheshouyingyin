@@ -37,13 +37,16 @@ public:
   OAuthDlg();
   virtual ~OAuthDlg();
 
-  void CalcOauthPos();
+  void CalcOauthPos(BOOL display = TRUE);
   void OnSize(UINT nType, int cx, int cy);
   void SetUrl(std::wstring url);
+
+  void HideFrame();
 
   BSTR CallSPlayer(LPCTSTR p, LPCTSTR param);
   afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 
+  CRect m_currect;
 protected:
   virtual BOOL OnInitDialog();
   STDMETHOD(TranslateAccelerator)(LPMSG lpMsg, const GUID* pguidCmdGroup, DWORD nCmdID);

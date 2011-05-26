@@ -43,6 +43,7 @@ public:
 
 protected:
   virtual BOOL OnInitDialog();
+  afx_msg void OnTimer(UINT_PTR nIDEvent);
   STDMETHOD(TranslateAccelerator)(LPMSG lpMsg, const GUID* pguidCmdGroup, DWORD nCmdID);
 
   DECLARE_MESSAGE_MAP()
@@ -53,6 +54,15 @@ protected:
 private:
   RECT m_mainrc;
   CRgn m_rgn;
+
+  // animation
+  DWORD m_st;
+  DWORD m_detalt;
+  DWORD m_ut;
+
+  float m_dt;
+  float m_offset;
+  int m_oauthHeight;
 };
 
 

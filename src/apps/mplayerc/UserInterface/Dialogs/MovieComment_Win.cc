@@ -18,6 +18,7 @@ IMPLEMENT_DYNAMIC(MovieComment, CDHtmlDialog)
 
 BEGIN_MESSAGE_MAP(MovieComment, CDHtmlDialog)
   ON_WM_SIZE()
+  ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 BEGIN_DHTML_EVENT_MAP(MovieComment)
@@ -347,24 +348,77 @@ void MovieComment::CloseOAuth()
   {
     delete m_oadlg;
     m_oadlg = NULL;
+	m_oauthHeight = 0;
+	m_detalt = 0;
+	m_offset = 0;
+	CMainFrame* cmf = (CMainFrame*)AfxGetMainWnd();
+	if (cmf && cmf->GetMediaState() == State_Paused)
+		cmf->OnPlayPlay();
   }
+}
+
+void MovieComment::OnTimer(UINT_PTR nIDEvent)
+{
+	// update
+	if (nIDEvent == 1)
+	{
+		m_detalt += (timeGetTime()-m_ut);
+		m_oauthHeight = m_detalt*(m_offset/m_dt);
+		m_ut = timeGetTime();
+	}
+	// render
+	else if (nIDEvent == 2)
+	{
+		if (m_oadlg)
+		{
+			RECT rc = m_oadlg->m_currect;
+			rc.bottom = m_oauthHeight;
+			m_oadlg->SetFramePos(rc);
+		}
+	}
+
+	if (timeGetTime()-m_st >= m_dt)
+	{
+		KillTimer(1);
+		KillTimer(2);
+		RECT rc = m_oadlg->m_currect;
+		rc.bottom = 400;
+		m_oadlg->SetFramePos(rc);
+	}
 }
 
 void MovieComment::OpenOAuth(LPCTSTR str)
 {
-  if (m_oadlg)
-    CloseOAuth();
-
   std::wstring url(str);
   if (url.empty() || url.find(L"http://") == std::string::npos)
     return;
+
+  if (m_oadlg)
+	  CloseOAuth();
+
+  CMainFrame* cmf = (CMainFrame*)AfxGetMainWnd();
+  if (cmf && cmf->GetMediaState() == State_Running)
+	  cmf->OnPlayPlaypause();
 
   m_oadlg = new OAuthDlg;
   m_oadlg->CreateFrame(DS_SETFONT|DS_FIXEDSYS|WS_POPUP|WS_DISABLED,WS_EX_NOACTIVATE);
   m_oadlg->SetUrl(url);
   m_oadlg->ShowFrame();
   AdjustMainWnd();
-  m_oadlg->CalcOauthPos();
+  m_oadlg->CalcOauthPos(FALSE);
+
+  RECT rc = m_oadlg->m_currect;
+  rc.bottom = 1;
+  m_oadlg->SetFramePos(rc);
+
+  m_st = m_ut = timeGetTime();
+  m_dt = 200.0f;
+
+  m_oauthHeight = 0;
+  m_detalt = 0;
+  m_offset = 400.f;
+  SetTimer(1, 1, NULL);
+  SetTimer(2, 33, NULL);
 }
 
 STDMETHODIMP MovieComment::TranslateAccelerator(LPMSG lpMsg, const GUID* /*pguidCmdGroup*/, DWORD /*nCmdID*/)

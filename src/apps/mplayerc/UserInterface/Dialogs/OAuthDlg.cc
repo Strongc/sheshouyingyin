@@ -7,6 +7,7 @@
 #include "OAuthDlg.h"
 #include "logging.h"
 #include "../../resource.h"
+#include "../../MainFrm.h"
 #include <ResLoader.h>
 
 IMPLEMENT_DYNAMIC(CircleBtn, CBitmapButton)
@@ -32,14 +33,14 @@ CircleBtn::~CircleBtn()
 void CircleBtn::SetCircleWnd()
 {
 	CRgn rgn;
-	rgn.CreateEllipticRgn(1, 1, 40, 40);
+	rgn.CreateEllipticRgn(1, 1, 35, 35);
 	SetWindowRgn(rgn, TRUE);
 }
 
 void CircleBtn::OnSize(UINT nType, int cx, int cy)
 {
 	__super::OnSize(nType, cx, cy);
-	//SetCircleWnd();
+	SetCircleWnd();
 }
 
 void CircleBtn::OnLButtonDown(UINT nFlags, CPoint point)
@@ -49,6 +50,9 @@ void CircleBtn::OnLButtonDown(UINT nFlags, CPoint point)
 void CircleBtn::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	GetParent()->ShowWindow(SW_HIDE);
+	CMainFrame* cmf = (CMainFrame*)AfxGetMainWnd();
+	if (cmf && cmf->GetMediaState() == State_Paused)
+		cmf->OnPlayPlay();
 }
 
 LRESULT CircleBtn::OnMouseLeave(WPARAM, LPARAM)
@@ -81,8 +85,7 @@ void CircleBtn::OnPaint()
 	mdc.CreateCompatibleDC(&dc);
 
 	HBITMAP hold = (HBITMAP)mdc.SelectObject(&(m_trackleave?m_over:m_out));
-	BLENDFUNCTION bf = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
-	dc.AlphaBlend(0, 0, 34, 29, &mdc, 0, 0, 34, 29, bf);
+	dc.BitBlt(0,0,36,36,&mdc,0,0,SRCCOPY);
 	mdc.SelectObject(hold);
 }
 
@@ -121,7 +124,7 @@ BSTR OAuthDlg::CallSPlayer(LPCTSTR p, LPCTSTR param)
 	if (cmd.empty())
 		ret = L"-1";
 	else if (cmd == L"close")
-		ShowWindow(SW_HIDE);
+		HideFrame();
 	else
 		ret = L"-1";
 	return ret.AllocSysString();
@@ -129,7 +132,7 @@ BSTR OAuthDlg::CallSPlayer(LPCTSTR p, LPCTSTR param)
 
 int OAuthDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
-	m_btnclose.Create(NULL, L"oauthclose", WS_CHILD|WS_VISIBLE , CRect(450, 5, 484, 34), this, 1);
+	m_btnclose.Create(NULL, L"oauthclose", WS_CHILD|WS_VISIBLE , CRect(450, 5, 486, 41), this, 1);
 
 	return __super::OnCreate(lpCreateStruct);
 }
@@ -157,7 +160,15 @@ BOOL OAuthDlg::OnInitDialog()
   return TRUE;
 }
 
-void OAuthDlg::CalcOauthPos()
+void OAuthDlg::HideFrame()
+{
+	DhtmlDlgBase::HideFrame();
+	CMainFrame* cmf = (CMainFrame*)AfxGetMainWnd();
+	if (cmf && cmf->GetMediaState() == State_Paused)
+		cmf->OnPlayPlay();
+}
+
+void OAuthDlg::CalcOauthPos(BOOL display)
 {
   if (!IsWindowVisible())
     return;
@@ -169,7 +180,9 @@ void OAuthDlg::CalcOauthPos()
   rc.left += (rc.right-rc.left-500)/2;
   rc.right = 500;
   rc.bottom = 400;
-  SetFramePos(rc);
+  m_currect = rc;
+  if (display)
+	SetFramePos(rc);
 }
 
 void OAuthDlg::OnSize(UINT nType, int cx, int cy)
