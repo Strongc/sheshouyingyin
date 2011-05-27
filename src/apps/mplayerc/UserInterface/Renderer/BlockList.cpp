@@ -290,6 +290,7 @@ BlockList::BlockList()
 , m_scrollbarinitialize(FALSE)
 , m_pFilmNameEditor(0)
 , m_hOldAccel(0)
+, m_clearstat(FALSE)
 {
   m_topdistance = 26;
   m_bottomdistance = 22;
@@ -941,8 +942,8 @@ BOOL BlockList::ContiniuPaint()
 
   BOOL bend = m_y.back() + m_blockh + m_top == m_winh? TRUE : FALSE;
   BOOL bbegin = m_y.front() - m_topdistance ==  0? TRUE : FALSE;
-  if ((m_end == m_list->end() && GetEmptyList() && bend)
-      || (m_start == m_list->begin() && GetEmptyList() && bbegin))
+  if ((m_end == m_list->end() && GetClearStat() && bend)
+      || (m_start == m_list->begin() && GetClearStat() && bbegin))
     bpaint = FALSE;
 
   return bpaint;
@@ -1034,20 +1035,28 @@ void BlockList::SwapListBuff(std::list<BlockUnit*>::iterator& it, BOOL upordown)
   std::list<BlockUnit*>::iterator ittmp;
   if (upordown)
   {
-    ittmp = it;
+    ittmp = m_end;
+    BOOL bl = TRUE;
     while (ittmp != m_logicalend)
     {
       ++count;
       ++ittmp;
+      
+      if (count > m_x.size())
+      {
+        bl = FALSE;
+        break;
+      }
     }
 
-    if (count <= m_viewcapacity) 
+    if (bl)//count <= m_viewcapacity) 
     {
       m_list = GetIdleList();
       if (m_list)
       {
         it = m_list->begin();
-        ClearList(GetIdleList());
+        //ClearList(GetIdleList());
+        m_clearstat = TRUE;
       }
     }
   }
@@ -1055,27 +1064,24 @@ void BlockList::SwapListBuff(std::list<BlockUnit*>::iterator& it, BOOL upordown)
   {
     if (it != m_list->begin())
       return;
-
-    ittmp = it;
-    while (ittmp != m_end)
+    
+    m_list = GetIdleList();
+    if (m_list)
     {
-      ++ittmp;
-      ++count;
-    }
+//         int maxsize = m_viewcapacity + m_remainitem;
+//         ittmp = m_list->end();
+//         while (maxsize--)
+//           --ittmp;
+//         it = ittmp;
+      
+      it = m_buffit;
+        
+      
 
-    if (count <= m_viewcapacity)
-    {
-      m_list = GetIdleList();
-      if (m_list)
-      {
-        int maxsize = m_viewcapacity + m_remainitem;
-        ittmp = m_list->end();
-        while (maxsize--)
-          --ittmp;
-        it = ittmp;
-        ClearList(GetIdleList());
-      }
+      //ClearList(GetIdleList());
+      m_clearstat = TRUE;
     }
+//}
   }
 }
 
@@ -1096,7 +1102,8 @@ void BlockList::CalculateViewCapacity()
 {
   int height = (int)m_blockh + (int)m_top;
   m_viewcapacity = ((int)m_winh / height + 2) * m_x.size();
-  m_listsize = 2 * m_viewcapacity;
+  m_listsize = 6 * m_viewcapacity;
+  //m_listsize = 100;
 }
 
 void BlockList::CalculateLogicalListEnd()
@@ -1164,6 +1171,21 @@ BOOL BlockList::NeedRepaintScrollbar()
 void BlockList::SetStatusBarTip(const std::wstring& str)
 {
   m_statusbar.SetText(str);
+}
+
+void BlockList::SetClearStat()
+{
+  m_clearstat = FALSE;
+}
+
+BOOL BlockList::GetClearStat()
+{
+  return m_clearstat;
+}
+
+void BlockList::SetListBuffIterator(std::list<BlockUnit*>::iterator it)
+{
+  m_buffit = it;
 }
 
 //BlockListView

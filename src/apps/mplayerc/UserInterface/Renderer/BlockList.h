@@ -99,7 +99,10 @@ public:
   void SetSizeChanged();
   BOOL IsEmpty();
   BOOL NeedRepaintScrollbar();
-  
+  void SetClearStat();
+  BOOL GetClearStat();
+  void SetListBuffIterator(std::list<BlockUnit*>::iterator it);
+
 // signals
 public:
   boost::signal<void (const MediaData &md)> m_sigPlayback;
@@ -142,6 +145,7 @@ private:
   std::list<BlockUnit*> m_list1;
   std::list<BlockUnit*> m_list2;
   int m_listsize;
+  std::list<BlockUnit*>::iterator m_buffit;
 
   MediaCenterScrollBar* m_scrollbar;
   int m_scrollbardirection;
@@ -155,6 +159,8 @@ private:
   BOOL m_scrollbarinitialize;
 
   bool m_bSizeChanged;
+
+  BOOL m_clearstat;
 
 protected:
   HWND m_hwnd;
