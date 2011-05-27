@@ -74,7 +74,7 @@ BOOL LoadMediaDataFromDB::CalculateStartAndEnd()
     m_amount = m_model.GetCount() - m_limitstart;
 
   m_limitend = m_limitstart + m_amount;
-
+  
   return TRUE;
 }
 
@@ -84,6 +84,9 @@ void LoadMediaDataFromDB::AddDataToList()
     ClearList();
 
   MediaDatas::iterator it = m_mediadatas.begin();
+
+  int count = 1;
+  BlockListView* list = &MediaCenterController::GetInstance()->GetBlockListView();
 
   while (it != m_mediadatas.end())
   {
@@ -98,10 +101,30 @@ void LoadMediaDataFromDB::AddDataToList()
     one->DefLayer();
     m_listbuff->push_back(one);
 
+    if (count == m_mediadatas.size() - m_windowcapacity - m_remain + 1)
+      list->SetListBuffIterator(--m_listbuff->end());
+
+
     ++it;
+    ++count;
   }
 
   m_mediadatas.clear();
+  if (!m_listbuff->empty())
+  {
+    
+    //BlockListView* list = &MediaCenterController::GetInstance()->GetBlockListView();
+    list->SetClearStat();
+//     if (m_direction < 0)
+//     {
+//       std::list<BlockUnit*>::iterator it = m_listbuff->end();
+//       int maxsize = m_windowcapacity + m_remain;
+//       while (maxsize--)
+//         --it;
+//       list->SetListBuffIterator(it);
+//     }
+  }
+      
 }
 
 void LoadMediaDataFromDB::SetWindownCapacity(int count)
@@ -116,6 +139,7 @@ void LoadMediaDataFromDB::SetAmount(int amount)
 
 void LoadMediaDataFromDB::ClearList()
 {
+  
   std::list<BlockUnit*>::iterator it = m_listbuff->begin();
   while (it != m_listbuff->end())
   {

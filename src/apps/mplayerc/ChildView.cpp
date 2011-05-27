@@ -820,8 +820,9 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
       BOOL bcontiniupaint = m_blocklistview->ContiniuPaint();
       m_blocklistview->SetScrollBarDragDirection(m_offsetspeed);
       std::list<BlockUnit*>* list = m_blocklistview->GetEmptyList();
-      if (list && !m_mediacenter->LoadMediaDataAlive())
-        m_mediacenter->LoadMediaData(m_offsetspeed, list, m_blocklistview->GetViewCapacity(),
+      //std::list<BlockUnit*>* list = m_blocklistview->GetIdleList();
+      if ((list || m_blocklistview->GetClearStat()) && !m_mediacenter->LoadMediaDataAlive())
+        m_mediacenter->LoadMediaData(m_offsetspeed, m_blocklistview->GetIdleList(), m_blocklistview->GetViewCapacity(),
         m_blocklistview->GetListCapacity(),
         m_blocklistview->GetListRemainItem());
       else
