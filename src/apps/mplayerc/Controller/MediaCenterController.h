@@ -61,8 +61,11 @@ public:
 
 public:
   // Data control
-  void SpiderStart();
-  void SpiderStop();
+  void SpiderThreadStart();
+  void SpiderThreadStop();
+
+  void CoverThreadStart();
+  void CoverThreadStop();
 
   void LoadMediaData(int direction, std::list<BlockUnit*>* list, int viewcapacity, 
                      int listcapacity, int remain, int times = 1);
