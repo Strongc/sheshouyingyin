@@ -570,14 +570,7 @@ void BlockList::Update(float winw, float winh)
   if ((m_winw != winw) || (m_winh != winh))
   {
     if (m_pFilmNameEditor)
-    {
-      // modify the block's filmname
-      OnSetFilmName();
-
-      // hide the editor
-      m_pFilmNameEditor->SetWindowText(L"");
-      m_pFilmNameEditor->ShowWindow(SW_HIDE);
-    }
+      HideFilmNameEditor();
   }
 
   m_winw = winw;
@@ -783,14 +776,7 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
     {
       m_pFilmNameEditor->GetClientRect(&rcEditor);
       if (!rcEditor.PtInRect(pt))
-      {
-        // modify the block's filmname
-        OnSetFilmName();
-
-        // hide the editor
-        m_pFilmNameEditor->SetWindowText(L"");
-        m_pFilmNameEditor->ShowWindow(SW_HIDE);
-      }
+        HideFilmNameEditor();
     }
   }
 
@@ -845,6 +831,16 @@ void BlockList::OnSetFilmName()
     media_tree::model &tree_model = MediaCenterController::GetInstance()->GetMediaTree();
     tree_model.addFile((*m_itCurEdit)->m_mediadata);
   }
+}
+
+void BlockList::HideFilmNameEditor()
+{
+  // modify the block's filmname
+  OnSetFilmName();
+
+  // hide the editor
+  m_pFilmNameEditor->SetWindowText(L"");
+  m_pFilmNameEditor->ShowWindow(SW_HIDE);
 }
 
 void BlockList::OnLButtonDblClk(POINT pt)
@@ -1387,6 +1383,9 @@ BOOL BlockListView::HandleRButtonUp(POINT pt)
 
   if (m_curUnit)
     bl = TRUE;
+
+  if (m_pFilmNameEditor)
+    HideFilmNameEditor();
 
   return bl;
 }
