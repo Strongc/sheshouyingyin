@@ -881,11 +881,15 @@ void CChildView::ShowMediaCenter(BOOL bl)
   if (!bl)
   {
     SetClassLong(m_hWnd, GCL_HCURSOR, (LONG)::LoadCursor(NULL, IDC_HAND));
+    InvalidateRect(0, FALSE);
     return;
   }
 
   if (!m_blocklistview->IsEmpty())
+  {
+    InvalidateRect(0, FALSE);
     return;
+  }
 
   RECT rc;
   GetClientRect(&rc);
