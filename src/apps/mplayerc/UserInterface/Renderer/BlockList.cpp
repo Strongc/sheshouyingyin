@@ -827,8 +827,13 @@ void BlockList::OnSetFilmName()
     // rename file
     std::wstring sPath = (*m_itCurEdit)->m_mediadata.path;
     std::wstring sOldFilename = (*m_itCurEdit)->m_mediadata.filename;
+    std::wstring sExt;
+    size_t nPos = sOldFilename.find_last_of('.');
+    if (nPos != std::wstring::npos)
+      sExt = sOldFilename.substr(nPos);
+
     boost::system::error_code err;
-    boost::filesystem::rename(sPath + sOldFilename, sPath + (LPCTSTR)sNewFilmName, err);
+    boost::filesystem::rename(sPath + sOldFilename, sPath + (LPCTSTR)sNewFilmName + sExt, err);
 
     if (err == boost::system::errc::success)
     {
@@ -860,6 +865,7 @@ void BlockList::OnLButtonDblClk(POINT pt)
       std::wstring sFilmName = (*it)->m_mediadata.filmname;
       if (sFilmName.empty())
         sFilmName = (*it)->m_mediadata.filename;
+
       int pos = sFilmName.find_last_of('.');
       if (pos != std::wstring::npos)
         sFilmName = sFilmName.substr(0, pos);
