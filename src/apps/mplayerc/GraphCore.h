@@ -179,7 +179,7 @@ public:
   bool BuildGraphVideoAudio(int fVPreview, bool fVCapture, int fAPreview, bool fACapture);
 
   //  Snapshot
-  void GetSnapShotSliently(CString fn);
+  void GetSnapShotSliently(const std::vector<std::wstring> &args);
   bool _skip_ui;
   bool GetDIB(BYTE** ppData, long& size, bool fSilent = false);
   void SaveDIB(LPCTSTR fn, BYTE* pData, long size);
