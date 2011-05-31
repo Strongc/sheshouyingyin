@@ -1,11 +1,12 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "GraphCore.h"
 #include <Strings.h>
 
 #include "mplayerc.h"
 #include "MainFrm.h"
 #include "Controller/HashController.h"
-
+#include <boost/filesystem.hpp>
+#include <boost/regex.hpp>
 #include "jpeg.h"
 #include "FGManager.h"
 #include "KeyProvider.h"
@@ -118,10 +119,10 @@ bool CGraphCore::LoadSubtitle(CString fn, int sub_delay_ms, BOOL bIsForPlayList)
 
   CSVPToolBox svTool;
   if(!sub_delay_ms){
-    //Èç¹ûÃ»ÓÐÔ¤Éè×ÖÄ»ÑÓ³Ù£¬ÊÓÍ¼¶ÁÈ¡ ×ÖÄ».delay »ñµÃdelay²ÎÊý
+    //ï¿½Ã»ï¿½Ô¤ï¿½ï¿½Ä»ï¿½Ù£ï¿½Í¼ï¿½ ï¿½Ä».delay ï¿½delayï¿½
     sub_delay_ms = _wtoi ( svTool.fileGetContent( fn+_T(".delay")) );
   }else{
-    //Èç¹ûÓÐ×ÖÄ»ÑÓ³Ù£¬ ¶øÇÒ²»ÊÇplaylist subtitles£¬ ±£´æµ½.delayÎÄ¼þ
+    //ï¿½ï¿½ï¿½Ä»ï¿½Ù£ ï¿½ï¿½playlist subtitles æµ½.delayï¿½
     if(!bIsForPlayList){
       szBuf.Format(_T("%d"), sub_delay_ms);
       svTool.filePutContent(  fn+_T(".delay"), szBuf );
@@ -223,7 +224,7 @@ void CGraphCore::UpdateSubtitle(bool fApplyDefStyle)
 
     i -= pSubStream->GetStreamCount();
   }
-  //SendStatusMessage(_T("Ö÷×ÖÄ»ÒÑ¹Ø±Õ") , 4000 );
+  //SendStatusMessage(_T("ï¿½ï¿½Ä»ï¿½Ø±ï¿½) , 4000 );
   m_pCAP->SetSubPicProvider(NULL);
 }
 
@@ -360,7 +361,7 @@ void CGraphCore::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyle, bool b
 
 
   }else{
-    //SendStatusMessage(_T("Ö÷×ÖÄ»ÒÑ¹Ø±Õ") , 4000 );
+    //SendStatusMessage(_T("ï¿½ï¿½Ä»ï¿½Ø±ï¿½) , 4000 );
   }
 }
 
@@ -370,7 +371,7 @@ void CGraphCore::SetSubtitleDelay(int delay_ms)
     m_pCAP->SetSubtitleDelay(delay_ms);
     getCurPlayingSubfile();
     //CString str;
-    //str.Format(_T("Ö÷×ÖÄ»ÑÓÊ±ÒÑ¾­ÉèÎª£º %d ms"), delay_ms);
+    //str.Format(_T("ï¿½ï¿½Ä»ï¿½Ê±ï¿½ï¿½Îª %d ms"), delay_ms);
     //SendStatusMessage(str, 5000);
   }
   time(&m_tPlayStartTime);
@@ -397,7 +398,7 @@ void CGraphCore::UpdateSubtitle2(bool fApplyDefStyle)
 
     i -= pSubStream->GetStreamCount();
   }
-  //SendStatusMessage(_T("µÚ¶þ×ÖÄ»ÒÑ¹Ø±Õ") , 4000 );
+  //SendStatusMessage(_T("Ú¶ï¿½Ä»ï¿½Ø±ï¿½) , 4000 );
   m_pCAP->SetSubPicProvider2(NULL);
 }
 
@@ -532,7 +533,7 @@ void CGraphCore::SetSubtitle2(ISubStream* pSubStream, bool fApplyDefStyle, bool 
     SetSubtitleDelay2(pSubStream->sub_delay_ms); 
 
   }else{
-    //SendStatusMessage(_T("µÚ¶þ×ÖÄ»ÒÑ¹Ø±Õ") , 4000 );
+    //SendStatusMessage(_T("Ú¶ï¿½Ä»ï¿½Ø±ï¿½) , 4000 );
   }
 }
 
@@ -586,7 +587,7 @@ void CGraphCore::SetSubtitleDelay2(int delay_ms)
     m_pCAP->SetSubtitleDelay2(delay_ms);
     getCurPlayingSubfile(NULL, 2);
     // 		CString str;
-    // 		str.Format(_T("µÚ¶þ×ÖÄ»ÑÓÊ±ÒÑ¾­ÉèÎª£º %d ms"), delay_ms);
+    // 		str.Format(_T("Ú¶ï¿½Ä»ï¿½Ê±ï¿½ï¿½Îª %d ms"), delay_ms);
     // 		SendStatusMessage(str, 5000);
   }
   time(&m_tPlayStartTime);
@@ -712,7 +713,7 @@ bool CGraphCore::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
           }else{
             CSVPToolBox svpTool;
             if(!svpTool.ifFileExist(fn, true)){
-              //SVP_LogMsg5(L"SVP ÎÄ¼þ²»´æÔÚ" );
+              //SVP_LogMsg5(L"SVP ï¿½ï¿½ï¿½ );
               throw ResStr(IDS_MSG_THROW_FILE_NOT_EXIST);
             }
           }
@@ -970,14 +971,46 @@ void CGraphCore::CloseMediaPrivate()
   SetThreadExecutionState(0); //this is the right way, only this work under vista . no ES_CONTINUOUS  so it can goes to sleep when not playing
 
 }
-void CGraphCore::GetSnapShotSliently(CString fn)
+
+// Function: make snapshot for media
+// command line: splayer /snapshot "\\file_01\reflections\-=Test File=-\01.rmvb" 128_128 5
+void CGraphCore::GetSnapShotSliently(const std::vector<std::wstring> &args)
 {
+  using namespace boost;
+  using namespace boost::filesystem;
+
+  // deal arguments
+  std::wstring sFilePath = args.front();
+  std::pair<int, int> prSnapshotSize;  // e.g: 128 * 128
+  int nSnapshotTime = 5;  // e.g: default is 5 minutes, unit is minute now
+
+  wsmatch what;
+  wregex pattern(L"(\\d+)_(\\d+)");
+  if (regex_search(args[1], what, pattern))
+  {
+    prSnapshotSize.first = ::_wtoi(what.str(1).c_str());
+    prSnapshotSize.second = ::_wtoi(what.str(2).c_str());
+  }
+
+  if (prSnapshotSize.first == 0)
+    prSnapshotSize.first = 128;   // set to a default size
+
+  if (prSnapshotSize.second == 0)
+    prSnapshotSize.second = 128;   // set to a default size
+
+  if (!args[2].empty())
+    nSnapshotTime = ::_wtoi(args[2].c_str());
+
+  if (!exists(sFilePath))
+    return;
+
+  // do snapshot
   OpenFileData* p = new OpenFileData();
   if (!p)
     return;
   _skip_ui = true;
 
-  p->fns.AddTail(fn);
+  p->fns.AddTail(sFilePath.c_str());
   p->rtStart = 0;
   CloseMedia();
   // disable graph thread
@@ -991,11 +1024,19 @@ void CGraphCore::GetSnapShotSliently(CString fn)
   s.fEnableWorkerThreadForOpening = 1;
   if(!pMS)
     return;
+
+  // set duration
   __int64 rtDur = 0;
-  pMS->GetDuration(&rtDur);
-  rtDur/=10;
-  if (rtDur > 1000)
-    pMS->SetPositions(&rtDur, AM_SEEKING_AbsolutePositioning|AM_SEEKING_SeekToKeyFrame, NULL, AM_SEEKING_NoPositioning);
+  rtDur = (__int64)nSnapshotTime * 60 * 10000000;
+
+  // return if snapshot time greater than media's stop time
+  __int64 rtStop = 0;
+  pMS->GetPositions(0, &rtStop);
+  if (rtDur > rtStop)
+    return;
+
+  // otherwise set the position
+  pMS->SetPositions(&rtDur, AM_SEEKING_AbsolutePositioning, NULL, AM_SEEKING_NoPositioning);
 
   HRESULT hr = pFS ? pFS->Step(3, NULL) : E_FAIL;
 
@@ -1021,24 +1062,43 @@ void CGraphCore::GetSnapShotSliently(CString fn)
   if (!dib_stat)
     return;
 
-  std::string szFileHash = Strings::WStringToUtf8String(HashController::GetInstance()->GetSPHash(fn));
+  std::string szFileHash = Strings::WStringToUtf8String(HashController::GetInstance()->GetSPHash(sFilePath.c_str()));
   std::wstring szJpgName = HashController::GetInstance()->GetMD5Hash(szFileHash.c_str(), szFileHash.length());
 
-  CSVPToolBox svpTool;
-  std::wstring app_path;
-  svpTool.GetAppDataPath(app_path);
-  app_path += L"\\mc";
-  _wmkdir(app_path.c_str());
-  app_path += L"\\cover";
-  _wmkdir(app_path.c_str());
-  std::wstring snapshot_fn = app_path + L"\\" + szJpgName + L".jpg";
+  CSVPToolBox toolbox;
+  std::wstring snapshot_fn;
+  toolbox.GetAppDataPath(snapshot_fn);
+  snapshot_fn += L"\\mc\\cover\\";
+
+  std::wstringstream ssFinalName;
+  ssFinalName << szJpgName << L"_" << prSnapshotSize.first << L"_"
+              << prSnapshotSize.second << L"_" << nSnapshotTime << L".jpg";
+
+  snapshot_fn += ssFinalName.str();
 
   BITMAPINFO* bi = (BITMAPINFO*)pData;
-  if (bi->bmiHeader.biWidth > 960)
-    CJpegEncoderFile(snapshot_fn.c_str()).EncodeHalf(pData);
-  else
-    CJpegEncoderFile(snapshot_fn.c_str()).Encode(pData);
 
+  // just start the gdi+
+  CImage igTemp;
+  igTemp.Load(L"");
+
+  // Zoom the bitmap
+  Gdiplus::Bitmap *pbmOrigin = Gdiplus::Bitmap::FromBITMAPINFO(bi, (char *)bi + sizeof(BITMAPINFO));
+  if (pbmOrigin)
+  {
+    Gdiplus::Bitmap bmResult(prSnapshotSize.first, prSnapshotSize.second);
+    Gdiplus::Graphics gpResult(&bmResult);
+    gpResult.DrawImage(pbmOrigin, 0, 0, prSnapshotSize.first, prSnapshotSize.second);
+
+    HBITMAP hbmResult = 0;
+    bmResult.GetHBITMAP(Gdiplus::Color(255, 255, 255), &hbmResult);
+    if (hbmResult)
+    {
+      CImage image;
+      image.Attach(hbmResult);
+      image.Save(snapshot_fn.c_str());
+    }
+  }
 }
 void CGraphCore::OpenCreateGraphObject(OpenMediaData* pOMD)
 {
@@ -1318,9 +1378,9 @@ void CGraphCore::OpenFile(OpenFileData* pOFD)
       AppSettings& s = AfxGetAppSettings();
       pOFD->title = fn;
       m_fnCurPlayingFile = fn;
-      //ÊÇ·ñÓÐ×ÖÄ»£¿ ›]ÓÐÔòÏÂÔØ×ÖÄ»
+      //ï¿½ï¿½ï¿½ï¿½ ]ï¿½ï¿½ï¿½ï¿½ï¿½Ä»
       CSVPToolBox svpTool;
-      //ËÑË÷Ä¿Â¼ÏÂÍ¬Ãû×ÖÄ»
+      //ï¿½ï¿½Ä¿Â¼ï¿½Í¬ï¿½ï¿½Ä»
       CAtlArray<CString> subSearchPaths;
       subSearchPaths.Add(_T("."));
       subSearchPaths.Add(s.GetSVPSubStorePath());
@@ -1368,7 +1428,7 @@ void CGraphCore::OpenFile(OpenFileData* pOFD)
           if(s.CheckSVPSubExts.Find(szExt) >= 0 ){
             SVPSubDownloadByVPath(fn);
           }else{
-            //SendStatusMessage(  _T("ÕýÔÚ²¥·ÅµÄÎÄ¼þÀàÐÍ¿´À´²»ÐèÒª×ÖÄ»£¬ÖÕÖ¹×Ô¶¯ÖÇÄÜÆ¥Åä"), 1000);
+            //SendStatusMessage(  _T("ï¿½ï¿½Åµï¿½Ä¼ï¿½ï¿½4ï¿½Òªï¿½Ä»ï¿½Ö¹ï¿½ï¿½ï¿½Æ¥ï¿½"), 1000);
           }
 
 

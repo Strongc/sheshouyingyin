@@ -5610,7 +5610,30 @@ BOOL CMainFrame::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCDS)
   if (s.nCLSwitches&CLSW_SNAPSHOT)
   {
     if (s.slFiles.GetCount() > 0)
-      GetSnapShotSliently(s.slFiles.GetHead());
+    {
+      // deal argument
+      std::vector<std::wstring> args;
+      POSITION pos = s.slFiles.GetHeadPosition();
+      while (pos)
+      {
+        CString sTemp = s.slFiles.GetNext(pos);
+        args.push_back((LPCTSTR)sTemp);
+      }
+
+      if (args.size() == 1)
+      {
+        args.push_back(L"");
+        args.push_back(L"");
+      }
+      else if (args.size() == 2)
+      {
+        args.push_back(L"");
+      }
+
+      // do snapshot
+      MediaCenterController::GetInstance()->SpiderStop();
+      GetSnapShotSliently(args);
+    }
 
     // not safe exit, but save a lot coding, so sue me
     exit(0);
