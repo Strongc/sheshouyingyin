@@ -25,6 +25,7 @@ public:
   static std::wstring GetMCFolder();
 
   static std::wstring GetCoverPath(const std::wstring &sFilePath);
+  static std::wstring GetMediaHash(const std::wstring &sFilePath);
 
 public:
   // Gui control, should not for other use

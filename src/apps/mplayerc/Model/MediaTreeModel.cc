@@ -6,6 +6,7 @@
 #include <boost/foreach.hpp>
 #include "MediaSQLite.h"
 #include "MediaDB.h"
+#include "../Controller/MediaCenterController.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // normal part
@@ -150,8 +151,9 @@ void media_tree::model::addFile(const MediaData &md)
       fe.file_data.filmname = md.filmname;
       fe.file_data.path = fullFolderPath(itFolder.node());
       fe.file_data.thumbnailpath = md.thumbnailpath;
-      //fe.sFileHash = ;
-      //fe.sFileUID = ;
+      fe.file_data.hash = MediaCenterController::GetMediaHash(fe.file_data.path + fe.file_data.filename);
+      fe.file_data.createtime = ::time(0);
+
       fe.tFileCreateTime = ::time(0);
       files.push_back(fe);
     }
@@ -199,6 +201,8 @@ void media_tree::model::save2DB()
           md.filmname = itFile->file_data.filmname;
           md.videotime = itFile->file_data.videotime;
           md.bHide = itFile->file_data.bHide;
+          md.hash = itFile->file_data.hash;
+          md.createtime = itFile->file_data.createtime;
 
           m_model.Add(md);
         }

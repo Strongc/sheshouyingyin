@@ -84,10 +84,14 @@ void MediaModel::Add(MediaData& mdData)
   {
     // insert new record
     ss.str(L"");
-    ss << L"INSERT INTO media_data(path, filename, filmname, thumbnailpath, videotime, hide)"
+    ss << L"INSERT INTO media_data(path, filename, filmname, thumbnailpath, hash, create_time, videotime, hide)"
       << L" VALUES('" << EscapeSQL(mdData.path) << L"', '" << EscapeSQL(mdData.filename) << L"', '"
       << EscapeSQL(mdData.filmname) << L"', '"
-      << EscapeSQL(mdData.thumbnailpath) << L"', " << mdData.videotime << L", " << mdData.bHide << L")";
+      << EscapeSQL(mdData.thumbnailpath) << L"', '"
+      << EscapeSQL(mdData.hash) << L"', "
+      << mdData.createtime << L", "
+      << mdData.videotime << L", "
+      << mdData.bHide << L")";
 
     MediaDB<>::exec(ss.str());
     MediaDB<>::last_insert_rowid(mdData.uniqueid);

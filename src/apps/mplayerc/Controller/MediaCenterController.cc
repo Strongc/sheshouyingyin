@@ -79,14 +79,21 @@ std::wstring MediaCenterController::GetMCFolder()
 
 std::wstring MediaCenterController::GetCoverPath(const std::wstring &sFilePath)
 {
-  std::string szFileHash = Strings::WStringToUtf8String(HashController::GetInstance()->GetSPHash(sFilePath.c_str()));
-  std::wstring szJpgName = HashController::GetInstance()->GetMD5Hash(szFileHash.c_str(), szFileHash.length());
+  std::wstring szJpgName = MediaCenterController::GetMediaHash(sFilePath);
 
   std::wstring sCoverPath;
   sCoverPath = GetMCFolder();
   sCoverPath += szJpgName + L".jpg";
 
   return sCoverPath;
+}
+
+std::wstring MediaCenterController::GetMediaHash(const std::wstring &sFilePath)
+{
+  std::string szFileHash = Strings::WStringToUtf8String(HashController::GetInstance()->GetSPHash(sFilePath.c_str()));
+  std::wstring szJpgName = HashController::GetInstance()->GetMD5Hash(szFileHash.c_str(), szFileHash.length());
+
+  return szJpgName;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
