@@ -104,6 +104,10 @@ void CoverController::_Thread()
         }
       }
 
+      // see if need to be stop
+      if (_Exit_state(0))
+        return;
+
       // Upload cover
       UploadCover(*it);
 
@@ -229,7 +233,13 @@ std::wstring CoverController::GetSnapshot(const MediaData &md, const std::string
   BOOL bRet = ::ShellExecuteEx(&shExecInfo);
   if (bRet)
   {
-    ::WaitForSingleObject(shExecInfo.hProcess, INFINITE);
+    HANDLE hHandles[] = {m_stopevent, shExecInfo.hProcess};
+    ::WaitForMultipleObjects(2, hHandles, FALSE, INFINITE);
+
+    // see if need to be stop
+    if (_Exit_state(0))
+      return L"";
+
     ::CloseHandle(shExecInfo.hProcess);
   }
 
