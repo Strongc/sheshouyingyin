@@ -91,23 +91,29 @@ std::wstring MediaCenterController::GetCoverPath(const std::wstring &sFilePath)
 
 ////////////////////////////////////////////////////////////////////////////////
 // data control
-void MediaCenterController::SpiderStart()
+void MediaCenterController::SpiderThreadStart()
 {
   m_spider._Stop();
   m_spider._Start();
+}
 
+void MediaCenterController::SpiderThreadStop()
+{
+   m_spider._Stop(500);
+
+   m_treeModel.save2DB();
+   m_treeModel.delTree();
+}
+
+void MediaCenterController::CoverThreadStart()
+{
   m_cover._Stop();
   m_cover._Start();
 }
 
-void MediaCenterController::SpiderStop()
+void MediaCenterController::CoverThreadStop()
 {
-   m_spider._Stop(1000);
-  
-   m_cover._Stop();
-
-   m_treeModel.save2DB();
-   m_treeModel.delTree();
+  m_cover._Stop(500);
 }
 
 void MediaCenterController::LoadMediaData(int direction, std::list<BlockUnit*>* list,

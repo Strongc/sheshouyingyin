@@ -571,14 +571,7 @@ void BlockList::Update(float winw, float winh)
   if ((m_winw != winw) || (m_winh != winh))
   {
     if (m_pFilmNameEditor)
-    {
-      // modify the block's filmname
-      OnSetFilmName();
-
-      // hide the editor
-      m_pFilmNameEditor->SetWindowText(L"");
-      m_pFilmNameEditor->ShowWindow(SW_HIDE);
-    }
+      HideFilmNameEditor();
   }
 
   m_winw = winw;
@@ -790,14 +783,7 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
     {
       m_pFilmNameEditor->GetClientRect(&rcEditor);
       if (!rcEditor.PtInRect(pt))
-      {
-        // modify the block's filmname
-        OnSetFilmName();
-
-        // hide the editor
-        m_pFilmNameEditor->SetWindowText(L"");
-        m_pFilmNameEditor->ShowWindow(SW_HIDE);
-      }
+        HideFilmNameEditor();
     }
   }
 
@@ -834,8 +820,13 @@ void BlockList::OnSetFilmName()
     // rename file
     std::wstring sPath = (*m_itCurEdit)->m_mediadata.path;
     std::wstring sOldFilename = (*m_itCurEdit)->m_mediadata.filename;
+    std::wstring sExt;
+    size_t nPos = sOldFilename.find_last_of('.');
+    if (nPos != std::wstring::npos)
+      sExt = sOldFilename.substr(nPos);
+
     boost::system::error_code err;
-    boost::filesystem::rename(sPath + sOldFilename, sPath + (LPCTSTR)sNewFilmName, err);
+    boost::filesystem::rename(sPath + sOldFilename, sPath + (LPCTSTR)sNewFilmName + sExt, err);
 
     if (err == boost::system::errc::success)
     {
@@ -847,6 +838,16 @@ void BlockList::OnSetFilmName()
     media_tree::model &tree_model = MediaCenterController::GetInstance()->GetMediaTree();
     tree_model.addFile((*m_itCurEdit)->m_mediadata);
   }
+}
+
+void BlockList::HideFilmNameEditor()
+{
+  // modify the block's filmname
+  OnSetFilmName();
+
+  // hide the editor
+  m_pFilmNameEditor->SetWindowText(L"");
+  m_pFilmNameEditor->ShowWindow(SW_HIDE);
 }
 
 void BlockList::OnLButtonDblClk(POINT pt)
@@ -867,6 +868,7 @@ void BlockList::OnLButtonDblClk(POINT pt)
       std::wstring sFilmName = (*it)->m_mediadata.filmname;
       if (sFilmName.empty())
         sFilmName = (*it)->m_mediadata.filename;
+
       int pos = sFilmName.find_last_of('.');
       if (pos != std::wstring::npos)
         sFilmName = sFilmName.substr(0, pos);
@@ -1401,6 +1403,9 @@ BOOL BlockListView::HandleRButtonUp(POINT pt)
 
   if (m_curUnit)
     bl = TRUE;
+
+  if (m_pFilmNameEditor)
+    HideFilmNameEditor();
 
   return bl;
 }
