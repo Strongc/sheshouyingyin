@@ -742,7 +742,12 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
   }
 
   MediaCenterController::GetInstance()->SetFrame(m_wndView.m_hWnd);
-  MediaCenterController::GetInstance()->SpiderStart();
+
+  if (!(s.nCLSwitches & CLSW_SNAPSHOT))
+  {
+    MediaCenterController::GetInstance()->SpiderThreadStart();
+    MediaCenterController::GetInstance()->CoverThreadStart();
+  }
 
   WNDCLASSEX layeredClass;
   layeredClass.cbSize        = sizeof(WNDCLASSEX);
@@ -1717,7 +1722,8 @@ void CMainFrame::OnResetSetting(){
 }
 void CMainFrame::OnDestroy()
 {
-   MediaCenterController::GetInstance()->SpiderStop();
+   MediaCenterController::GetInstance()->SpiderThreadStop();
+   MediaCenterController::GetInstance()->CoverThreadStop();
 
   //AfxMessageBox(_T("2"));
   ShowTrayIcon(false);
@@ -5622,14 +5628,10 @@ BOOL CMainFrame::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCDS)
   if (s.nCLSwitches&CLSW_SNAPSHOT)
   {
     if (s.slFiles.GetCount() > 0)
-    {
-      MediaCenterController::GetInstance()->SpiderStop();
       GetSnapShotSliently(s.slFiles.GetHead());
-    }
 
     // not safe exit, but save a lot coding, so sue me
     exit(0);
-    //PostMessage(WM_CLOSE);
     return FALSE;
   }
 
@@ -7154,6 +7156,10 @@ void CMainFrame::OnViewOptions()
 
 void CMainFrame::OnPlayPlay()
 {
+  // stop the cover download thread when playing files
+  MediaCenterController::GetInstance()->CoverThreadStop();
+
+  // other things
   if(m_iMediaLoadState == MLS_LOADED)
   {
     if(GetMediaState() == State_Stopped) {  m_iSpeedLevel = 0; time(&m_tPlayStartTime);}
@@ -7293,6 +7299,10 @@ void CMainFrame::OnPlayStopDummy(){
 }
 void CMainFrame::OnPlayStop()
 {
+  // restart the cover thread
+  MediaCenterController::GetInstance()->CoverThreadStart();
+
+  // other things
   m_l_been_playing_sec = 0;
   if(m_iMediaLoadState == MLS_LOADED)
   {
