@@ -107,9 +107,6 @@ void MediaCenterController::SpiderThreadStart()
 void MediaCenterController::SpiderThreadStop()
 {
    m_spider._Stop(500);
-
-   m_treeModel.save2DB();
-   m_treeModel.delTree();
 }
 
 void MediaCenterController::CoverThreadStart()
@@ -122,6 +119,11 @@ void MediaCenterController::CoverThreadStop()
 {
   m_cover._Stop(500);
 }
+
+void MediaCenterController::SaveTreeDataToDB()
+{
+  m_treeModel.save2DB();
+  m_treeModel.delTree();}
 
 void MediaCenterController::LoadMediaData(int direction, std::list<BlockUnit*>* list,
                                           int viewcapacity, int listcapacity, 
