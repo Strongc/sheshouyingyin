@@ -2,9 +2,11 @@
 #include "MediaCenterScrollBar.h"
 #include <ResLoader.h>
 #include "..\..\Controller\MediaCenterController.h"
+#include "..\..\ChildView.h"
 
 #define  TIMER_OFFSET 11
-#define  TIMER_SLOWOFFSET 12
+#define  TIMER_UPDATE 12
+#define  TIMER_TIME 13
 
 #define  ScrollBarClick 21
 #define  ScrollBarHit   22
@@ -17,6 +19,7 @@ MediaCenterScrollBar::MediaCenterScrollBar(void):
 ,m_prestat(0)
 ,m_intpos(0, 0)
 ,m_prepos(0, 0)
+,m_predirction(0)
 {
 }
 
@@ -88,7 +91,9 @@ BOOL MediaCenterScrollBar::DoPaint(WTL::CDC& dc)
   return TRUE;
 }
 
-BOOL MediaCenterScrollBar::OnHittest(POINT pt, int bLbtdown, int& offsetspeed, HWND hwnd)
+extern DWORD updateTime;
+extern DWORD deltaT;
+BOOL MediaCenterScrollBar::OnHittest(POINT pt, int bLbtdown, int& offsetdirection, float& offsetspeed, HWND hwnd)
 {
   if (m_winh - m_bm.bmHeight < 0)
     return FALSE;
@@ -113,22 +118,39 @@ BOOL MediaCenterScrollBar::OnHittest(POINT pt, int bLbtdown, int& offsetspeed, H
     m_pos.y = min(m_pos.y, m_winh - m_bm.bmHeight);
 
     int offset = m_pos.y - m_intpos.y;
-    int i = (m_winh - m_bm.bmHeight) / 2 / 13;
+
+    int i = (m_winh - m_bm.bmHeight) / 2 / 5;
     //int j = (m_winh - m_bm.bmHeight) / 2 / 20;
 
-    if (i == 0)
-      i = 1;    // if i equal to 0 then changed it to 1
+//     if (i == 0)
+//       i = 1;    // if i equal to 0 then changed it to 1
+
+    if (offset == 0)
+      return 0;
 
     if (offset > 0)
-      offsetspeed = (offset + i - 1) / i;
+      offsetdirection = 1;
     else
-      offsetspeed = (offset - i + 1) / i;
+      offsetdirection = -1;
+      
+    offsetspeed = (abs(offset) + i -1) / i * 0.1;
+    Logging("--------------OnHittest speed %f", offsetspeed);
+    if (offsetdirection != m_predirction)
+      deltaT = MAXINT;
+
+    m_predirction = offsetdirection;
+    
+    updateTime = timeGetTime();
+
     /*    DWORD timer = max(63 - (abs(offset) + j - 1) / j * 3, 1);*/
-    DWORD timer = 20 - (abs(offset) + i - 1) / i;
+    //DWORD timer = 20 - (abs(offset) + i - 1) / i;
     //DWORD timer = 10;
+    
+    //updateTime = timeGetTime();
+    
     SetTimer(hwnd, TIMER_OFFSET, 1, NULL);
-    KillTimer(hwnd, TIMER_OFFSET);
-    SetTimer(hwnd, TIMER_OFFSET, timer, NULL);
+    //KillTimer(hwnd, TIMER_OFFSET);
+    SetTimer(hwnd, TIMER_UPDATE, 16, NULL);
 
     bhit = ScrollBarClick;
 
@@ -146,13 +168,14 @@ BOOL MediaCenterScrollBar::OnHittest(POINT pt, int bLbtdown, int& offsetspeed, H
       bhit = NoScrollBarHit;
       m_stat = 0;
     }
-
+    
     KillTimer(hwnd, TIMER_OFFSET);
-    KillTimer(hwnd, TIMER_SLOWOFFSET);
+    KillTimer(hwnd, TIMER_UPDATE);
+
     m_pos = m_intpos;
     m_prepos = m_intpos;
     m_lastlbtstate = FALSE;
-    offsetspeed = 0;
+    m_predirction = 0;
   }
 
   UpdataHittest(m_pos);
@@ -212,4 +235,9 @@ BOOL MediaCenterScrollBar::NeedRepaint()
     bl = m_prepos == m_pos? FALSE : TRUE;
 
   return bl;
+}
+
+BOOL  MediaCenterScrollBar::BeOffseting()
+{
+  return m_predirction == 0? FALSE : TRUE;
 }

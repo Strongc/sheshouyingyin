@@ -57,7 +57,7 @@ public:
   BOOL AddScrollBar();
   void DoPaint(HDC hdc, RECT rcclient);
   void DoPaint(WTL::CDC& dc);
-  int OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetspeed, HWND hwnd);
+  int OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetdirection, float& offsetspeed, HWND hwnd);
   int OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit);
   void OnLButtonDblClk(POINT pt);
   void OnSetFilmName();  // set filmname by the edit control
@@ -102,6 +102,8 @@ public:
   void SetClearStat();
   BOOL GetClearStat();
   void SetListBuffIterator(std::list<BlockUnit*>::iterator it);
+  void ResetOffsetTotal();
+  BOOL BeScrollBarOffseting(); 
 
 // signals
 public:
@@ -162,6 +164,8 @@ private:
 
   BOOL m_clearstat;
 
+  float m_preoffsettotal;
+
 protected:
   HWND m_hwnd;
   TextEdit *m_pFilmNameEditor;
@@ -183,14 +187,16 @@ public:
 
   void SetFrameHwnd(HWND hwnd);
   void CreateTextEdit();
-  void SetScrollSpeed(int* speed);
+  void SetScrollDirection(int* dr);
+  void SetScrollSpeed(float* sd);
   void SetOffsetBool(BOOL* bl);
 
   HWND GetFilmNameEdit();
 
   BlockUnit* GetCurrentUnit();
 private:
-  int*  m_scrollspeed;
+  int*  m_scrolldirection;
+  float*  m_scrollspeed;
   BOOL* m_boffset; 
   BOOL m_lbtndown;
   RECT m_prehittest;

@@ -63,8 +63,10 @@ public:
 	CSUIBtnList m_btnList;
 	CSUIBtnList m_btnBBList;
 
-  int m_offsetspeed;
-  int m_preoffsetspeed;
+  // MC scrollbar direction and speed
+  float m_scrollspeed;
+  int   m_direction;
+  int   m_predirection;
 
   CSeekBarTip m_tip;
 

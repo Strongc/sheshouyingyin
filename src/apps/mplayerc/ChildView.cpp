@@ -41,7 +41,8 @@ static char THIS_FILE[] = __FILE__;
 // CChildView
 
 #define TIMER_OFFSET 11
-#define  TIMER_SLOWOFFSET 12
+#define TIMER_UPDATE 12
+#define TIMER_TIME 13 
 #define TIMER_TIPS 15
 
 #define WM_MEDIACENTERPLAYVEDIO 16
@@ -54,8 +55,8 @@ m_vrect(0,0,0,0)
 , m_lastLyricColor(0x00dfe7ff)
 , m_blocklistview(0)
 , m_blockunit(0)
-, m_offsetspeed(0)
-, m_preoffsetspeed(0)
+, m_direction(0)
+, m_predirection(0)
 {
 	m_lastlmdowntime = 0;
 	m_lastlmdownpoint.SetPoint(0, 0);
@@ -638,7 +639,8 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
     m_blocklistview->SetFrameHwnd(m_hWnd);
     m_blocklistview->CreateTextEdit();  // create the film name editor
-    m_blocklistview->SetScrollSpeed(&m_offsetspeed);
+    m_blocklistview->SetScrollDirection(&m_direction);
+    m_blocklistview->SetScrollSpeed(&m_scrollspeed);
 
     m_menu.LoadMenu(IDR_MEDIACENTERMENU);
 
@@ -801,6 +803,9 @@ void CChildView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 	CWnd::OnKeyUp(nChar, nRepCnt, nFlags);
 }
 
+DWORD updateTime = 0;
+DWORD deltaT = 0;
+
 void CChildView::OnTimer(UINT_PTR nIDEvent)
 {
     // TODO: Add your message handler code here and/or call default
@@ -812,17 +817,15 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
 
     if (nIDEvent == TIMER_OFFSET)
     {
-      m_preoffsetspeed = m_offsetspeed;
-
-      if (m_offsetspeed == 0)
+      if (m_direction == 0)
         return;
-      
+      //updateTime = timeGetTime();
       BOOL bcontiniupaint = m_blocklistview->ContiniuPaint();
-      m_blocklistview->SetScrollBarDragDirection(m_offsetspeed);
+      m_blocklistview->SetScrollBarDragDirection(m_direction);
       std::list<BlockUnit*>* list = m_blocklistview->GetEmptyList();
       //std::list<BlockUnit*>* list = m_blocklistview->GetIdleList();
       if ((list || m_blocklistview->GetClearStat()) && !m_mediacenter->LoadMediaDataAlive())
-        m_mediacenter->LoadMediaData(m_offsetspeed, m_blocklistview->GetIdleList(), m_blocklistview->GetViewCapacity(),
+        m_mediacenter->LoadMediaData(m_direction, m_blocklistview->GetIdleList(), m_blocklistview->GetViewCapacity(),
         m_blocklistview->GetListCapacity(),
         m_blocklistview->GetListRemainItem());
       else
@@ -830,20 +833,36 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
         if (m_blocklistview->BeDirectionChange())
         {
           list = m_blocklistview->GetIdleList();
-          m_mediacenter->LoadMediaData(m_offsetspeed, list, m_blocklistview->GetViewCapacity(),
+          m_mediacenter->LoadMediaData(m_direction, list, m_blocklistview->GetViewCapacity(),
             m_blocklistview->GetListCapacity(),
             m_blocklistview->GetListRemainItem(), 2);
         }
       }
 
-      m_blocklistview->SetOffset(m_offsetspeed);
-
+      if (deltaT == MAXINT)
+      {
+        m_blocklistview->ResetOffsetTotal();
+      }
+      
+      //deltaT += timeGetTime() - updateTime;
+      deltaT = timeGetTime() - updateTime;
+      float offset = deltaT * m_scrollspeed;
+      if (m_direction < 0)
+        offset = -offset;
+      
+      m_blocklistview->SetOffset(offset);
+      updateTime = timeGetTime();
+    }
+    
+    if (nIDEvent == TIMER_UPDATE)
+    {
+      BOOL bcontiniupaint = m_blocklistview->ContiniuPaint();
       if (bcontiniupaint)
       {
         RECT rc;
         GetClientRect(&rc);
         m_blocklistview->Update(rc.right - rc.left, rc.bottom - rc.top);
-
+      
         RECT statusbarrc = m_blocklistview->GetStatusBarHittest();
         RECT scrollbarrc = m_blocklistview->GetScrollBarHittest();
         rc.right -= (scrollbarrc.right - scrollbarrc.left);
@@ -928,3 +947,4 @@ LRESULT CChildView::OnMediaCenterPlayVedio(WPARAM wParam, LPARAM lParam)
    
    return 0;
 }
+

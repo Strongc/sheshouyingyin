@@ -291,6 +291,7 @@ BlockList::BlockList()
 , m_pFilmNameEditor(0)
 , m_hOldAccel(0)
 , m_clearstat(FALSE)
+, m_preoffsettotal(0.0)
 {
   m_topdistance = 26;
   m_bottomdistance = 22;
@@ -610,8 +611,10 @@ RECT BlockList::GetStatusBarHittest()
 
 void BlockList::SetOffset(float offset)
 {
-  int result = SetStartOffset(offset);
-  SetYOffset(offset, result);
+  int totaloffset = offset + m_preoffsettotal;
+  int result = SetStartOffset(totaloffset);
+  SetYOffset(totaloffset, result);
+  m_preoffsettotal = offset;
 }
 
 int BlockList::IsListEnd(std::list<BlockUnit*>::iterator it)
@@ -674,8 +677,10 @@ int BlockList::SetStartOffset(float offset)
     distance = 0;
 
   int minoffset = (int)(m_winh - distance) % height == 0? 0:height - (int)(m_winh - distance) % height; 
-  m_offsettotal += offset;
 
+  int minus = offset - m_preoffsettotal;
+  m_offsettotal += minus;
+  
   if (offset > 0)
   {
     listState = IsListEnd(start);
@@ -692,7 +697,7 @@ int BlockList::SetStartOffset(float offset)
     }
 
     if (listState == OFFSETNO)
-      m_offsettotal -= offset;
+      m_offsettotal -= minus;
   }
   if (offset < 0)
   {
@@ -739,8 +744,10 @@ void BlockList::SetYOffset(float offset, int result)
   else
     distance = 0;
   int ymin =  ((int)(m_winh - distance) % height == 0? 0 : (int)(m_winh - distance) % height - height);
-  y = y - offset;
 
+  int minus = offset - m_preoffsettotal;
+  y = y - minus;
+  
   switch (result)
   {
   case DOWNOFFSETONE:
@@ -765,10 +772,10 @@ void BlockList::SetYOffset(float offset, int result)
   m_y.front() = y;
 }
 
-int BlockList::OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetspeed, HWND hwnd)
+int BlockList::OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetdirection, float& offsetspeed, HWND hwnd)
 {
   if (m_scrollbar->GetDisPlay())
-    return m_scrollbar->OnHittest(pt, blbtndown, offsetspeed, hwnd);
+    return m_scrollbar->OnHittest(pt, blbtndown, offsetdirection, offsetspeed, hwnd);
   else
     return 0;
 }
@@ -1102,7 +1109,7 @@ void BlockList::CalculateViewCapacity()
 {
   int height = (int)m_blockh + (int)m_top;
   m_viewcapacity = ((int)m_winh / height + 2) * m_x.size();
-  m_listsize = 6 * m_viewcapacity;
+  m_listsize = 2 * m_viewcapacity;
   //m_listsize = 100;
 }
 
@@ -1188,6 +1195,16 @@ void BlockList::SetListBuffIterator(std::list<BlockUnit*>::iterator it)
   m_buffit = it;
 }
 
+void BlockList::ResetOffsetTotal()
+{
+  m_preoffsettotal = 0;
+}
+
+BOOL BlockList::BeScrollBarOffseting()
+{
+  return m_scrollbar->BeOffseting();
+}
+
 //BlockListView
 
 #define WM_CHANGECOVE 17
@@ -1226,9 +1243,9 @@ void BlockListView::CreateTextEdit()
   m_pFilmNameEditor->SetTextVCenter();
 }
 
-void BlockListView::SetScrollSpeed(int* speed)
+void BlockListView::SetScrollDirection(int* dr)
 {
-  m_scrollspeed = speed;
+  m_scrolldirection = dr;
 }
 
 void BlockListView::HandleLButtonDown(POINT pt, BlockUnit** unit)
@@ -1236,7 +1253,7 @@ void BlockListView::HandleLButtonDown(POINT pt, BlockUnit** unit)
   RECT rcclient;
   GetClientRect(m_hwnd, &rcclient);
 
-  int bscroll = OnScrollBarHittest(pt, TRUE, *m_scrollspeed, m_hwnd);
+  int bscroll = OnScrollBarHittest(pt, TRUE, *m_scrolldirection, *m_scrollspeed, m_hwnd);
   int layerstate = OnHittest(pt, TRUE, unit);
 
   if (bscroll == ScrollBarClick)
@@ -1276,7 +1293,7 @@ void BlockListView::HandleLButtonUp(POINT pt, BlockUnit** unit)
   RECT rcclient;
   GetClientRect(m_hwnd, &rcclient);
 
-  int bscroll = OnScrollBarHittest(pt, FALSE, *m_scrollspeed, m_hwnd);
+  int bscroll = OnScrollBarHittest(pt, FALSE, *m_scrolldirection, *m_scrollspeed, m_hwnd);
   //int blayer = OnHittest(pt, FALSE, unit);
 
   if (m_lbtndown)
@@ -1300,7 +1317,7 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
   GetClientRect(m_hwnd, &rcclient);
   
   RECT prerc = GetScrollBarHittest();
-  int bscroll = OnScrollBarHittest(pt, -1, *m_scrollspeed, m_hwnd);
+  int bscroll = OnScrollBarHittest(pt, -1, *m_scrolldirection, *m_scrollspeed, m_hwnd);
 
   if (bscroll == ScrollBarClick && NeedRepaintScrollbar())
   {
@@ -1333,6 +1350,9 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
       InvalidateRect(m_hwnd, &rc, FALSE);
     }
   }
+
+  if (BeScrollBarOffseting())
+    return;
 
   *unit = NULL;
 
@@ -1404,4 +1424,9 @@ HWND BlockListView::GetFilmNameEdit()
 BlockUnit* BlockListView::GetCurrentUnit()
 {
   return m_curUnit;
+}
+
+void BlockListView::SetScrollSpeed(float* sd)
+{
+  m_scrollspeed = sd;
 }

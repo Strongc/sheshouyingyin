@@ -13,7 +13,7 @@ public:
   void  SetScrollBarRange(float winh);
   float GetScrollBarRange();
   BOOL  DoPaint(WTL::CDC& dc);
-  BOOL  OnHittest(POINT pt, BOOL bLbtdown, int& offsetspeed, HWND hwnd);
+  BOOL  OnHittest(POINT pt, BOOL bLbtdown, int& offsetdirection, float& offsetspeed, HWND hwnd);
   void  UpdataHittest(POINT pt);
   RECT  GetRect();
   POINT GetPosition();
@@ -22,6 +22,7 @@ public:
   void  SetInitializeFlag(BOOL bl);
   BOOL  GetInitializeFlag();
   BOOL  NeedRepaint();
+  BOOL  BeOffseting();
 
 private:
   WTL::CBitmap m_hbitmap;
@@ -41,4 +42,5 @@ private:
   BOOL    m_binitialize;
   int     m_stat;
   int     m_prestat;
+  int     m_predirction;
 };
