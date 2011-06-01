@@ -1724,6 +1724,7 @@ void CMainFrame::OnDestroy()
 {
    MediaCenterController::GetInstance()->SpiderThreadStop();
    MediaCenterController::GetInstance()->CoverThreadStop();
+   //MediaCenterController::GetInstance()->SaveTreeDataToDB();
 
   //AfxMessageBox(_T("2"));
   ShowTrayIcon(false);

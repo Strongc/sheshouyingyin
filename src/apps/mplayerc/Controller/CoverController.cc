@@ -109,7 +109,7 @@ void CoverController::_Thread()
         return;
 
       // Upload cover
-      UploadCover(*it);
+      //UploadCover(*it);
 
       // pop the front media data even if fail to get the cover
       m_list.pop_front();
@@ -233,12 +233,32 @@ std::wstring CoverController::GetSnapshot(const MediaData &md, const std::string
   BOOL bRet = ::ShellExecuteEx(&shExecInfo);
   if (bRet)
   {
+    // waiting for the snapshot process
     HANDLE hHandles[] = {m_stopevent, shExecInfo.hProcess};
-    ::WaitForMultipleObjects(2, hHandles, FALSE, INFINITE);
+    DWORD dwRet = ::WaitForMultipleObjects(2, hHandles, FALSE, 30000);  // wait for max 30s
 
-    // see if need to be stop
-    if (_Exit_state(0))
-      return L"";
+    switch (dwRet)
+    {
+    case WAIT_FAILED:
+      Logging(L"wait for snapshot process failed!");
+      break;
+
+    case WAIT_TIMEOUT:
+      {
+          // terminate the snapshot process
+          ::TerminateProcess(shExecInfo.hProcess, -1);
+      }
+      break;
+
+    default:
+      {
+        if (_Exit_state(0))  // stop event is triggered
+        {
+          // terminate the snapshot process
+          ::TerminateProcess(shExecInfo.hProcess, -1);
+        }
+      }
+    }
 
     ::CloseHandle(shExecInfo.hProcess);
   }

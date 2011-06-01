@@ -68,6 +68,8 @@ public:
   void CoverThreadStart();
   void CoverThreadStop();
 
+  void SaveTreeDataToDB();
+
   void LoadMediaData(int direction, std::list<BlockUnit*>* list, int viewcapacity, 
                      int listcapacity, int remain, int times = 1);
   
