@@ -146,6 +146,10 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
   using boost::regex_replace;
   using namespace boost::filesystem;
 
+  // check if we should spider this folder
+  if (IsExcludePath(sFolder))
+    return;
+
   try
   {
     // First, fetch all db's data to tree
