@@ -53,6 +53,8 @@ public:
    HRGN CalculateUpdateRgn(WTL::CRect& rc);
 
    void SetCover(BlockUnit* unit, std::wstring orgpath);
+   HFONT GetFilmTextFont();
+   void SetFilmTextFont(int height, const std::wstring &family);
 
 // slots
 public:
@@ -88,6 +90,7 @@ private:
   CoverController m_cover;
   BOOL m_initiablocklist;
   LoadMediaDataFromDB m_loaddata;
+  HFONT m_hFilmTextFont;
   
   // Data
   MediaModel            m_model;

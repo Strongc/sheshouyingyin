@@ -215,7 +215,9 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
     fmnm = m_mediadata.filmname;
   //dc.DrawText(m_itFile.filename.c_str(), m_itFile.filename.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
   CPen pen;
+  HFONT hOldFont = dc.SelectFont(MediaCenterController::GetInstance()->GetFilmTextFont());
   dc.DrawText(fmnm.c_str(), fmnm.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+  dc.SelectFont(hOldFont);
 }
 
 void BlockUnit::DeleteLayer()
@@ -1243,6 +1245,9 @@ void BlockListView::CreateTextEdit()
   m_pFilmNameEditor = new TextEdit;
   m_pFilmNameEditor->Create(WS_CHILD | ES_AUTOHSCROLL | ES_MULTILINE, CRect(0, 0, 0, 0), CWnd::FromHandle(m_hwnd), 1111);
   m_pFilmNameEditor->SetTextVCenter();
+
+  static CFont *pFont = CFont::FromHandle(MediaCenterController::GetInstance()->GetFilmTextFont());
+  m_pFilmNameEditor->SetFont(pFont);
 }
 
 void BlockListView::SetScrollDirection(int* dr)

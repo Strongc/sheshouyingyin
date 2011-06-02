@@ -12,8 +12,12 @@
 // normal part
 MediaCenterController::MediaCenterController()
 : m_planestate(FALSE)
- ,m_initiablocklist(FALSE)
+, m_initiablocklist(FALSE)
+, m_hFilmTextFont(0)
 {
+  // create film text font
+  SetFilmTextFont(12, L"宋体");
+
   // load default mc cover
   SetMCCover();
   // connect signals and slots
@@ -23,6 +27,11 @@ MediaCenterController::MediaCenterController()
 MediaCenterController::~MediaCenterController()
 {
   m_loaddata._Stop();
+  if (m_hFilmTextFont)
+  {
+    ::DeleteObject(m_hFilmTextFont);
+    m_hFilmTextFont = 0;
+  }
 }
 
 void MediaCenterController::Playback(std::wstring file)
@@ -259,6 +268,29 @@ void MediaCenterController::SetCover(BlockUnit* unit, std::wstring orgpath)
   }
 
   m_cover._Start();
+}
+
+HFONT MediaCenterController::GetFilmTextFont()
+{
+  return m_hFilmTextFont;
+}
+
+void MediaCenterController::SetFilmTextFont(int height, const std::wstring &family)
+{
+  if (m_hFilmTextFont)
+  {
+    ::DeleteObject(m_hFilmTextFont);
+    m_hFilmTextFont = 0;
+  }
+
+  LOGFONT lf = {0};
+  lf.lfHeight = height;
+  ::wcscpy(lf.lfFaceName, family.c_str());
+
+  CFont fnTemp;
+  fnTemp.CreateFontIndirect(&lf);
+  m_hFilmTextFont = (HFONT)fnTemp;
+  fnTemp.Detach();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

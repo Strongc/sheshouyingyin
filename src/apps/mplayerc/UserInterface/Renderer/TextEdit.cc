@@ -80,7 +80,7 @@ END_MESSAGE_MAP()
 HBRUSH TextEdit::CtlColor(CDC* pDC, UINT nCtlColor)
 {
   pDC->SetTextColor(m_crTextColor);
-  pDC->SetBkMode(TRANSPARENT);
+  pDC->SetBkColor(m_crBKColor);
 
   return m_brBK;
 }
