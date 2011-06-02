@@ -1241,7 +1241,7 @@ void BlockListView::CreateTextEdit()
 
   // create new editor
   m_pFilmNameEditor = new TextEdit;
-  m_pFilmNameEditor->Create(m_hwnd, CRect(0, 0, 0, 0), 0, WS_CHILD | ES_AUTOHSCROLL | ES_MULTILINE);
+  m_pFilmNameEditor->Create(WS_CHILD | ES_AUTOHSCROLL | ES_MULTILINE, CRect(0, 0, 0, 0), CWnd::FromHandle(m_hwnd), 1111);
   m_pFilmNameEditor->SetTextVCenter();
 }
 
