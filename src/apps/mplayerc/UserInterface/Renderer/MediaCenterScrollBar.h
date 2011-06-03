@@ -1,5 +1,13 @@
 #pragma once
 
+struct OffsetAttribute
+{
+  OffsetAttribute() : direction(0), speed(0){}
+  
+  int direction;
+  float speed;
+};
+
 class MediaCenterScrollBar
 {
 public:
@@ -42,5 +50,8 @@ private:
   BOOL    m_binitialize;
   int     m_stat;
   int     m_prestat;
+  int     m_currdirction;
   int     m_predirction;
+  DWORD   m_offsettimeid;
+  OffsetAttribute m_offat;
 };

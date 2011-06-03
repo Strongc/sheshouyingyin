@@ -44,6 +44,7 @@ static char THIS_FILE[] = __FILE__;
 #define TIMER_UPDATE 12
 #define TIMER_TIME 13 
 #define TIMER_TIPS 15
+#define TIMER_TEST 16
 
 #define WM_MEDIACENTERPLAYVEDIO 16
 #define WM_CHANGECOVE 17
@@ -320,7 +321,7 @@ static COLORREF colorNextLyricColor(COLORREF lastColor)
 #include "../../svplib/svplib.h"
 void CChildView::OnPaint() 
 {
-	CPaintDC dc(this); // device context for painting
+  CPaintDC dc(this); // device context for painting
 
 	CMainFrame* pFrame = (CMainFrame*)GetParentFrame();
   if (pFrame->IsSomethingLoading()) //�ļ̲Repaint
@@ -815,53 +816,14 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
 
     }
 
-    if (nIDEvent == TIMER_OFFSET)
-    {
-      if (m_direction == 0)
-        return;
-      //updateTime = timeGetTime();
-      BOOL bcontiniupaint = m_blocklistview->ContiniuPaint();
-      m_blocklistview->SetScrollBarDragDirection(m_direction);
-      std::list<BlockUnit*>* list = m_blocklistview->GetEmptyList();
-      //std::list<BlockUnit*>* list = m_blocklistview->GetIdleList();
-      if ((list || m_blocklistview->GetClearStat()) && !m_mediacenter->LoadMediaDataAlive())
-        m_mediacenter->LoadMediaData(m_direction, m_blocklistview->GetIdleList(), m_blocklistview->GetViewCapacity(),
-        m_blocklistview->GetListCapacity(),
-        m_blocklistview->GetListRemainItem());
-      else
-      {
-        if (m_blocklistview->BeDirectionChange())
-        {
-          list = m_blocklistview->GetIdleList();
-          m_mediacenter->LoadMediaData(m_direction, list, m_blocklistview->GetViewCapacity(),
-            m_blocklistview->GetListCapacity(),
-            m_blocklistview->GetListRemainItem(), 2);
-        }
-      }
-
-      if (deltaT == MAXINT)
-      {
-        m_blocklistview->ResetOffsetTotal();
-      }
-      
-      //deltaT += timeGetTime() - updateTime;
-      deltaT = timeGetTime() - updateTime;
-      float offset = deltaT * m_scrollspeed;
-      if (m_direction < 0)
-        offset = -offset;
-      
-      m_blocklistview->SetOffset(offset);
-      updateTime = timeGetTime();
-    }
-    
     if (nIDEvent == TIMER_UPDATE)
     {
-      BOOL bcontiniupaint = m_blocklistview->ContiniuPaint();
+      BOOL bcontiniupaint = m_blocklistview->ContinuePaint();
       if (bcontiniupaint)
       {
         RECT rc;
         GetClientRect(&rc);
-        m_blocklistview->Update(rc.right - rc.left, rc.bottom - rc.top);
+        //m_blocklistview->Update(rc.right - rc.left, rc.bottom - rc.top);
       
         RECT statusbarrc = m_blocklistview->GetStatusBarHittest();
         RECT scrollbarrc = m_blocklistview->GetScrollBarHittest();
@@ -948,3 +910,52 @@ LRESULT CChildView::OnMediaCenterPlayVedio(WPARAM wParam, LPARAM lParam)
    return 0;
 }
 
+void CALLBACK ProcessOffset(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2)
+{
+  OffsetAttribute* offat = (OffsetAttribute*)dwUser;
+  int direction = offat->direction;
+  if (direction == 0)
+    return;
+
+  MediaCenterController* mediacenter = MediaCenterController::GetInstance();
+  BlockListView* blocklistview = &mediacenter->GetBlockListView();
+
+  std::list<BlockUnit*>* list = blocklistview->GetEmptyList();
+  //std::list<BlockUnit*>* list = m_blocklistview->GetIdleList();
+  if ((list || blocklistview->GetClearStat()) && !mediacenter->LoadMediaDataAlive())
+    mediacenter->LoadMediaData(direction, blocklistview->GetIdleList(), blocklistview->GetViewCapacity(),
+    blocklistview->GetListCapacity(),
+    blocklistview->GetListRemainItem());
+  else
+  {
+    if (deltaT == MAXINT)
+    {
+      list = blocklistview->GetIdleList();
+      //m_blocklistview->ClearList(list);
+      mediacenter->LoadMediaData(direction, list, blocklistview->GetViewCapacity(),
+        blocklistview->GetListCapacity(),
+        blocklistview->GetListRemainItem(), 2);
+    }
+  }
+
+  if (deltaT == MAXINT)
+  {
+    blocklistview->ResetOffsetTotal();
+  }
+
+  //deltaT += timeGetTime() - updateTime;
+  deltaT = timeGetTime() - updateTime;
+  float offset = deltaT * offat->speed;
+  if (direction < 0)
+    offset = -offset;
+
+  blocklistview->SetOffset(offset);
+  updateTime = timeGetTime();
+}
+
+
+                                  
+                                  
+                                  
+                                  
+                                  

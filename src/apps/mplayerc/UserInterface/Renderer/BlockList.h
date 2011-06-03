@@ -64,21 +64,19 @@ public:
 
   // logic
   void SetOffset(float offset);
-  BOOL SetStartOffset(float offset);
-  void SetYOffset(float offset, BOOL result);
+  BOOL SetStartOffset(float offset, int state);
+  void SetYOffset(float offset, int result);
   void AlignColumnBlocks();
   void AlignRowBlocks();
   void BlockRanges();
   void Update(float winw, float winh);
-  int IsListEnd(std::list<BlockUnit*>::iterator it);
-  int IsListBegin(std::list<BlockUnit*>::iterator it);
   void AlignScrollBar();
   void UpdateScrollBar(POINT pt);
   RECT GetScrollBarHittest();
   void AlignStatusBar();
   void SetStatusBarTip(const std::wstring& str);
   RECT GetStatusBarHittest();
-  BOOL ContiniuPaint();
+  BOOL ContinuePaint();
   void GetLastBlockPosition(RECT& rc);
   int  GetEnableShowAmount();
   void SetScrollBarInitializeFlag(BOOL bl);
@@ -104,12 +102,14 @@ public:
   void SetListBuffIterator(std::list<BlockUnit*>::iterator it);
   void ResetOffsetTotal();
   BOOL BeScrollBarOffseting(); 
+  void ResetListLogicalEnd(BOOL bl);
 
 // signals
 public:
   boost::signal<void (const MediaData &md)> m_sigPlayback;
   std::wstring m_tipstring;
-  int m_viewcapacity;
+  int m_maxviewcapacity;
+  int m_minviewcapacity;
 
 private:
   int m_topdistance;
@@ -135,12 +135,17 @@ private:
 
   std::list<BlockUnit*>::iterator m_start;
   std::list<BlockUnit*>::iterator m_end;
+  std::list<BlockUnit*>::iterator m_paintstart;
+  std::list<BlockUnit*>::iterator m_paintend;
   std::list<BlockUnit*>::iterator m_logicalbegin;
   std::list<BlockUnit*>::iterator m_logicalend;
   int m_remainitem;
+  int m_itemscount;
 
   std::vector<float> m_x;
   std::vector<float> m_y;
+  std::vector<float> m_paintx;
+  std::vector<float> m_painty;
   std::list<BlockUnit*>* m_list;
   std::list<BlockUnit*> m_listHide;  // store hidden items
   // dual buff
@@ -165,7 +170,13 @@ private:
   BOOL m_clearstat;
 
   float m_preoffsettotal;
+  float m_waitoffset;
 
+  int m_state;
+  int m_yoffsetmin;
+
+  BOOL m_bepainting;
+  
 protected:
   HWND m_hwnd;
   TextEdit *m_pFilmNameEditor;

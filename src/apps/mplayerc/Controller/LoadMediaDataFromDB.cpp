@@ -29,11 +29,18 @@ void LoadMediaDataFromDB::SetExecuteTime(int tm)
 
 void LoadMediaDataFromDB::_Thread()
 {
-  while (m_executetime--)
+  if (!m_listbuff->empty())
+    ClearList();
+
+  int executetime = m_executetime;
+  while (executetime--)
   {
     LoadMediadatasFromDB();
-    AddDataToList();
   }
+  if (m_executetime > 1 && m_limitstart == 0)
+    m_mediadatas.clear();
+  if (m_executetime)
+    AddDataToList();
 }
 
 void LoadMediaDataFromDB::LoadMediadatasFromDB()
@@ -80,8 +87,8 @@ BOOL LoadMediaDataFromDB::CalculateStartAndEnd()
 
 void LoadMediaDataFromDB::AddDataToList()
 {
-  if (!m_listbuff->empty())
-    ClearList();
+//   if (!m_listbuff->empty())
+//     ClearList();
 
   MediaDatas::iterator it = m_mediadatas.begin();
 
@@ -112,17 +119,12 @@ void LoadMediaDataFromDB::AddDataToList()
   m_mediadatas.clear();
   if (!m_listbuff->empty())
   {
-    
-    //BlockListView* list = &MediaCenterController::GetInstance()->GetBlockListView();
     list->SetClearStat();
-//     if (m_direction < 0)
-//     {
-//       std::list<BlockUnit*>::iterator it = m_listbuff->end();
-//       int maxsize = m_windowcapacity + m_remain;
-//       while (maxsize--)
-//         --it;
-//       list->SetListBuffIterator(it);
-//     }
+    list->ResetListLogicalEnd(FALSE);
+  }
+  else
+  {
+    list->ResetListLogicalEnd(TRUE);
   }
       
 }

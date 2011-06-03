@@ -214,7 +214,6 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   else
     fmnm = m_mediadata.filmname;
   //dc.DrawText(m_itFile.filename.c_str(), m_itFile.filename.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
-  CPen pen;
   dc.DrawText(fmnm.c_str(), fmnm.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
 }
 
@@ -292,6 +291,13 @@ BlockList::BlockList()
 , m_hOldAccel(0)
 , m_clearstat(FALSE)
 , m_preoffsettotal(0.0)
+, m_state(0)
+, m_yoffsetmin(MAXINT)
+, m_itemscount(0)
+, m_maxviewcapacity(0)
+, m_minviewcapacity(0)
+, m_bepainting(FALSE)
+, m_waitoffset(0.0)
 {
   m_topdistance = 26;
   m_bottomdistance = 22;
@@ -301,6 +307,8 @@ BlockList::BlockList()
   m_scrollbarwidth = 20;
   m_top = 25;
   m_list = &m_list1;
+  m_paintstart = m_list->end();
+  m_paintend = m_list->end();
   m_start = m_list->begin();
   m_end = m_list->begin();
   m_logicalbegin = m_list->begin();
@@ -308,6 +316,8 @@ BlockList::BlockList()
   m_remainitem = 0;
   m_x.clear();
   m_y.clear();
+  m_paintx.clear();
+  m_painty.clear();
   m_offsettotal = 0;
   m_scrollbar = 0;
   m_scrollbardirection = 0;
@@ -342,11 +352,13 @@ BlockList::~BlockList()
 
 void BlockList::DoPaint(HDC hdc, RECT rcclient)
 {
+  m_bepainting = TRUE;
   WTL::CMemoryDC dc(hdc, rcclient);
   HBRUSH hbrush = ::CreateSolidBrush(COLORREF(0xb3b3b3));
   dc.FillRect(&rcclient, hbrush);
   DoPaint(dc);
   DeleteObject(hbrush);
+  m_bepainting = FALSE;
 }
 
 void BlockList::DoPaint(WTL::CDC& dc)
@@ -359,21 +371,27 @@ void BlockList::DoPaint(WTL::CDC& dc)
 
   m_scrollbar->DoPaint(dc);
   
-  std::list<BlockUnit*>::iterator it = m_start;
-  std::vector<float>::iterator itx =  m_x.begin();
-  std::vector<float>::iterator ity =  m_y.begin();
+  std::list<BlockUnit*>::iterator it = m_paintstart;
+  std::vector<float>::iterator itx =  m_paintx.begin();
+  std::vector<float>::iterator ity =  m_painty.begin();
 
-  for (; it != m_end; ++it)
+  for (; it != m_paintend; ++it)
   {
-    if (itx == m_x.end())
+    if (itx == m_paintx.end())
     {
-      itx = m_x.begin();
+      itx = m_paintx.begin();
       ++ity;
     }
 
     POINT pt = {*itx, *ity};
     (*it)->DoPaint(dc, pt);
     ++itx;
+
+    if (itx == m_paintx.end() && ity == m_painty.end())
+      break;
+    
+   
+    //Logging(L"----------DoPaint x %f y %f", *itx, *ity);
   } 
  
   if (m_statusbar.GetText().empty())
@@ -423,10 +441,12 @@ void BlockList::BlockRanges()
     m_maxcolumnpre = m_maxcolumn;
   }
 
+  m_itemscount = 0;
   m_end = m_start;
 
-  while(maxitems-- && (m_end != m_list->end()))
+  while(maxitems-- && m_end != m_list->end())//(m_end != m_list->end()))
   {
+    ++m_itemscount;
     ++m_end;
   }
 }
@@ -523,10 +543,11 @@ void BlockList::AlignRowBlocks()
   else
     y = m_y.front();
   m_y.clear();
-
+  
   while (y + m_blockh +m_top < m_winh + m_blockh + m_top)
   {
     m_y.push_back(y);
+    
     if (y + m_blockh + m_top < m_winh + m_blockh + m_top)
       y += m_blockh + m_top;
     else
@@ -596,6 +617,15 @@ void BlockList::Update(float winw, float winh)
     CalculateLogicalListEnd();
     BlockRanges();
   }
+
+  if (!m_x.empty() || !m_y.empty())
+  {
+    m_paintstart = m_start;
+    m_paintend = m_end;
+    m_paintx = m_x;
+    m_painty = m_y;
+  }
+  
 }
 void BlockList::AlignStatusBar()
 {
@@ -611,60 +641,31 @@ RECT BlockList::GetStatusBarHittest()
 
 void BlockList::SetOffset(float offset)
 {
-  int totaloffset = offset + m_preoffsettotal;
-  int result = SetStartOffset(totaloffset);
-  SetYOffset(totaloffset, result);
-  m_preoffsettotal = offset;
-}
-
-int BlockList::IsListEnd(std::list<BlockUnit*>::iterator it)
-{
-  int height = (int)m_blockh + (int)m_top;
-  int minitem;
-  if ((int)m_winh % height == 0)
-    minitem = (int)m_winh / height * m_maxcolumn;
-  else
-    minitem = ((int)m_winh / height + 1) * m_maxcolumn;
-
-  int count = 1;
-  while (minitem--)
+  if (m_state == 0)
   {
-    ++it;
-    ++count;
-    if (it == m_logicalend)//m_list->end())
-    {
-      if (MediaCenterController::GetInstance()->LoadMediaDataAlive())
-        ::WaitForSingleObject(MediaCenterController::GetInstance()->GetMediaDataThreadHandle()
-        , INFINITE);
-      if (!GetIdleList()->empty())
-        break;
-
-      int row = (count  + m_x.size() - 1)/ m_x.size();
-      float y = m_y.front(); 
-      if (y + row * height < m_winh)
-        return OFFSETNO;
-      else
-        return DOWNOFFSETONE;
-    }
-  }
-  return DOWNOFFSETSUCCESS;
-}
-
-int BlockList::IsListBegin(std::list<BlockUnit*>::iterator it)
-{
-  if (it == m_list->begin())
-  {
-    if (MediaCenterController::GetInstance()->LoadMediaDataAlive())
-      ::WaitForSingleObject(MediaCenterController::GetInstance()->GetMediaDataThreadHandle()
-      , INFINITE);
-    if (GetIdleList()->empty())
-      return UPOFFSETONE;
+    if (offset > 0)
+      m_state = DOWNOFFSETSUCCESS;
+    else
+      m_state = UPOFFSETSUCCESS;
   }
 
-  return UPOFFSETSUCCESS;
+  int totaloffset = offset + m_waitoffset + m_preoffsettotal;
+
+  SetYOffset(totaloffset, m_state);
+  m_state = SetStartOffset(totaloffset, m_state);
+  
+  m_preoffsettotal = totaloffset;
+  m_waitoffset = 0;
+
+  if (!m_bepainting)
+  {
+    m_paintstart = m_start;
+    m_paintend = m_end;
+    m_painty = m_y;
+  }
 }
 
-int BlockList::SetStartOffset(float offset)
+int BlockList::SetStartOffset(float offset, int state)
 {
   std::list<BlockUnit*>::iterator start = m_start;
   int listState = 0;
@@ -680,81 +681,95 @@ int BlockList::SetStartOffset(float offset)
 
   int minus = offset - m_preoffsettotal;
   m_offsettotal += minus;
-  
+
   if (offset > 0)
   {
-    listState = IsListEnd(start);
-
-    if (listState == DOWNOFFSETONE)
-      m_offsettotal = min(m_offsettotal, minoffset);
-
-    if (listState == DOWNOFFSETSUCCESS && m_offsettotal >= height + distance)
-    { 
+    if (state == DOWNOFFSETONE)
+      m_offsettotal = min(m_offsettotal, abs(m_yoffsetmin));
+    
+    if (state == DOWNOFFSETSUCCESS && m_offsettotal >= height + distance)
+    {
       while (column--)
-        ++start;
-      SwapListBuff(start, TRUE);
+        ++m_start;
       m_offsettotal -= (height + distance);
     }
-
-    if (listState == OFFSETNO)
-      m_offsettotal -= minus;
   }
+
   if (offset < 0)
   {
-    listState = IsListBegin(start);
-
-    if (listState == UPOFFSETONE)
+    if (state == UPOFFSETONE)
     {
       m_DBbeginstate = TRUE;
       m_offsettotal = max(m_offsettotal, 0);
     }
-
-    if (listState == UPOFFSETSUCCESS && m_offsettotal < 0)
+    
+    if (state == UPOFFSETSUCCESS && m_offsettotal < 0)
     {
-      SwapListBuff(start, FALSE);
-      while (column--)
+      while (column-- && m_start != m_list->begin())
       {
-        --start;
-        if (start == m_list->begin())
-          break;
+        --m_start;
       }
 
-      m_offsettotal += height; 
-      if (m_start == m_list->begin() && m_DBbeginstate)
-        distance = m_topdistance;
-      else
-        distance = 0;
-      m_offsettotal += distance;
+      m_offsettotal += height;
+
+      if (m_start == m_list->begin() && GetIdleList()->empty())
+        m_offsettotal += m_topdistance;
     }
   }
 
-  m_start = start;
+  //m_start = start;
+  if (start != m_start || (m_itemscount < m_maxcolumn * m_maxrow && offset > 0)
+      || (m_itemscount > m_maxcolumn * m_maxrow && offset < 0))
+  {
+    BlockRanges();
+  }
+
+  BOOL bempty = GetIdleList()->empty();
+  if (m_end == m_logicalend && !bempty && offset > 0)
+  {
+    SwapListBuff(m_start, TRUE);
+  }
+
+  if (m_end == m_list->end() && bempty && offset > 0 && m_itemscount <= m_minviewcapacity)
+  {
+    if (m_yoffsetmin == MAXINT)
+    {
+      m_yoffsetmin = m_winh - (m_y.back() + height);
+      m_yoffsetmin += m_y.front();
+    }
+    
+    state = DOWNOFFSETONE;
+  }
+
+  if (m_start == m_list->begin() && !bempty && offset < 0)
+  {
+    SwapListBuff(m_start, FALSE);
+  }
+
+  if (m_start == m_list->begin() && bempty && offset < 0)
+    state = UPOFFSETONE;
+
   if (m_start != m_list->begin())
     m_DBbeginstate = FALSE;
-  return listState;
+  
+  return state;
 }
 
 void BlockList::SetYOffset(float offset, int result)
 {
   float y = m_y.front();
   int height = (int)m_blockh + (int)m_top;
-  int distance;
-  if (m_start == m_list->begin() && m_DBbeginstate)
-    distance = m_topdistance;
-  else
-    distance = 0;
-  int ymin =  ((int)(m_winh - distance) % height == 0? 0 : (int)(m_winh - distance) % height - height);
-
+  
   int minus = offset - m_preoffsettotal;
   y = y - minus;
   
   switch (result)
   {
   case DOWNOFFSETONE:
-    y = max(y, ymin);
+    y = max(y, m_yoffsetmin);
     break;
   case UPOFFSETONE:
-    y = min(y, distance);
+    y = min(y, m_topdistance);
     break;
   case DOWNOFFSETSUCCESS:
     if (y <= -height)
@@ -770,6 +785,7 @@ void BlockList::SetYOffset(float offset, int result)
   }
 
   m_y.front() = y;
+  AlignRowBlocks();
 }
 
 int BlockList::OnScrollBarHittest(POINT pt, BOOL blbtndown, int& offsetdirection, float& offsetspeed, HWND hwnd)
@@ -943,7 +959,7 @@ void BlockList::DeleteBlock(BlockUnit* unit)
   DeleteBlock(it);
 }
 
-BOOL BlockList::ContiniuPaint()
+BOOL BlockList::ContinuePaint()
 {
   BOOL bpaint = TRUE;
 
@@ -1042,29 +1058,16 @@ void BlockList::SwapListBuff(std::list<BlockUnit*>::iterator& it, BOOL upordown)
   std::list<BlockUnit*>::iterator ittmp;
   if (upordown)
   {
-    ittmp = m_end;
-    BOOL bl = TRUE;
-    while (ittmp != m_logicalend)
-    {
-      ++count;
-      ++ittmp;
-      
-      if (count > m_x.size())
-      {
-        bl = FALSE;
-        break;
-      }
-    }
+    if (m_end != m_logicalend)
+      return;
 
-    if (bl)//count <= m_viewcapacity) 
+    m_list = GetIdleList();
+      
+    if (m_list)
     {
-      m_list = GetIdleList();
-      if (m_list)
-      {
-        it = m_list->begin();
-        //ClearList(GetIdleList());
-        m_clearstat = TRUE;
-      }
+      it = m_list->begin();
+      //ClearList(GetIdleList());
+      m_clearstat = TRUE;
     }
   }
   else
@@ -1075,21 +1078,14 @@ void BlockList::SwapListBuff(std::list<BlockUnit*>::iterator& it, BOOL upordown)
     m_list = GetIdleList();
     if (m_list)
     {
-//         int maxsize = m_viewcapacity + m_remainitem;
-//         ittmp = m_list->end();
-//         while (maxsize--)
-//           --ittmp;
-//         it = ittmp;
-      
       it = m_buffit;
-        
-      
-
       //ClearList(GetIdleList());
       m_clearstat = TRUE;
     }
-//}
   }
+
+  CalculateLogicalListEnd();
+  BlockRanges();
 }
 
 void BlockList::ClearList(std::list<BlockUnit*>* list)
@@ -1108,8 +1104,9 @@ void BlockList::ClearList(std::list<BlockUnit*>* list)
 void BlockList::CalculateViewCapacity()
 {
   int height = (int)m_blockh + (int)m_top;
-  m_viewcapacity = ((int)m_winh / height + 2) * m_x.size();
-  m_listsize = 2 * m_viewcapacity;
+  m_minviewcapacity = (m_winh + height - 1) / height * m_maxcolumn;
+  m_maxviewcapacity = ((int)m_winh / height + 2) * m_maxcolumn;
+  m_listsize = 6 * m_maxviewcapacity;
   //m_listsize = 100;
 }
 
@@ -1143,7 +1140,7 @@ void BlockList::CalculateLogicalListEnd()
 
 int BlockList::GetViewCapacity()
 {
-  return m_viewcapacity;
+  return m_maxviewcapacity;
 }
 
 int BlockList::GetListRemainItem()
@@ -1198,11 +1195,22 @@ void BlockList::SetListBuffIterator(std::list<BlockUnit*>::iterator it)
 void BlockList::ResetOffsetTotal()
 {
   m_preoffsettotal = 0;
+  m_state = 0;
+  m_yoffsetmin = MAXINT;
+  ResetListLogicalEnd(FALSE);
 }
 
 BOOL BlockList::BeScrollBarOffseting()
 {
   return m_scrollbar->BeOffseting();
+}
+
+void BlockList::ResetListLogicalEnd(BOOL bl)
+{
+  if (bl)
+    m_logicalend = m_list->end();
+  else
+    CalculateLogicalListEnd();
 }
 
 //BlockListView
@@ -1254,13 +1262,17 @@ void BlockListView::HandleLButtonDown(POINT pt, BlockUnit** unit)
   GetClientRect(m_hwnd, &rcclient);
 
   int bscroll = OnScrollBarHittest(pt, TRUE, *m_scrolldirection, *m_scrollspeed, m_hwnd);
-  int layerstate = OnHittest(pt, TRUE, unit);
-
+  
   if (bscroll == ScrollBarClick)
   {
     ::SetCapture(m_hwnd);
     m_lbtndown = TRUE;
   }
+
+  if (BeScrollBarOffseting())
+    return;
+
+  int layerstate = OnHittest(pt, TRUE, unit);
 
   if (m_curUnit)
   {
@@ -1350,7 +1362,7 @@ void BlockListView::HandleMouseMove(POINT pt, BlockUnit** unit)
       InvalidateRect(m_hwnd, &rc, FALSE);
     }
   }
-
+  
   if (BeScrollBarOffseting())
     return;
 
