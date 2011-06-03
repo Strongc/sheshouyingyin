@@ -352,13 +352,11 @@ BlockList::~BlockList()
 
 void BlockList::DoPaint(HDC hdc, RECT rcclient)
 {
-  m_bepainting = TRUE;
   WTL::CMemoryDC dc(hdc, rcclient);
   HBRUSH hbrush = ::CreateSolidBrush(COLORREF(0xb3b3b3));
   dc.FillRect(&rcclient, hbrush);
   DoPaint(dc);
   DeleteObject(hbrush);
-  m_bepainting = FALSE;
 }
 
 void BlockList::DoPaint(WTL::CDC& dc)
@@ -371,6 +369,8 @@ void BlockList::DoPaint(WTL::CDC& dc)
 
   m_scrollbar->DoPaint(dc);
   
+  m_bepainting = TRUE;
+
   std::list<BlockUnit*>::iterator it = m_paintstart;
   std::vector<float>::iterator itx =  m_paintx.begin();
   std::vector<float>::iterator ity =  m_painty.begin();
@@ -389,10 +389,9 @@ void BlockList::DoPaint(WTL::CDC& dc)
 
     if (itx == m_paintx.end() && ity == m_painty.end())
       break;
-    
-   
-    //Logging(L"----------DoPaint x %f y %f", *itx, *ity);
-  } 
+  }
+
+  m_bepainting = FALSE;
  
   if (m_statusbar.GetText().empty())
     m_statusbar.SetText(L"射手生活 影音相伴");
