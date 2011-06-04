@@ -214,7 +214,9 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   else
     fmnm = m_mediadata.filmname;
   //dc.DrawText(m_itFile.filename.c_str(), m_itFile.filename.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+  HFONT hOldFont = dc.SelectFont(MediaCenterController::GetInstance()->GetFilmTextFont());
   dc.DrawText(fmnm.c_str(), fmnm.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+  dc.SelectFont(hOldFont);
 }
 
 void BlockUnit::DeleteLayer()
@@ -591,14 +593,7 @@ void BlockList::Update(float winw, float winh)
   if ((m_winw != winw) || (m_winh != winh))
   {
     if (m_pFilmNameEditor)
-    {
-      // modify the block's filmname
-      OnSetFilmName();
-
-      // hide the editor
-      m_pFilmNameEditor->SetWindowText(L"");
-      m_pFilmNameEditor->ShowWindow(SW_HIDE);
-    }
+      HideFilmNameEditor();
   }
 
   m_winw = winw;
@@ -805,14 +800,7 @@ int BlockList::OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit)
     {
       m_pFilmNameEditor->GetClientRect(&rcEditor);
       if (!rcEditor.PtInRect(pt))
-      {
-        // modify the block's filmname
-        OnSetFilmName();
-
-        // hide the editor
-        m_pFilmNameEditor->SetWindowText(L"");
-        m_pFilmNameEditor->ShowWindow(SW_HIDE);
-      }
+        HideFilmNameEditor();
     }
   }
 
@@ -849,8 +837,13 @@ void BlockList::OnSetFilmName()
     // rename file
     std::wstring sPath = (*m_itCurEdit)->m_mediadata.path;
     std::wstring sOldFilename = (*m_itCurEdit)->m_mediadata.filename;
+    std::wstring sExt;
+    size_t nPos = sOldFilename.find_last_of('.');
+    if (nPos != std::wstring::npos)
+      sExt = sOldFilename.substr(nPos);
+
     boost::system::error_code err;
-    boost::filesystem::rename(sPath + sOldFilename, sPath + (LPCTSTR)sNewFilmName, err);
+    boost::filesystem::rename(sPath + sOldFilename, sPath + (LPCTSTR)sNewFilmName + sExt, err);
 
     if (err == boost::system::errc::success)
     {
@@ -862,6 +855,16 @@ void BlockList::OnSetFilmName()
     media_tree::model &tree_model = MediaCenterController::GetInstance()->GetMediaTree();
     tree_model.addFile((*m_itCurEdit)->m_mediadata);
   }
+}
+
+void BlockList::HideFilmNameEditor()
+{
+  // modify the block's filmname
+  OnSetFilmName();
+
+  // hide the editor
+  m_pFilmNameEditor->SetWindowText(L"");
+  m_pFilmNameEditor->ShowWindow(SW_HIDE);
 }
 
 void BlockList::OnLButtonDblClk(POINT pt)
@@ -882,6 +885,7 @@ void BlockList::OnLButtonDblClk(POINT pt)
       std::wstring sFilmName = (*it)->m_mediadata.filmname;
       if (sFilmName.empty())
         sFilmName = (*it)->m_mediadata.filename;
+
       int pos = sFilmName.find_last_of('.');
       if (pos != std::wstring::npos)
         sFilmName = sFilmName.substr(0, pos);
@@ -1246,8 +1250,11 @@ void BlockListView::CreateTextEdit()
 
   // create new editor
   m_pFilmNameEditor = new TextEdit;
-  m_pFilmNameEditor->Create(m_hwnd, CRect(0, 0, 0, 0), 0, WS_CHILD | ES_AUTOHSCROLL | ES_MULTILINE);
+  m_pFilmNameEditor->Create(WS_CHILD | ES_AUTOHSCROLL | ES_MULTILINE, CRect(0, 0, 0, 0), CWnd::FromHandle(m_hwnd), 1111);
   m_pFilmNameEditor->SetTextVCenter();
+
+  static CFont *pFont = CFont::FromHandle(MediaCenterController::GetInstance()->GetFilmTextFont());
+  m_pFilmNameEditor->SetFont(pFont);
 }
 
 void BlockListView::SetScrollDirection(int* dr)
@@ -1412,6 +1419,9 @@ BOOL BlockListView::HandleRButtonUp(POINT pt)
 
   if (m_curUnit)
     bl = TRUE;
+
+  if (m_pFilmNameEditor)
+    HideFilmNameEditor();
 
   return bl;
 }

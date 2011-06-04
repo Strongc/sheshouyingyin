@@ -25,6 +25,7 @@ public:
   static std::wstring GetMCFolder();
 
   static std::wstring GetCoverPath(const std::wstring &sFilePath);
+  static std::wstring GetMediaHash(const std::wstring &sFilePath);
 
 public:
   // Gui control, should not for other use
@@ -52,6 +53,8 @@ public:
    HRGN CalculateUpdateRgn(WTL::CRect& rc);
 
    void SetCover(BlockUnit* unit, std::wstring orgpath);
+   HFONT GetFilmTextFont();
+   void SetFilmTextFont(int height, const std::wstring &family);
 
 // slots
 public:
@@ -61,8 +64,13 @@ public:
 
 public:
   // Data control
-  void SpiderStart();
-  void SpiderStop();
+  void SpiderThreadStart();
+  void SpiderThreadStop();
+
+  void CoverThreadStart();
+  void CoverThreadStop();
+
+  void SaveTreeDataToDB();
 
   void LoadMediaData(int direction, std::list<BlockUnit*>* list, int viewcapacity, 
                      int listcapacity, int remain, int times = 1);
@@ -82,6 +90,7 @@ private:
   CoverController m_cover;
   BOOL m_initiablocklist;
   LoadMediaDataFromDB m_loaddata;
+  HFONT m_hFilmTextFont;
   
   // Data
   MediaModel            m_model;

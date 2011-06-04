@@ -109,7 +109,7 @@ private:
 
   }
 
-private:
+protected:
   HANDLE m_thread;
   HANDLE m_stopevent;
 
