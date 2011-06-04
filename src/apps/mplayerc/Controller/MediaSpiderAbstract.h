@@ -54,10 +54,38 @@ public:
 
   BOOL IsExcludePath(const std::wstring& path)
   {
-    if (find(m_exincludepaths.begin(), m_exincludepaths.end(), path) != m_exincludepaths.end())
-      return TRUE;
+    BOOL bRet = FALSE;
 
-    return FALSE;
+    // do not spide the removable disk
+    if (path.size() >= 3)
+    {
+      if (path.substr(0, 2) == L"\\\\")
+      {
+        // determine the network path
+        bRet = FALSE;
+      }
+      else
+      {
+        // determine other path
+        UINT type = ::GetDriveType(path.substr(0, 3).c_str());
+        switch (type)
+        {
+        case DRIVE_FIXED:
+          bRet = FALSE;
+          break;
+
+        default:
+          bRet = TRUE;
+          break;
+        }
+      }
+    }
+
+    // find in the exclude folder list
+    if (find(m_exincludepaths.begin(), m_exincludepaths.end(), path) != m_exincludepaths.end())
+      bRet = TRUE;
+
+    return bRet;
   }
 
   void SetExcludePath(const std::wstring& path)

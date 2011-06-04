@@ -12,8 +12,12 @@
 // normal part
 MediaCenterController::MediaCenterController()
 : m_planestate(FALSE)
- ,m_initiablocklist(FALSE)
+, m_initiablocklist(FALSE)
+, m_hFilmTextFont(0)
 {
+  // create film text font
+  SetFilmTextFont(12, L"宋体");
+
   // load default mc cover
   SetMCCover();
   // connect signals and slots
@@ -23,6 +27,11 @@ MediaCenterController::MediaCenterController()
 MediaCenterController::~MediaCenterController()
 {
   m_loaddata._Stop();
+  if (m_hFilmTextFont)
+  {
+    ::DeleteObject(m_hFilmTextFont);
+    m_hFilmTextFont = 0;
+  }
 }
 
 void MediaCenterController::Playback(std::wstring file)
@@ -79,8 +88,7 @@ std::wstring MediaCenterController::GetMCFolder()
 
 std::wstring MediaCenterController::GetCoverPath(const std::wstring &sFilePath)
 {
-  std::string szFileHash = Strings::WStringToUtf8String(HashController::GetInstance()->GetSPHash(sFilePath.c_str()));
-  std::wstring szJpgName = HashController::GetInstance()->GetMD5Hash(szFileHash.c_str(), szFileHash.length());
+  std::wstring szJpgName = MediaCenterController::GetMediaHash(sFilePath);
 
   std::wstring sCoverPath;
   sCoverPath = GetMCFolder();
@@ -89,26 +97,42 @@ std::wstring MediaCenterController::GetCoverPath(const std::wstring &sFilePath)
   return sCoverPath;
 }
 
+std::wstring MediaCenterController::GetMediaHash(const std::wstring &sFilePath)
+{
+  std::string szFileHash = Strings::WStringToUtf8String(HashController::GetInstance()->GetSPHash(sFilePath.c_str()));
+  std::wstring szJpgName = HashController::GetInstance()->GetMD5Hash(szFileHash.c_str(), szFileHash.length());
+
+  return szJpgName;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // data control
-void MediaCenterController::SpiderStart()
+void MediaCenterController::SpiderThreadStart()
 {
   m_spider._Stop();
   m_spider._Start();
+}
 
+void MediaCenterController::SpiderThreadStop()
+{
+   m_spider._Stop(500);
+}
+
+void MediaCenterController::CoverThreadStart()
+{
   m_cover._Stop();
   m_cover._Start();
 }
 
-void MediaCenterController::SpiderStop()
+void MediaCenterController::CoverThreadStop()
 {
-   m_spider._Stop(1000);
-  
-   m_cover._Stop();
-
-   m_treeModel.save2DB();
-   m_treeModel.delTree();
+  m_cover._Stop(500);
 }
+
+void MediaCenterController::SaveTreeDataToDB()
+{
+  m_treeModel.save2DB();
+  m_treeModel.delTree();}
 
 void MediaCenterController::LoadMediaData(int direction, std::list<BlockUnit*>* list,
                                           int viewcapacity, int listcapacity, 
@@ -244,6 +268,29 @@ void MediaCenterController::SetCover(BlockUnit* unit, std::wstring orgpath)
   }
 
   m_cover._Start();
+}
+
+HFONT MediaCenterController::GetFilmTextFont()
+{
+  return m_hFilmTextFont;
+}
+
+void MediaCenterController::SetFilmTextFont(int height, const std::wstring &family)
+{
+  if (m_hFilmTextFont)
+  {
+    ::DeleteObject(m_hFilmTextFont);
+    m_hFilmTextFont = 0;
+  }
+
+  LOGFONT lf = {0};
+  lf.lfHeight = height;
+  ::wcscpy(lf.lfFaceName, family.c_str());
+
+  CFont fnTemp;
+  fnTemp.CreateFontIndirect(&lf);
+  m_hFilmTextFont = (HFONT)fnTemp;
+  fnTemp.Detach();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

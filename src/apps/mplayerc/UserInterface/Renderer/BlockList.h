@@ -61,6 +61,7 @@ public:
   int OnHittest(POINT pt, BOOL blbtndown, BlockUnit** unit);
   void OnLButtonDblClk(POINT pt);
   void OnSetFilmName();  // set filmname by the edit control
+  void HideFilmNameEditor();
 
   // logic
   void SetOffset(float offset);

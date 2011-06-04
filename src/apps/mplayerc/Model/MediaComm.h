@@ -15,6 +15,8 @@ struct MediaData
   std::wstring filename;
   std::wstring thumbnailpath;
   std::wstring filmname;
+  std::wstring hash;   // media's hash value, using media center to generate
+  int createtime;      // file's first been found time, using time() to generate it
   int videotime;
   bool bHide;  // is hide this media?
 };
