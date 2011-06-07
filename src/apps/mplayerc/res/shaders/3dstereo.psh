@@ -16,5 +16,5 @@ float4 main(float2 tex : TEXCOORD0) : COLOR
   left = right;
   right = swap;
 #endif
-  return float4(left.x,right.y,right.z,right.w);
+  return float4(left_c,right.y,right.z,right.w);
 }

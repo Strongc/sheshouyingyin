@@ -2355,6 +2355,7 @@ CMPlayerCApp::Settings::Settings()
   , skinid(0)
   , skinname(L"")
   , i3DStereo(0)
+  , i3DStereoKeepAspectRatio(0)
 {
 
 }

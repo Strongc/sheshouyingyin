@@ -454,6 +454,7 @@ public:
 		bool fFasterSeeking;
 		int				iLanguage;
     int  i3DStereo;
+    int  i3DStereoKeepAspectRatio;
 
 		int nVolume;
 		int nBalance;
