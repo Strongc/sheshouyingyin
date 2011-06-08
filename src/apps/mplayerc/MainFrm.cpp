@@ -958,6 +958,12 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
   ImmAssociateContextEx(m_hWnd, 0, IACE_CHILDREN);
   //ImmAssociateContext((HWND)m_wndView, 0);
+
+  // let child view's children can have IME, such as the FilmNameEditor
+  // still let child view itself has no IME
+  ImmAssociateContextEx(m_wndView.m_hWnd, 0, IACE_CHILDREN | IACE_DEFAULT);
+  ImmAssociateContextEx(m_wndView.m_hWnd, 0, IACE_IGNORENOCONTEXT);
+
   /*NEW UI END*/
 
   if(!m_tip.CreateEx(WS_EX_NOACTIVATE|WS_EX_TOPMOST|dwTransFlag, _T("SVPLayered"), _T("TIPS"), WS_POPUP, CRect( 20,20,21,21 ) , this,  0)){
