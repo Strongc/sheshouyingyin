@@ -158,14 +158,7 @@ BSTR OAuthDlg::CallSPlayer(LPCTSTR p, LPCTSTR param)
   if (cmd.empty())
     ret = L"-1";
   else if (cmd == L"close")
-  {
     HideFrame();
-
-    // get the new status of user account info
-    // this design is not very good
-    UserAccountController::GetInstance()->_Stop();
-    UserAccountController::GetInstance()->_Start();
-  }
   else
     ret = L"-1";
   return ret.AllocSysString();
@@ -216,6 +209,11 @@ void OAuthDlg::HideFrame()
 {
   m_btnclose.ShowWindow(SW_HIDE);
   DhtmlDlgBase::HideFrame();
+
+  // get the new status of user account info
+  // this design is not very good
+  UserAccountController::GetInstance()->_Stop();
+  UserAccountController::GetInstance()->_Start();
 }
 
 void OAuthDlg::CalcOauthPos(BOOL display)

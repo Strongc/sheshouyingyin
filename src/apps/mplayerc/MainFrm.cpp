@@ -754,7 +754,6 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
   m_pUserAccountDlg->CreateFrame(DS_SETFONT|DS_FIXEDSYS|WS_POPUP|WS_DISABLED,WS_EX_NOACTIVATE);
   m_pUserAccountDlg->ClearFrame();
   m_pUserAccountDlg->SetFramePos(CRect(0, 0, 0, 0));
-  m_pUserAccountDlg->HideFrame();
 
   WNDCLASSEX layeredClass;
   layeredClass.cbSize        = sizeof(WNDCLASSEX);
@@ -13343,8 +13342,11 @@ void CMainFrame::OnPaint()
 void CMainFrame::OnSize(UINT nType, int cx, int cy)
 {
   // hide the user account dialog if drag the main frame
-  m_pUserAccountDlg->HideFrame();
-  m_pUserAccountDlg->SetFramePos(CRect(0, 0, 0, 0));
+  if (m_pUserAccountDlg->IsWindowVisible())
+  {
+    m_pUserAccountDlg->HideFrame();
+    m_pUserAccountDlg->SetFramePos(CRect(0, 0, 0, 0));
+  }
 
   AppSettings& s = AfxGetAppSettings();
   //the SeekBarTip may not have been created.
