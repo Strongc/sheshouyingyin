@@ -183,8 +183,8 @@ void SPMCList::Update(DWORD deltatime)
       return;
     }
 
-    if (m_y.back() >= m_wndsize.cy)
-    {
+    if (m_y.back() >= m_wndsize.cy+m_blockh+m_blocktop)
+    { CString log;log.Format(L"last y:%d\n", m_y.back());MCDEBUG(log);
       m_dbsource->RemoveRowDatas(dir, m_x.size());
       m_y.pop_back();
     }
@@ -390,7 +390,7 @@ BOOL SPMCList::ActWindowChange(int w, int h)
   m_lockpaint = TRUE;
 
   if (!m_listempty)
-    m_dbsource->AdjustRange(m_blockcount);
+    m_dbsource->AdjustRange(m_blockcount, m_x.size());
   
   m_dbsource->SetReadNums(m_blockcount);
 

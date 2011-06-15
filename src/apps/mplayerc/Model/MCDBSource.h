@@ -50,7 +50,7 @@ public:
   #define MCLoopNextData()  if(sp!=ep)sp++;
 
   BOOL PreLoad(UINT nums);
-  void AdjustRange(UINT nums);
+  void AdjustRange(UINT nums, UINT columns);
   BOOL IsMoreData();
 
   int LoadRowDatas(BOOL direction, UINT movenums);
