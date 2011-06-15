@@ -40,11 +40,9 @@ static char THIS_FILE[] = __FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // CChildView
 
-#define TIMER_OFFSET 11
-#define TIMER_UPDATE 12
-#define TIMER_TIME 13 
-#define TIMER_TIPS 15
-#define TIMER_TEST 16
+//#define TIMER_TIME 13 
+//#define TIMER_TIPS 15
+//#define TIMER_TEST 16
 
 #define WM_MEDIACENTERPLAYVEDIO 16
 #define WM_CHANGECOVE 17
@@ -54,10 +52,10 @@ m_vrect(0,0,0,0)
 ,m_cover(NULL)
 ,m_bMouseDown(FALSE)
 , m_lastLyricColor(0x00dfe7ff)
-, m_blocklistview(0)
-, m_blockunit(0)
-, m_direction(0)
-, m_predirection(0)
+// , m_blocklistview(0)
+// , m_blockunit(0)
+// , m_direction(0)
+// , m_predirection(0)
 {
 	m_lastlmdowntime = 0;
 	m_lastlmdownpoint.SetPoint(0, 0);
@@ -71,7 +69,7 @@ m_vrect(0,0,0,0)
 
 	}
 	m_mediacenter = MediaCenterController::GetInstance();
-  m_blocklistview = &(m_mediacenter->GetBlockListView());
+  //m_blocklistview = &(m_mediacenter->GetBlockListView());
   //m_btnList.AddTail( new CSUIButton(L"BTN_OPENADV.BMP" ,ALIGN_TOPLEFT, CRect(-50 , -62, 0,0)  , FALSE, ID_FILE_OPENMEDIA, FALSE, ALIGN_LEFT,btnFileOpen,  CRect(3,3,3,3) ) ) ;
 	
 	m_btnList.AddTail( new CSUIButton(L"WATERMARK2.BMP" , ALIGN_BOTTOMRIGHT, CRect(6 , 6, 0,6)  , TRUE, 0, FALSE  ) );
@@ -324,7 +322,7 @@ void CChildView::OnPaint()
   CPaintDC dc(this); // device context for painting
 
 	CMainFrame* pFrame = (CMainFrame*)GetParentFrame();
-  if (pFrame->IsSomethingLoading()) //�ļ̲Repaint
+  if (pFrame->IsSomethingLoading())
     return;
 	pFrame->RepaintVideo();
 
@@ -359,10 +357,10 @@ void CChildView::OnPaint()
 
 			CRect r;
 			GetClientRect(r);
-			// ��ֿ��
+		
 			CRect cover_r;
 			if ( bm.bmWidth * 100 / bm.bmHeight > r.Width() * 100 / r.Height() ){
-				//�r.Width()Ϊ׼
+
 				int w = r.Width();
 				int h = r.Width() * bm.bmHeight/ bm.bmWidth ;
 				int x = 0;
@@ -386,18 +384,18 @@ void CChildView::OnPaint()
 			GetClientRect(r);
       PlayerPreference* pref = PlayerPreference::GetInstance();
 			/*
-			if( s.logostretch == 1){ // ֿ�  ��
+			if( s.logostretch == 1){
 							int w = min(bm.bmWidth, r.Width());
 							int h = min(abs(bm.bmHeight), r.Height());
 							int x = (r.Width() - w) / 2;
 							int y = (r.Height() - h) / 2;
 							m_logo_r = CRect(CPoint(x, y), CSize(w, h));
 						}else */
-			if(pref->GetIntVar(INTVAR_LOGO_AUTOSTRETCH) == 2 || isUsingSkinBG){ // ��ֿ��
+			if(pref->GetIntVar(INTVAR_LOGO_AUTOSTRETCH) == 2 || isUsingSkinBG){
 				m_logo_r = r;
-			}else if(pref->GetIntVar(INTVAR_LOGO_AUTOSTRETCH) == 3){// ��ֿ��
+			}else if(pref->GetIntVar(INTVAR_LOGO_AUTOSTRETCH) == 3){
 				if ( bm.bmWidth * 100 / bm.bmHeight > r.Width() * 100 / r.Height() ){
-					//�r.Width()Ϊ׼
+				
 					int w = r.Width();
 					int h = r.Width() * bm.bmHeight/ bm.bmWidth ;
 					int x = 0;
@@ -411,7 +409,7 @@ void CChildView::OnPaint()
 					m_logo_r = CRect(CPoint(x, y), CSize(w, h));
 				}
 				
-			}else{ //��ֿ��
+			}else{
 				int w = bm.bmWidth;
 				int h = bm.bmHeight ;
 				CPoint pos = r.CenterPoint();
@@ -547,14 +545,8 @@ void CChildView::OnSize(UINT nType, int cx, int cy)
 	((CMainFrame*)GetParentFrame())->MoveVideoWindow();
 	ReCalcBtn();
 
-  m_blocklistview->SetSizeChanged();
-  if (m_mediacenter->GetPlaneState())
-  {
-    RECT rc;
-    GetClientRect(&rc);
-    m_blocklistview->Update(rc.right - rc.left, rc.bottom - rc.top);
-    //Invalidate();
-  }
+  if (m_mediacenter->ActWindowChange(cx, cy))
+    return;
 }
 
 
@@ -638,14 +630,14 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
       AfxMessageBox(ResStr(IDS_MSG_CREATE_SEEKTIP_FAIL));
 
 
-    m_blocklistview->SetFrameHwnd(m_hWnd);
-    m_blocklistview->CreateTextEdit();  // create the film name editor
-    m_blocklistview->SetScrollDirection(&m_direction);
-    m_blocklistview->SetScrollSpeed(&m_scrollspeed);
+//     m_blocklistview->SetFrameHwnd(m_hWnd);
+//     m_blocklistview->CreateTextEdit();  // create the film name editor
+//     m_blocklistview->SetScrollDirection(&m_direction);
+//     m_blocklistview->SetScrollSpeed(&m_scrollspeed);
 
-    m_menu.LoadMenu(IDR_MEDIACENTERMENU);
-
-    SetMenu(&m_menu);
+//     m_menu.LoadMenu(IDR_MEDIACENTERMENU);
+// 
+//     SetMenu(&m_menu);
 
 	return 0;
 }
@@ -653,18 +645,8 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 BOOL CChildView::OnMouseMove(UINT nFlags, CPoint point)
 {
 	// TODO: Add your message handler code here and/or call default
-  if (m_mediacenter->GetPlaneState())
-  {
-    m_blocklistview->HandleMouseMove(point, &m_blockunit);
-
-    TRACKMOUSEEVENT tmet;
-    tmet.cbSize = sizeof(TRACKMOUSEEVENT);
-    tmet.dwFlags = TME_LEAVE;
-    tmet.hwndTrack = m_hWnd;
-    _TrackMouseEvent(&tmet);
-
+  if (m_mediacenter->ActMouseMove(point))
     return TRUE;
-  }
 
 	CSize diff = m_lastMouseMove - point;
 	BOOL bMouseMoved =  diff.cx || diff.cy ;
@@ -701,21 +683,14 @@ BOOL CChildView::OnMouseMove(UINT nFlags, CPoint point)
 }
 void CChildView::OnLButtonDown(UINT nFlags, CPoint point)
 {
+  if (m_mediacenter->ActMouseLBDown(point))
+    return;
 	// TODO: Add your message handler code here and/or call default
-  
 	CMainFrame* pFrame = ((CMainFrame*)GetParentFrame());
 	iBottonClicked = -1;
 	m_bMouseDown = TRUE;
 	CRect rc;
 	GetWindowRect(&rc);
-
-  if (m_mediacenter->GetPlaneState())
-  {
-    RECT rc;
-    GetClientRect(&rc);
-    m_blocklistview->HandleLButtonDown(point, &m_blockunit);
-    return;
-  }
   
 	point += rc.TopLeft() ;
 	UINT ret = m_btnList.OnHitTest(point,rc,TRUE);
@@ -731,23 +706,17 @@ void CChildView::OnLButtonDown(UINT nFlags, CPoint point)
 
 void CChildView::OnLButtonUp(UINT nFlags, CPoint point)
 {
+  if (m_mediacenter->ActMouseLBUp(point))
+    return;
+
 	// TODO: Add your message handler code here and/or call default
 	CMainFrame* pFrame = ((CMainFrame*)GetParentFrame());
 	KillTimer(TIMER_FASTFORWORD);
-	ReleaseCapture();
+	ReleaseCapture(); 
 
 	CRect rc;
 	GetWindowRect(&rc);
 
-  if (m_mediacenter->GetPlaneState())
-  {
-    RECT rc;
-    GetClientRect(&rc);
-    m_blocklistview->HandleLButtonUp(point, &m_blockunit);
-    InvalidateRect(&m_scrollbarrect);
-    return;
-  }
-  
 	CPoint xpoint = point + rc.TopLeft() ;
 	UINT ret = m_btnList.OnHitTest(xpoint,rc,FALSE);
 	if( m_btnList.HTRedrawRequired ){
@@ -767,7 +736,10 @@ BOOL CChildView::OnRButtonUP(UINT nFlags, CPoint point)
   BOOL bmenutrack = FALSE;
 
   if (m_mediacenter->GetPlaneState())
-    bmenutrack = m_blocklistview->HandleRButtonUp(point);
+  {
+ /*   bmenutrack = m_blocklistview->HandleRButtonUp(point);*/
+  }
+
   
   return bmenutrack;
 }
@@ -778,8 +750,8 @@ BOOL CChildView::OnLButtonDBCLK(UINT nFlags, CPoint point)
 
   if (m_mediacenter->GetPlaneState())
   {
-    bl = TRUE;
-    m_blocklistview->HandleLButtonDblClk(point);
+//     bl = TRUE;
+//     m_blocklistview->HandleLButtonDblClk(point);
   }
 
   return bl;
@@ -815,25 +787,10 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
         m_strAudioInfo.Empty(); 
 
     }
+    else
+      m_mediacenter->OnTimer(nIDEvent);
 
-    if (nIDEvent == TIMER_UPDATE)
-    {
-      BOOL bcontiniupaint = m_blocklistview->ContinuePaint();
-      if (bcontiniupaint)
-      {
-        RECT rc;
-        GetClientRect(&rc);
-        //m_blocklistview->Update(rc.right - rc.left, rc.bottom - rc.top);
-      
-        RECT statusbarrc = m_blocklistview->GetStatusBarHittest();
-        RECT scrollbarrc = m_blocklistview->GetScrollBarHittest();
-        rc.right -= (scrollbarrc.right - scrollbarrc.left);
-        rc.bottom -= (statusbarrc.bottom - statusbarrc.top);
-        InvalidateRect(&rc);
-        return;
-      }
-    }
-
+    /*
     if (nIDEvent == TIMER_TIPS)
     {
       KillTimer(TIMER_TIPS);
@@ -851,48 +808,48 @@ void CChildView::OnTimer(UINT_PTR nIDEvent)
       }
       return;
     }
-
+    */
     CWnd::OnTimer(nIDEvent);
 }
 
-void CChildView::ShowMediaCenter(BOOL bl)
-{
-  m_mediacenter->SetPlaneState(bl);
-
-  if (!bl)
-  {
-    SetClassLong(m_hWnd, GCL_HCURSOR, (LONG)::LoadCursor(NULL, IDC_HAND));
-    InvalidateRect(0, FALSE);
-    return;
-  }
-
-  if (!m_blocklistview->IsEmpty())
-  {
-    InvalidateRect(0, FALSE);
-    return;
-  }
-
-  RECT rc;
-  GetClientRect(&rc);
-  m_mediacenter->UpdateBlock(rc);
-  std::list<BlockUnit*>* list = m_blocklistview->GetEmptyList();
-  if (list)
-    m_mediacenter->LoadMediaData(1, list, m_blocklistview->GetViewCapacity(), 
-    m_blocklistview->GetListCapacity(), 0);
-
-  HCURSOR oldcursor = SetCursor(::LoadCursor(NULL, IDC_WAIT));
-
-  // wait until the load data thread is exit and finish its job
-  ::WaitForSingleObject(m_mediacenter->GetMediaDataThreadHandle(), INFINITE);
-
-  SetCursor(oldcursor);
-
-  SetClassLong(m_hWnd, GCL_HCURSOR, (LONG)::LoadCursor(NULL, IDC_ARROW));
-  
-  if (!m_blocklistview->IsEmpty())
-    m_mediacenter->UpdateBlock(rc);
-  InvalidateRect(0, FALSE);
-}
+// void CChildView::ShowMediaCenter(BOOL bl)
+// {
+//   m_mediacenter->SetPlaneState(bl);
+// 
+//   if (!bl)
+//   {
+//     SetClassLong(m_hWnd, GCL_HCURSOR, (LONG)::LoadCursor(NULL, IDC_HAND));
+//     InvalidateRect(0, FALSE);
+//     return;
+//   }
+// 
+//   if (!m_blocklistview->IsEmpty())
+//   {
+//     InvalidateRect(0, FALSE);
+//     return;
+//   }
+// 
+//   RECT rc;
+//   GetClientRect(&rc);
+//   m_mediacenter->UpdateBlock(rc);
+//   std::list<BlockUnit*>* list = m_blocklistview->GetEmptyList();
+//   if (list)
+//     m_mediacenter->LoadMediaData(1, list, m_blocklistview->GetViewCapacity(), 
+//     m_blocklistview->GetListCapacity(), 0);
+// 
+//   HCURSOR oldcursor = SetCursor(::LoadCursor(NULL, IDC_WAIT));
+// 
+//   // wait until the load data thread is exit and finish its job
+//   ::WaitForSingleObject(m_mediacenter->GetMediaDataThreadHandle(), INFINITE);
+// 
+//   SetCursor(oldcursor);
+// 
+//   SetClassLong(m_hWnd, GCL_HCURSOR, (LONG)::LoadCursor(NULL, IDC_ARROW));
+//   
+//   if (!m_blocklistview->IsEmpty())
+//     m_mediacenter->UpdateBlock(rc);
+//   InvalidateRect(0, FALSE);
+// }
 
 LRESULT CChildView::OnSetCover(WPARAM wParam, LPARAM lParam)
 {
@@ -914,48 +871,48 @@ LRESULT CChildView::OnMediaCenterPlayVedio(WPARAM wParam, LPARAM lParam)
    return 0;
 }
 
-void CALLBACK ProcessOffset(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2)
-{
-  OffsetAttribute* offat = (OffsetAttribute*)dwUser;
-  int direction = offat->direction;
-  if (direction == 0)
-    return;
-
-  MediaCenterController* mediacenter = MediaCenterController::GetInstance();
-  BlockListView* blocklistview = &mediacenter->GetBlockListView();
-
-  std::list<BlockUnit*>* list = blocklistview->GetEmptyList();
-  //std::list<BlockUnit*>* list = m_blocklistview->GetIdleList();
-  if ((list || blocklistview->GetClearStat()) && !mediacenter->LoadMediaDataAlive())
-    mediacenter->LoadMediaData(direction, blocklistview->GetIdleList(), blocklistview->GetViewCapacity(),
-    blocklistview->GetListCapacity(),
-    blocklistview->GetListRemainItem());
-  else
-  {
-    if (deltaT == MAXINT)
-    {
-      list = blocklistview->GetIdleList();
-      //m_blocklistview->ClearList(list);
-      mediacenter->LoadMediaData(direction, list, blocklistview->GetViewCapacity(),
-        blocklistview->GetListCapacity(),
-        blocklistview->GetListRemainItem(), 2);
-    }
-  }
-
-  if (deltaT == MAXINT)
-  {
-    blocklistview->ResetOffsetTotal();
-  }
-
-  //deltaT += timeGetTime() - updateTime;
-  deltaT = timeGetTime() - updateTime;
-  float offset = deltaT * offat->speed;
-  if (direction < 0)
-    offset = -offset;
-
-  blocklistview->SetOffset(offset);
-  updateTime = timeGetTime();
-}
+// void CALLBACK ProcessOffset(UINT uTimerID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2)
+// {
+//   OffsetAttribute* offat = (OffsetAttribute*)dwUser;
+//   int direction = offat->direction;
+//   if (direction == 0)
+//     return;
+// 
+//   MediaCenterController* mediacenter = MediaCenterController::GetInstance();
+//   BlockListView* blocklistview = &mediacenter->GetBlockListView();
+// 
+//   std::list<BlockUnit*>* list = blocklistview->GetEmptyList();
+//   //std::list<BlockUnit*>* list = m_blocklistview->GetIdleList();
+//   if ((list || blocklistview->GetClearStat()) && !mediacenter->LoadMediaDataAlive())
+//     mediacenter->LoadMediaData(direction, blocklistview->GetIdleList(), blocklistview->GetViewCapacity(),
+//     blocklistview->GetListCapacity(),
+//     blocklistview->GetListRemainItem());
+//   else
+//   {
+//     if (deltaT == MAXINT)
+//     {
+//       list = blocklistview->GetIdleList();
+//       //m_blocklistview->ClearList(list);
+//       mediacenter->LoadMediaData(direction, list, blocklistview->GetViewCapacity(),
+//         blocklistview->GetListCapacity(),
+//         blocklistview->GetListRemainItem(), 2);
+//     }
+//   }
+// 
+//   if (deltaT == MAXINT)
+//   {
+//     blocklistview->ResetOffsetTotal();
+//   }
+// 
+//   //deltaT += timeGetTime() - updateTime;
+//   deltaT = timeGetTime() - updateTime;
+//   float offset = deltaT * offat->speed;
+//   if (direction < 0)
+//     offset = -offset;
+// 
+//   blocklistview->SetOffset(offset);
+//   updateTime = timeGetTime();
+// }
 
 
                                   

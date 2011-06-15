@@ -269,7 +269,7 @@ void CSUIButton::Attach(HBITMAP bmp){
 	m_bitmap.Attach(bmp);
 	PreMultiplyBitmap(m_bitmap,m_btnSize,m_NotButton);
 }
-void CSUIButton::PreMultiplyBitmap(CBitmap& bmp , CSize& sizeBmp, BOOL NotButton)
+BOOL CSUIButton::PreMultiplyBitmap(CBitmap& bmp , CSize& sizeBmp, BOOL NotButton)
 {
 
 	BITMAP bm;
@@ -281,7 +281,7 @@ void CSUIButton::PreMultiplyBitmap(CBitmap& bmp , CSize& sizeBmp, BOOL NotButton
 		sizeBmp.cy = sizeBmp.cy /4;
 	}
 	if(bm.bmBitsPixel != 32){
-		return;
+		return FALSE;
 	}
 
 	for (int y=0; y<bm.bmHeight; y++)
@@ -295,6 +295,7 @@ void CSUIButton::PreMultiplyBitmap(CBitmap& bmp , CSize& sizeBmp, BOOL NotButton
 			pPixel += 4;
 		}
 	}
+  return TRUE;
 }
 
 void CSUIButton::SetCurrentHideState(long iWidth,double skinsRate,int m_nLogDPIY)

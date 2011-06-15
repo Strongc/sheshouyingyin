@@ -2,8 +2,8 @@
 #include "MCUILayer.h"
 
 
-ULBackground::ULBackground(std::wstring respath, BOOL display) :
-  UILayer(respath, display)
+ULBackground::ULBackground(std::wstring respath, BOOL display, UINT nums) :
+  UILayer(respath, display, nums)
 {
 
 }
@@ -15,43 +15,45 @@ ULBackground::~ULBackground()
 
 BOOL ULBackground::ActMouseOver(const POINT& pt)
 {
-  RECT rc;
-  GetTextureRect(rc);
 
-  int prestat = GetState();
-  int stat = 0;
-  BOOL bl = FALSE;
+  BOOL ret = FALSE;
+  if (GetState() == 0)
+  {
+    ret = TRUE;
+    SetState(1);
+  }
 
-  if (PtInRect(&rc, pt))
-    stat = 1;
-
-  if (prestat != stat)
-    bl = TRUE;
-
-  SetState(stat);
-  
-  return bl;
+  return ret;
 }
 
 BOOL ULBackground::ActMouseOut(const POINT& pt)
 {
-  SetState(0);
+  BOOL ret = FALSE;
 
-  return TRUE;
+  RECT rc;
+  GetTextureRect(rc);
+
+  if (GetState() == 1 && !PtInRect(&rc, pt))
+  {
+    ret = TRUE;
+    SetState(0);
+  }
+
+  return ret;
 }
 
-BOOL ULBackground::ActMouseDown(const POINT& pt)
+BOOL ULBackground::ActMouseLBDown(const POINT& pt)
 {
   return FALSE;
 }
 
-BOOL ULBackground::ActMouseUp(const POINT& pt)
+BOOL ULBackground::ActMouseLBUp(const POINT& pt)
 {
   return FALSE;
 }
 
-ULDel::ULDel(std::wstring respath, BOOL display) :
-  UILayer(respath, display)
+ULDel::ULDel(std::wstring respath, BOOL display, UINT nums) :
+  UILayer(respath, display, nums)
 {
 
 }
@@ -66,29 +68,39 @@ BOOL ULDel::ActMouseOver(const POINT& pt)
   RECT rc;
   GetTextureRect(rc);
 
-  int prestat = GetState();
-  int stat = 0;
-  BOOL bl = FALSE;
+  BOOL ret = FALSE;
 
   if (PtInRect(&rc, pt))
-    stat = 1;
+  {
+    SetState(1);
+    ret = TRUE;
+  }
+  else if (GetState() == 1)
+  {
+    SetState(0);
+    ret = TRUE;
+  }
 
-  if (prestat != stat)
-    bl = TRUE;
-
-  SetState(stat);
-
-  return bl;
+  return ret;
 }
 
 BOOL ULDel::ActMouseOut(const POINT& pt)
 {
-  SetState(0);
+  BOOL ret = FALSE;
 
-  return TRUE;
+  RECT rc;
+  GetTextureRect(rc);
+
+  if (GetState() == 1 && !PtInRect(&rc, pt))
+  {
+    ret = TRUE;
+    SetState(0);
+  }
+
+  return ret;
 }
 
-BOOL ULDel::ActMouseDown(const POINT& pt)
+BOOL ULDel::ActMouseLBDown(const POINT& pt)
 {
   RECT rc;
   GetTextureRect(rc);
@@ -101,14 +113,14 @@ BOOL ULDel::ActMouseDown(const POINT& pt)
   return bl;
 }
 
-BOOL ULDel::ActMouseUp(const POINT& pt)
+BOOL ULDel::ActMouseLBUp(const POINT& pt)
 {
   return FALSE;
 }
 
 
-ULPlayback::ULPlayback(std::wstring respath, BOOL display) :
-UILayer(respath, display)
+ULPlayback::ULPlayback(std::wstring respath, BOOL display, UINT nums) :
+UILayer(respath, display, nums)
 {
 
 }
@@ -123,29 +135,40 @@ BOOL ULPlayback::ActMouseOver(const POINT& pt)
   RECT rc;
   GetTextureRect(rc);
 
-  int prestat = GetState();
-  int stat = 0;
-  BOOL bl = FALSE;
+  BOOL ret = FALSE;
 
   if (PtInRect(&rc, pt))
-    stat = 1;
+  {
+    SetState(1);
+    ret = TRUE;
+  }
+  else if (GetState() == 1)
+  {
+    SetState(0);
+    ret = TRUE;
+  }
 
-  if (prestat != stat)
-    bl = TRUE;
-
-  SetState(stat);
-
-  return bl;
+  return ret;
 }
 
 BOOL ULPlayback::ActMouseOut(const POINT& pt)
 {
-  SetState(0);
+  BOOL ret = FALSE;
 
-  return TRUE;
+  RECT rc;
+  GetTextureRect(rc);
+
+  if (GetState() == 1 && !PtInRect(&rc, pt))
+  {
+    ret = TRUE;
+    SetState(0);
+  }
+
+
+  return ret;
 }
 
-BOOL ULPlayback::ActMouseDown(const POINT& pt)
+BOOL ULPlayback::ActMouseLBDown(const POINT& pt)
 {
   RECT rc;
   GetTextureRect(rc);
@@ -158,13 +181,13 @@ BOOL ULPlayback::ActMouseDown(const POINT& pt)
   return bl;
 }
 
-BOOL ULPlayback::ActMouseUp(const POINT& pt)
+BOOL ULPlayback::ActMouseLBUp(const POINT& pt)
 {
   return FALSE;
 }
 
-ULFavourite::ULFavourite(std::wstring respath, BOOL display):
-  UILayer(respath, display)
+ULFavourite::ULFavourite(std::wstring respath, BOOL display, UINT nums):
+  UILayer(respath, display, nums)
 {
   
 }
@@ -179,40 +202,51 @@ BOOL ULFavourite::ActMouseOver(const POINT& pt)
   RECT rc;
   GetTextureRect(rc);
 
-  int prestat = GetState();
-  int stat = 0;
-  BOOL bl = FALSE;
+  BOOL ret = FALSE;
 
   if (PtInRect(&rc, pt))
-    stat = 1;
+  {
+    SetState(1);
+    ret = TRUE;
+  }
+  else if (GetState() == 1)
+  {
+    SetState(0);
+    ret = TRUE;
+  }
 
-  if (prestat != stat)
-    bl = TRUE;
-
-  SetState(stat);
-
-  return bl;
+  return ret;
 }
 
 BOOL ULFavourite::ActMouseOut(const POINT& pt)
 {
-  SetState(0);
+  BOOL ret = FALSE;
 
-  return TRUE;
+  RECT rc;
+  GetTextureRect(rc);
+
+  if (GetState() == 1 && !PtInRect(&rc, pt))
+  {
+    ret = TRUE;
+    SetState(0);
+  }
+
+
+  return ret;
 }
 
-BOOL ULFavourite::ActMouseDown(const POINT& pt)
+BOOL ULFavourite::ActMouseLBDown(const POINT& pt)
 {
   return FALSE;
 }
 
-BOOL ULFavourite::ActMouseUp(const POINT& pt)
+BOOL ULFavourite::ActMouseLBUp(const POINT& pt)
 {
   return FALSE;
 }
 
-ULCover::ULCover(std::wstring respath, BOOL display):
-  UILayer(respath, display)
+ULCover::ULCover(std::wstring respath, BOOL display, UINT nums):
+  UILayer(respath, display, nums)
 {
 
 }
@@ -227,29 +261,40 @@ BOOL ULCover::ActMouseOver(const POINT& pt)
   RECT rc;
   GetTextureRect(rc);
 
-  int prestat = GetState();
-  int stat = 0;
-  BOOL bl = FALSE;
+  BOOL ret = FALSE;
 
   if (PtInRect(&rc, pt))
-    stat = 1;
+  {
+    SetState(1);
+    ret = TRUE;
+  }
+  else if (GetState() == 1)
+  {
+    SetState(0);
+    ret = TRUE;
+  }
 
-  if (prestat != stat)
-    bl = TRUE;
-
-  SetState(stat);
-
-  return bl;
+  return ret;
 }
 
 BOOL ULCover::ActMouseOut(const POINT& pt)
 {
-  SetState(0);
+  BOOL ret = FALSE;
 
-  return TRUE;
+  RECT rc;
+  GetTextureRect(rc);
+
+  if (GetState() == 1 && !PtInRect(&rc, pt))
+  {
+    ret = TRUE;
+    SetState(0);
+  }
+
+
+  return ret;
 }
 
-BOOL ULCover::ActMouseDown(const POINT& pt)
+BOOL ULCover::ActMouseLBDown(const POINT& pt)
 {
   RECT rc;
   GetTextureRect(rc);
@@ -262,7 +307,7 @@ BOOL ULCover::ActMouseDown(const POINT& pt)
   return bl;
 }
 
-BOOL ULCover::ActMouseUp(const POINT& pt)
+BOOL ULCover::ActMouseLBUp(const POINT& pt)
 {
   return FALSE;
 }

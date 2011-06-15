@@ -30,7 +30,7 @@ class CChildView : public CWnd
 {
 	CRect m_vrect;
   MediaCenterController* m_mediacenter;
-  BlockListView* m_blocklistview;
+  //BlockListView* m_blocklistview;
   DWORD m_lastlmdowntime;
 	CPoint m_lastlmdownpoint;
 
@@ -49,8 +49,8 @@ class CChildView : public CWnd
   RECT m_scrollbarrect;
 
   //MediaCenter Menu
-  CMenu m_menu;
-  BlockUnit* m_blockunit;
+//   CMenu m_menu;
+//   BlockUnit* m_blockunit;
 
 public:
 	CChildView();
@@ -112,6 +112,6 @@ public:
 
   afx_msg LRESULT OnMediaCenterPlayVedio(WPARAM wParam, LPARAM lParam);
 
-  void ShowMediaCenter(BOOL bl);
+  //void ShowMediaCenter(BOOL bl);
   BOOL OnRButtonUP(UINT nFlags, CPoint point);
 };

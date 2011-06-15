@@ -28,8 +28,6 @@ public:
     void Find(MediaDatas& data, const MediaFindCondition& condition,
               int limit_start, int limit_end);
 
-    void Find(int limit_start, int limit_end, MediaDatas& data);
-
     void Delete(const MediaFindCondition& condition);
     void DeleteAll();
 
