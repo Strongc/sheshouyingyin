@@ -17,6 +17,8 @@ public:
   void Update(DWORD deltatime);
   void DoPaint(WTL::CDC& dc, RECT& rcclient);
 
+  void InitMCList(int w, int h);
+
   BOOL ActMouseMove(const POINT& pt);
   BOOL ActMouseLBDown(const POINT& pt);
   BOOL ActMouseLBUp(const POINT& pt);
@@ -24,6 +26,7 @@ public:
 
 private:
   void SetCover();
+  void SetMCRect(int w, int h);
   void AddScrollBar();
   void BlocksMouseMove(const POINT& pt);
 
@@ -53,6 +56,7 @@ private:
   BOOL m_lockpaint;
 
   DWORD m_deltatime;
+  UINT m_blockcount;
 
   WTL::CBitmap m_cover;
   CSize m_coversize;
