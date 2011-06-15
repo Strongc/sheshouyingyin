@@ -319,7 +319,7 @@ void MediaCenterController::Render()
 void MediaCenterController::DoPaint(HDC hdc, RECT rcClient)
 {
   WTL::CMemoryDC dc(hdc, rcClient);
-  HBRUSH hbrush = ::CreateSolidBrush(COLORREF(0xb3b3b3));
+  HBRUSH hbrush = ::CreateSolidBrush(COLORREF(0xb7b7b7));
   dc.FillRect(&rcClient, hbrush);
   m_mclist.DoPaint(dc, rcClient);
   DeleteObject(hbrush);
