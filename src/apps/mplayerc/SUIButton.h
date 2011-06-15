@@ -95,7 +95,7 @@ public:
   BOOL m_bsingleormultiply;
 
 	static HBITMAP SUILoadImage(LPCTSTR szBmpName);
-	static void PreMultiplyBitmap( CBitmap& bmp , CSize& sizeBmp, BOOL NotButton);
+	static BOOL PreMultiplyBitmap( CBitmap& bmp , CSize& sizeBmp, BOOL NotButton);
 
 	CString m_szBmpName;
   CDC*    m_dc;

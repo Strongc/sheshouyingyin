@@ -2,14 +2,12 @@
 #include "UILayer.h"
 #include <ResLoader.h>
 
-UILayer::UILayer(std::wstring respath, BOOL display /* = TRUE */):
-  m_texturerect(0, 0, 0, 0)
-, m_stat(0)
+UILayer::UILayer(std::wstring respath, BOOL display /* = TRUE */, UINT nums /*= 1*/):
+  m_stat(0)
 {
   ResLoader rs;
-  SetTexture(rs.LoadBitmap(respath));
-  m_fixdisplay = display;
-  SetDisplay(FALSE);
+  SetTexture(rs.LoadBitmap(respath), nums);
+  SetDisplay(display);
 }
 
 UILayer::~UILayer()
@@ -17,7 +15,7 @@ UILayer::~UILayer()
 
 }
 
-BOOL UILayer::SetTexture(HBITMAP texture, BOOL bMultily)
+BOOL UILayer::SetTexture(HBITMAP texture, UINT nums)
 {
   if (texture == NULL)
     return FALSE;
@@ -41,17 +39,37 @@ BOOL UILayer::SetTexture(HBITMAP texture, BOOL bMultily)
     }
   }
 
-  if (bMultily)
-    m_bm.bmHeight /= 2;
+  if (nums)
+    m_bm.bmHeight /= nums;
 
   return TRUE;
 }
 
 BOOL UILayer::GetTextureRect(RECT& rc)
 {
-  rc = m_texturerect;
+  rc.left = m_texturepos.x;
+  rc.top = m_texturepos.y;
+  rc.right = rc.left + m_bm.bmWidth;
+  rc.bottom = rc.top + m_bm.bmHeight;
 
   return TRUE;
+}
+
+BOOL UILayer::GetTextureWH(int& w, int& h)
+{
+  BOOL ret = FALSE;
+  if (m_bm.bmWidth)
+  {
+    w = m_bm.bmWidth;
+    h = m_bm.bmHeight;
+    ret = TRUE;
+  }
+  else
+  {
+    w = 0;
+    h = 0;
+  }
+  return ret;
 }
 
 BOOL UILayer::GetTexturePos(POINT& pt)
@@ -62,19 +80,7 @@ BOOL UILayer::GetTexturePos(POINT& pt)
 
 BOOL UILayer::SetTexturePos(const POINT& pt)
 {
-  m_texturerect.left = pt.x;
-  m_texturerect.top = pt.y;
-  m_texturerect.right = pt.x + m_bm.bmWidth;
-  m_texturerect.bottom = pt.y + m_bm.bmHeight;
-  return TRUE;
-}
-
-BOOL UILayer::SetTexturePos(const POINT& pt, int width, int height)
-{
-  m_texturerect.left = pt.x;
-  m_texturerect.top = pt.y;
-  m_texturerect.right = pt.x + width;
-  m_texturerect.bottom = pt.y + height;
+  m_texturepos = pt;
   return TRUE;
 }
 
@@ -84,9 +90,14 @@ BOOL UILayer::SetDisplay(BOOL display)
   return TRUE;
 }
 
+BOOL UILayer::GetDisplay()
+{
+  return m_display;
+}
+
 BOOL UILayer::DoPaint(WTL::CDC& dc)
 {
-  if (!m_display || !m_fixdisplay)
+  if (!m_display)
     return FALSE;
 
   WTL::CDC texturedc;
@@ -97,12 +108,12 @@ BOOL UILayer::DoPaint(WTL::CDC& dc)
 
   BLENDFUNCTION bf = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
   if (m_bm.bmBitsPixel == 32)
-    dc.AlphaBlend(m_texturerect.left, m_texturerect.top, m_texturerect.Width(), m_texturerect.Height(),
+    dc.AlphaBlend(m_texturepos.x, m_texturepos.y, m_bm.bmWidth, m_bm.bmHeight,
     texturedc, 0, m_bm.bmHeight * m_stat, m_bm.bmWidth, m_bm.bmHeight, bf);
   else
   {
     dc.SetStretchBltMode(COLORONCOLOR);
-    dc.StretchBlt(m_texturerect.left, m_texturerect.top, m_texturerect.Width(), m_texturerect.Height(),
+    dc.StretchBlt(m_texturepos.x, m_texturepos.y, m_bm.bmWidth, m_bm.bmHeight,
       texturedc, 0, m_bm.bmHeight * m_stat, m_bm.bmWidth, m_bm.bmHeight, SRCCOPY);
   }
 

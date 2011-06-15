@@ -10,23 +10,27 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 // normal part
-MediaCenterController::MediaCenterController()
-: m_planestate(FALSE)
-, m_initiablocklist(FALSE)
-, m_hFilmTextFont(0)
+MediaCenterController::MediaCenterController():
+  m_hwnd(NULL),
+  m_isupdate(FALSE),
+  m_isrender(FALSE),
+  m_planestate(FALSE),
+  m_updatetime(0),
+  m_initiablocklist(FALSE),
+  m_hFilmTextFont(NULL)
 {
   // create film text font
   SetFilmTextFont(12, L"宋体");
 
   // load default mc cover
-  SetMCCover();
+  // SetMCCover();
   // connect signals and slots
-  m_blocklist.m_sigPlayback.connect(boost::bind(&MediaCenterController::HandlePlayback, this, _1));
+  //m_blocklist.m_sigPlayback.connect(boost::bind(&MediaCenterController::HandlePlayback, this, _1));
 }
 
 MediaCenterController::~MediaCenterController()
 {
-  m_loaddata._Stop();
+  //m_loaddata._Stop();
   if (m_hFilmTextFont)
   {
     ::DeleteObject(m_hFilmTextFont);
@@ -42,11 +46,6 @@ void MediaCenterController::Playback(std::wstring file)
   m_treeModel.addFolder(file, true);
   m_treeModel.save2DB();
   m_treeModel.delTree();
-}
-
-void MediaCenterController::SetFrame(HWND hwnd)
-{
-  m_hwnd = hwnd;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,96 +108,68 @@ std::wstring MediaCenterController::GetMediaHash(const std::wstring &sFilePath)
 // data control
 void MediaCenterController::SpiderThreadStart()
 {
-  m_spider._Stop();
-  m_spider._Start();
+//   m_spider._Stop();
+//   m_spider._Start();
 }
 
 void MediaCenterController::SpiderThreadStop()
 {
-   m_spider._Stop(500);
+   //m_spider._Stop(500);
 }
 
 void MediaCenterController::CoverThreadStart()
 {
-  m_cover._Stop();
-  m_cover._Start();
+//   m_cover._Stop();
+//   m_cover._Start();
 }
 
 void MediaCenterController::CoverThreadStop()
 {
-  m_cover._Stop(500);
+  //m_cover._Stop(500);
 }
 
 void MediaCenterController::SaveTreeDataToDB()
 {
   m_treeModel.save2DB();
-  m_treeModel.delTree();}
-
-void MediaCenterController::LoadMediaData(int direction, std::list<BlockUnit*>* list,
-                                          int viewcapacity, int listcapacity, 
-                                          int remain, int times)
-{
-  m_loaddata._Stop();
-  m_loaddata.SetList(list);
-  m_loaddata.SetDirection(direction);
-  m_loaddata.SetWindownCapacity(viewcapacity);
-  m_loaddata.SetAmount(listcapacity);
-  m_loaddata.SetListRemainItem(remain);
-  m_loaddata.SetExecuteTime(times);
-  m_loaddata._Start();
+  m_treeModel.delTree();
 }
 
-HANDLE MediaCenterController::GetMediaDataThreadHandle()
-{
-  return m_loaddata._GetThreadHandle();
-}
+// void MediaCenterController::LoadMediaData(int direction, std::list<BlockUnit*>* list,
+//                                           int viewcapacity, int listcapacity, 
+//                                           int remain, int times)
+// {
+//   m_loaddata._Stop();
+//   m_loaddata.SetList(list);
+//   m_loaddata.SetDirection(direction);
+//   m_loaddata.SetWindownCapacity(viewcapacity);
+//   m_loaddata.SetAmount(listcapacity);
+//   m_loaddata.SetListRemainItem(remain);
+//   m_loaddata.SetExecuteTime(times);
+//   m_loaddata._Start();
+// }
 
-BOOL MediaCenterController::LoadMediaDataAlive()
-{
-  return m_loaddata._Is_alive();
-}
+// HANDLE MediaCenterController::GetMediaDataThreadHandle()
+// {
+//   return m_loaddata._GetThreadHandle();
+// }
+// 
+// BOOL MediaCenterController::LoadMediaDataAlive()
+// {
+//   return m_loaddata._Is_alive();
+// }
 
 //////////////////////////////////////////////////////////////////////////////
 //  GUI control
-
-void MediaCenterController::DoPaint(HDC hdc, RECT rcClient)
-{
-  if (m_blocklist.IsEmpty())
-  {
-    if (!m_mccover)
-      return;
-
-    WTL::CDC dcmem;
-    HBITMAP  hold;
-
-    dcmem.CreateCompatibleDC(hdc);
-    hold = dcmem.SelectBitmap(m_mccover);
-
-    SetStretchBltMode(hdc, HALFTONE);
-    SetBrushOrgEx(hdc, 0, 0, NULL);
-    StretchBlt(hdc, rcClient.left, rcClient.top, rcClient.right, rcClient.bottom,
-               dcmem, 0, 0, m_mccoverbm.bmWidth, m_mccoverbm.bmHeight, SRCCOPY);
-
-    dcmem.SelectBitmap(hold);
-    dcmem.DeleteDC();
-  }
-  else
-    m_blocklist.DoPaint(hdc, rcClient);
-}
-BOOL MediaCenterController::GetPlaneState()
-{
-  return m_planestate;
-}
 
 void MediaCenterController::SetPlaneState(BOOL bl)
 {
   m_planestate = bl;
 }
 
-BlockListView& MediaCenterController::GetBlockListView()
-{
-  return m_blocklist;
-}
+// BlockListView& MediaCenterController::GetBlockListView()
+// {
+//   return m_blocklist;
+// }
 
 media_tree::model& MediaCenterController::GetMediaTree()
 {
@@ -207,7 +178,8 @@ media_tree::model& MediaCenterController::GetMediaTree()
 
 HWND MediaCenterController::GetFilmNameEdit()
 {
-  return m_blocklist.GetFilmNameEdit();
+  //return m_blocklist.GetFilmNameEdit();
+  return NULL;
 }
 
 CoverController& MediaCenterController::GetCoverDownload()
@@ -215,60 +187,31 @@ CoverController& MediaCenterController::GetCoverDownload()
   return m_cover;
 }
 
-void MediaCenterController::SetMCCover()
-{
-  ResLoader resLoader;
-  HBITMAP mccover = resLoader.LoadBitmap(L"skin\\mccover.jpg");
-
-  if (mccover)
-  {
-    m_mccover.Attach(mccover);
-
-    m_mccover.GetBitmap(&m_mccoverbm);
-
-    if(m_mccoverbm.bmBitsPixel != 32)
-      return;
-
-    for (int y=0; y<m_mccoverbm.bmHeight; y++)
-    {
-      BYTE * pPixel = (BYTE *) m_mccoverbm.bmBits + m_mccoverbm.bmWidth * 4 * y;
-      for (int x=0; x<m_mccoverbm.bmWidth; x++)
-      {
-        pPixel[0] = pPixel[0] * pPixel[3] / 255; 
-        pPixel[1] = pPixel[1] * pPixel[3] / 255; 
-        pPixel[2] = pPixel[2] * pPixel[3] / 255; 
-        pPixel += 4;
-      }
-    }
-    
-  }
-}
-
 void MediaCenterController::UpdateBlock(RECT rc)
 {
   // update the view
-  m_blocklist.Update(rc.right - rc.left, rc.bottom - rc.top);
+  //m_blocklist.Update(rc.right - rc.left, rc.bottom - rc.top);
 }
 
 void MediaCenterController::DelBlock(int index)
 {
-  m_blocklist.DeleteBlock(index);
-  ::InvalidateRect(m_hwnd, 0, FALSE);
+  //m_blocklist.DeleteBlock(index);
+  //::InvalidateRect(m_hwnd, 0, FALSE);
 }
 
-void MediaCenterController::SetCover(BlockUnit* unit, std::wstring orgpath)
-{
-  std::vector<MediaData> vtMD = m_blocklist.GetCurrentMediaDatas();
-  std::vector<MediaData>::iterator it = vtMD.begin();
-  while (it != vtMD.end())
-  {
-    m_cover.SetBlockUnit(*it);
-    
-    ++it;
-  }
-
-  m_cover._Start();
-}
+// void MediaCenterController::SetCover(BlockUnit* unit, std::wstring orgpath)
+// {
+//   std::vector<MediaData> vtMD = m_blocklist.GetCurrentMediaDatas();
+//   std::vector<MediaData>::iterator it = vtMD.begin();
+//   while (it != vtMD.end())
+//   {
+//     m_cover.SetBlockUnit(*it);
+//     
+//     ++it;
+//   }
+// 
+//   m_cover._Start();
+// }
 
 HFONT MediaCenterController::GetFilmTextFont()
 {
@@ -317,23 +260,170 @@ void MediaCenterController::HandlePlayback(const MediaData &md)
   }
 }
 
-void MediaCenterController::HandleDelBlock(const BlockUnit *pBlock)
-{
-  //typedef media_tree::model::TreeIterator TreeIterator;
-  //TreeIterator it = m_treeModel.findFolder(pBlock->m_itFile->file_data.path);
-  //TreeIterator itEnd;
-  //if (it != itEnd)
-  //{
-  //  MediaTreeFiles::iterator itFindFile = it->lsFiles.begin();
-  //  while (itFindFile != it->lsFiles.end())
-  //  {
-  //    if (itFindFile->file_data.filename == pBlock->m_itFile->file_data.filename)
-  //    {
-  //      itFindFile->file_data.bHide = pBlock->m_itFile->file_data.bHide;
-  //      break;
-  //    }
+// void MediaCenterController::HandleDelBlock(const BlockUnit *pBlock)
+// {
+//   //typedef media_tree::model::TreeIterator TreeIterator;
+//   //TreeIterator it = m_treeModel.findFolder(pBlock->m_itFile->file_data.path);
+//   //TreeIterator itEnd;
+//   //if (it != itEnd)
+//   //{
+//   //  MediaTreeFiles::iterator itFindFile = it->lsFiles.begin();
+//   //  while (itFindFile != it->lsFiles.end())
+//   //  {
+//   //    if (itFindFile->file_data.filename == pBlock->m_itFile->file_data.filename)
+//   //    {
+//   //      itFindFile->file_data.bHide = pBlock->m_itFile->file_data.bHide;
+//   //      break;
+//   //    }
+// 
+//   //    ++itFindFile;
+//   //  }
+//   //}
+// }
 
-  //    ++itFindFile;
-  //  }
-  //}
+
+void MediaCenterController::ShowMC()
+{
+  if (!m_hwnd)
+    return;
+
+  SetTimer(m_hwnd, TIMER_MC_RENDER, 33, NULL);
+  SetTimer(m_hwnd, TIMER_MC_UPDATE, 13, NULL);
+
+  SetClassLong(m_hwnd, GCL_HCURSOR, (LONG)::LoadCursor(NULL, IDC_ARROW));
+  m_planestate = TRUE;
+
+  ::InvalidateRect(m_hwnd, NULL, TRUE);
+
+  RECT rc;
+  ::GetClientRect(m_hwnd, &rc);
+  CString log(L"");
+  MCDEBUG(log);
+}
+
+void MediaCenterController::HideMC()
+{
+  m_planestate = FALSE;
+
+  KillTimer(m_hwnd, TIMER_MC_RENDER);
+  KillTimer(m_hwnd, TIMER_MC_UPDATE);
+  // restore defaults cursor
+  SetClassLong(m_hwnd, GCL_HCURSOR, (LONG)::LoadCursor(NULL, IDC_HAND));
+  ::InvalidateRect(m_hwnd, NULL, TRUE);
+}
+
+void MediaCenterController::SetFrame(HWND hwnd)
+{
+  m_hwnd = hwnd;
+}
+
+BOOL MediaCenterController::GetPlaneState()
+{
+  return m_planestate;
+}
+
+void MediaCenterController::Update()
+{
+  m_isupdate = TRUE;
+  m_updatetime = timeGetTime();
+}
+
+void MediaCenterController::StopUpdate()
+{
+  m_isupdate = FALSE;
+  m_updatetime = 0;
+}
+
+void MediaCenterController::Render()
+{
+  m_isrender = TRUE;
+}
+
+void MediaCenterController::DoPaint(HDC hdc, RECT rcClient)
+{
+//   if (m_blocklist.IsEmpty())
+//   {
+//     if (!m_mccover)
+//       return;
+// 
+//     WTL::CDC dcmem;
+//     HBITMAP  hold;
+// 
+//     dcmem.CreateCompatibleDC(hdc);
+//     hold = dcmem.SelectBitmap(m_mccover);
+// 
+//     SetStretchBltMode(hdc, HALFTONE);
+//     SetBrushOrgEx(hdc, 0, 0, NULL);
+//     StretchBlt(hdc, rcClient.left, rcClient.top, rcClient.right, rcClient.bottom,
+//                dcmem, 0, 0, m_mccoverbm.bmWidth, m_mccoverbm.bmHeight, SRCCOPY);
+// 
+//     dcmem.SelectBitmap(hold);
+//     dcmem.DeleteDC();
+//   }
+//   else
+  WTL::CMemoryDC dc(hdc, rcClient);
+  HBRUSH hbrush = ::CreateSolidBrush(COLORREF(0xb3b3b3));
+  dc.FillRect(&rcClient, hbrush);
+  m_mclist.DoPaint(dc, rcClient);
+  DeleteObject(hbrush);
+}
+
+void MediaCenterController::OnTimer(UINT_PTR nIDEvent)
+{
+  if (m_isrender && nIDEvent == TIMER_MC_RENDER)
+  {
+    m_isrender = FALSE;
+    ::InvalidateRect(m_hwnd, NULL, TRUE);
+  }
+  else if (m_isupdate && nIDEvent == TIMER_MC_UPDATE && m_updatetime)
+  {
+    Render();
+    DWORD deltatime = timeGetTime() - m_updatetime;
+    m_mclist.Update(deltatime);
+    m_updatetime = timeGetTime();
+    Render();
+  }
+}
+
+BOOL MediaCenterController::ActMouseMove(const POINT& pt)
+{
+  if (!m_planestate)
+    return FALSE;
+
+  m_mclist.ActMouseMove(pt);
+
+  return TRUE;
+}
+
+BOOL MediaCenterController::ActMouseLBDown(const POINT& pt)
+{
+  if (!m_planestate)
+    return FALSE;
+
+  m_mclist.ActMouseLBDown(pt);
+  if (m_mclist.GetScrollBar()->IsDragBar())
+    ::SetCapture(m_hwnd);
+
+  return TRUE;
+}
+
+BOOL MediaCenterController::ActMouseLBUp(const POINT& pt)
+{
+  if (!m_planestate)
+    return FALSE;
+
+  if (m_mclist.GetScrollBar()->IsDragBar())
+    ::ReleaseCapture();
+  m_mclist.ActMouseLBUp(pt);
+
+  return TRUE;
+}
+
+BOOL MediaCenterController::ActWindowChange(int w, int h)
+{
+  if (!m_planestate)
+    return FALSE;
+
+  m_mclist.ActWindowChange(w, h);
+  return TRUE;
 }

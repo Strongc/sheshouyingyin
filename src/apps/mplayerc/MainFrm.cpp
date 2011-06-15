@@ -6627,7 +6627,8 @@ void CMainFrame::OnFileCloseMedia()
 
   if (MediaCenterController::GetInstance()->GetPlaneState())
   {
-    m_wndView.ShowMediaCenter(TRUE);
+    //m_wndView.ShowMediaCenter(TRUE);
+    MediaCenterController::GetInstance()->HideMC();
     HideToolBar();
   }
 }
@@ -14940,16 +14941,23 @@ void CMainFrame::OnShowMediaCenter()
     return;
 
   m_bmediacentershow  = !m_bmediacentershow;
-  m_wndView.ShowMediaCenter(m_bmediacentershow);
+  //m_wndView.ShowMediaCenter(m_bmediacentershow);
   
   if (!m_bmediacentershow)
+  {
+    MediaCenterController::GetInstance()->HideMC();
     ShowToolBar();
+  }
   else
+  {
+    MediaCenterController::GetInstance()->ShowMC();
     HideToolBar();
+  }
 
   m_btoolbardisplay = !m_bmediacentershow;
   RedrawNonClientArea();
 
+  // why do this??
   CRect rc;
   GetClientRect(&rc);
   PostMessage(WM_SIZE, 0, MAKELPARAM(rc.Width(), rc.Height()));

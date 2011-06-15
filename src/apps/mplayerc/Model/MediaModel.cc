@@ -250,81 +250,6 @@ void MediaModel::FindOne(MediaData& data, const MediaFindCondition& condition)
 void MediaModel::Find(MediaDatas& data, const MediaFindCondition& condition,
           int limit_start, int limit_end)
 {
-  // Use the unique id
-  if (condition.uniqueid > 0)
-  {
-    std::vector<long long> vtUniqueID;
-    std::vector<std::wstring > vtPath;
-    std::vector<std::wstring > vtFilename;
-    std::vector<std::wstring > vtFilmname;
-    std::vector<std::wstring > vtThumbnailPath;
-    std::vector<int> vtVideoTime;
-    std::vector<bool> vtHide;
-
-    std::wstringstream ss;
-    ss << L" WHERE uniqueid=" << condition.uniqueid
-       << L" limit " << limit_start << L"," << limit_end;
-
-    typedef MediaDB<long long, std::wstring, std::wstring, std::wstring, std::wstring, int, bool> tpdMediaDBDB;
-    tpdMediaDBDB::exec(L"SELECT uniqueid, path, filename, filmname, thumbnailpath, videotime, hide FROM media_data" + ss.str()
-                      , &vtUniqueID, &vtPath, &vtFilename, &vtFilmname, &vtThumbnailPath, &vtVideoTime, &vtHide);
-
-    for (size_t i = 0; i < vtUniqueID.size(); ++i)
-    {
-      MediaData md;
-      md.uniqueid = vtUniqueID[i];
-      md.path = vtPath[i];
-      md.filename = vtFilename[i];
-      md.filmname = vtFilmname[i];
-      md.thumbnailpath = vtThumbnailPath[i];
-      md.videotime = vtVideoTime[i];
-      md.bHide = vtHide[i];
-
-      data.push_back(md);
-    }
-
-    return;
-  }
-
-  // Use the filename
-  if (!condition.filename.empty())
-  {
-    std::vector<long long> vtUniqueID;
-    std::vector<std::wstring > vtPath;
-    std::vector<std::wstring> vtFilename;
-    std::vector<std::wstring > vtFilmname;
-    std::vector<std::wstring > vtThumbnailPath;
-    std::vector<int> vtVideoTime;
-    std::vector<bool> vtHide;
-
-    std::wstringstream ss;
-    ss << L" WHERE filename='" << condition.filename << L"'"
-      << L" limit " << limit_start << L"," << limit_end;
-
-    typedef MediaDB<long long, std::wstring, std::wstring, std::wstring, std::wstring, int, bool> tpdMediaDBDB;
-    tpdMediaDBDB::exec(L"SELECT uniqueid, path, filename, filmname, thumbnailpath, videotime, hide FROM media_data" + ss.str()
-                      , &vtUniqueID, &vtPath, &vtFilename, &vtFilmname, &vtThumbnailPath, &vtVideoTime, &vtHide);
-
-    for (size_t i = 0; i < vtUniqueID.size(); ++i)
-    {
-      MediaData md;
-      md.uniqueid = vtUniqueID[i];
-      md.path = vtPath[i];
-      md.filename = vtFilename[i];
-      md.filmname = vtFilmname[i];
-      md.thumbnailpath = vtThumbnailPath[i];
-      md.videotime = vtVideoTime[i];
-      md.bHide = vtHide[i];
-
-      data.push_back(md);
-    }
-
-    return;
-  }
-}
-
-void MediaModel::Find(int limit_start, int limit_end, MediaDatas& data)
-{
   std::vector<long long> vtUniqueID;
   std::vector<std::wstring > vtPath;
   std::vector<std::wstring > vtFilename;
@@ -332,13 +257,22 @@ void MediaModel::Find(int limit_start, int limit_end, MediaDatas& data)
   std::vector<std::wstring > vtThumbnailPath;
   std::vector<int> vtVideoTime;
   std::vector<bool> vtHide;
-  
-  std::wstringstream ss;
-  ss << L" limit " << limit_start << L"," << limit_end;
-  
+
+  std::wstringstream sql;
   typedef MediaDB<long long, std::wstring, std::wstring, std::wstring, std::wstring, int, bool> tpdMediaDBDB;
-  tpdMediaDBDB::exec(L"SELECT uniqueid, path, filename, filmname, thumbnailpath, videotime, hide FROM media_data" + ss.str()
-    , &vtUniqueID, &vtPath, &vtFilename, &vtFilmname, &vtThumbnailPath, &vtVideoTime, &vtHide);
+
+  sql << L"SELECT uniqueid, path, filename, filmname, thumbnailpath, videotime, hide FROM media_data";
+
+  // Use the unique id
+  if (condition.uniqueid > 0)
+    sql << L" WHERE uniqueid=" << condition.uniqueid;
+  else if (!condition.filename.empty())
+    sql << L" WHERE filename='" << condition.filename << L"'";
+
+  sql << L" limit " << limit_start << L"," << limit_end;
+
+  OutputDebugString(sql.str().c_str());
+  tpdMediaDBDB::exec(sql.str(), &vtUniqueID, &vtPath, &vtFilename, &vtFilmname, &vtThumbnailPath, &vtVideoTime, &vtHide);
 
   for (size_t i = 0; i < vtUniqueID.size(); ++i)
   {
@@ -353,6 +287,7 @@ void MediaModel::Find(int limit_start, int limit_end, MediaDatas& data)
 
     data.push_back(md);
   }
+
 }
 
 void MediaModel::Delete(const MediaFindCondition& condition)
