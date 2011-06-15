@@ -59,18 +59,16 @@ void TextEdit::SetTextVCenter()
   CRect rc = CRect(0,0,0,0);
   GetClientRect(&rc);
 
-  HDC dc = GetDC()->m_hDC;
-  CDC pDC;
-  pDC.Attach(dc);
-  TEXTMETRIC tm;
-  pDC.GetTextMetrics(&tm);
-  pDC.Detach();
-  int nFontHeight = tm.tmHeight + tm.tmExternalLeading;
+  CFont *pFont = GetFont();
+
+  LOGFONT lf = {0};
+  pFont->GetLogFont(&lf);
+
+  int nFontHeight = lf.lfHeight;
   int nMargin = (rc.Height() - nFontHeight) / 2;
 
   rc.DeflateRect(0,nMargin);
   SetRectNP(&rc);
-  ::ReleaseDC(m_hWnd, dc);
 }
 
 BEGIN_MESSAGE_MAP(TextEdit, CEdit)
