@@ -62,10 +62,12 @@ void SPMCList::DoPaint(WTL::CDC& dc, RECT& rcclient)
     dcmem.CreateCompatibleDC(dc);
     hold = dcmem.SelectBitmap(m_cover);
 
-    SetStretchBltMode(dc, HALFTONE);
+    CPoint piCenter = CRect(rcclient).CenterPoint();
+
     SetBrushOrgEx(dc, 0, 0, NULL);
-    StretchBlt(dc, rcclient.left, rcclient.top, rcclient.right, rcclient.bottom,
-               dcmem, 0, 0, m_coversize.cx, m_coversize.cy, SRCCOPY);
+    BLENDFUNCTION bf = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
+    AlphaBlend(dc, piCenter.x - m_coversize.cx / 2, piCenter.y - m_coversize.cy / 2, m_coversize.cx, m_coversize.cy,
+               dcmem, 0, 0, m_coversize.cx, m_coversize.cy, bf);
 
     dcmem.SelectBitmap(hold);
     dcmem.DeleteDC();
@@ -495,7 +497,7 @@ void SPMCList::SetCover()
     return;
 
   ResLoader resLoader;
-  HBITMAP cover = resLoader.LoadBitmap(L"skin\\mccover.jpg");
+  HBITMAP cover = resLoader.LoadBitmap(L"skin\\mccover.png");
 
   if (cover)
   {
