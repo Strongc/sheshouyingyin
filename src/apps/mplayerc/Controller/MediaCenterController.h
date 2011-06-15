@@ -6,8 +6,6 @@
 #include "../Model/MediaTreeModel.h"
 #include "MediaSpiderFolderTree.h"
 #include <map>
-//#include "..\UserInterface\Renderer\BlockList.h"
-//#include "LoadMediaDataFromDB.h"
 //#include "..\UserInterface\Renderer\MCStatusBar.h"
 #include "CoverController.h"
 #include "..\UserInterface\Renderer\MCList.h"
@@ -33,7 +31,6 @@ public:
 
 public:
   // Gui control, should not for other use
-
    void UpdateBlock(RECT rc);
    void DelBlock(int i);
 
@@ -41,7 +38,6 @@ public:
 
    void SetPlaneState(BOOL bl);
 
-   //BlockListView& GetBlockListView();
    media_tree::model& GetMediaTree();
    HWND GetFilmNameEdit();
    CoverController& GetCoverDownload();
@@ -67,13 +63,6 @@ public:
   void CoverThreadStop();
 
   void SaveTreeDataToDB();
-
-//   void LoadMediaData(int direction, std::list<BlockUnit*>* list, int viewcapacity, 
-//                      int listcapacity, int remain, int times = 1);
-  
-//   HANDLE GetMediaDataThreadHandle();
-// 
-//   BOOL LoadMediaDataAlive();
 
   // ****************************** //
 public:
@@ -113,11 +102,9 @@ private:
 private: 
   BOOL m_isupdate;
   BOOL m_isrender;
-  //BlockListView m_blocklist;
 
   CoverController m_cover;
   BOOL m_initiablocklist;
-  //LoadMediaDataFromDB m_loaddata;
   HFONT m_hFilmTextFont;
   
   // Data
