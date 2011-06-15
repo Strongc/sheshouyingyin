@@ -44,8 +44,11 @@ BOOL MCDBSource::PreLoad(UINT nums)
 
   SetReadNums(nums);
 
-  m_frontbuff.swap(m_tmpdatas);
-  m_frontcount = m_frontbuff.size();
+  if (m_frontbuff.empty())
+  {
+    m_frontbuff.swap(m_tmpdatas);
+    m_frontcount = m_frontbuff.size();
+  }
 
   if (nums > m_frontcount)
     nums = m_frontcount;
@@ -57,7 +60,7 @@ BOOL MCDBSource::PreLoad(UINT nums)
   return TRUE;
 }
 
-void MCDBSource::AdjustRange(UINT nums)
+void MCDBSource::AdjustRange(UINT nums, UINT columns)
 {
   UINT x = 0;
   UINT len = 0;
@@ -66,11 +69,17 @@ void MCDBSource::AdjustRange(UINT nums)
     return;
   else if (nums < m_readnums)
   {
-    log.Format(L"[AdjustRange_0_0] m_pos:%d\n", m_pos);MCDEBUG(log);
     int len = m_ep - m_sp;
     x = m_frontbuff.end() - m_sp;
     if (nums > x)
+    {
+      int val = x % columns;
+      m_fixnums = (!val) ? 0 : columns-val;
       nums = x;
+    }
+    else
+      m_fixnums = 0;
+    log.Format(L"[AdjustRange_0_0] m_pos:%d, x:%d, columns:%d, m_fixnums:%d\n", m_pos,x,columns,m_fixnums);MCDEBUG(log);
     m_ep = m_sp + nums;
     m_pos -= (len - nums);
     log.Format(L"[AdjustRange_0_1] m_pos:%d\n", m_pos);MCDEBUG(log);
@@ -79,8 +88,14 @@ void MCDBSource::AdjustRange(UINT nums)
   {
     x = m_frontbuff.end() - m_sp;
     if (nums > x)
+    {
+      int val = x % columns;
+      m_fixnums = (!val) ? 0 : columns-val;
       nums = x;
-    log.Format(L"[AdjustRange_1_0] m_pos:%d\n", m_pos);MCDEBUG(log);
+    }
+    else
+      m_fixnums = 0;
+    log.Format(L"[AdjustRange_1_0] m_pos:%d, x:%d,m_fixnums:%d, read:%d,columns:%d\n", m_pos, x, m_fixnums, m_readnums,columns);MCDEBUG(log);
     int len = m_ep - m_sp;
     m_ep = m_sp + nums;
     m_pos += (m_ep - m_sp) - len;
@@ -168,10 +183,7 @@ int MCDBSource::LoadRowDatas(BOOL direction, UINT movenums)
         return m_readerstatus;
       }
       else if (x < movenums)
-      {
-        m_fixnums = movenums - x;
         movenums = x;
-      }
     }
 
     m_sp -= movenums;
