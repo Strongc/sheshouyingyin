@@ -173,62 +173,70 @@ void media_tree::model::save2DB()
 
   MediaSQLite<>::exec(L"begin transaction");
 
-  MediaTreeFolders::tree_type::pre_order_iterator it = m_lsFolderTree.pre_order_begin();
-  std::wstringstream ssSQL;
-  while (it != m_lsFolderTree.pre_order_end())
+  try
   {
-    // store path info
-    std::wstring sFolderPath = fullFolderPath(it.node());
-
-    if (exists(sFolderPath))
+    MediaTreeFolders::tree_type::pre_order_iterator it = m_lsFolderTree.pre_order_begin();
+    std::wstringstream ssSQL;
+    while (it != m_lsFolderTree.pre_order_end())
     {
-      // store path
-      MediaPath mp;
-      mp.path = sFolderPath;
-      m_model.Add(mp);
+      // store path info
+      std::wstring sFolderPath = fullFolderPath(it.node());
 
-      // store file info
-      MediaTreeFiles &files = it->lsFiles;
-      MediaTreeFiles::iterator itFile = files.begin();
-      while (itFile != files.end())
+      if (exists(sFolderPath))
       {
-        if (exists(mp.path + itFile->file_data.filename))
-        {
-          MediaData md;
-          md.path = sFolderPath;
-          md.filename = itFile->file_data.filename;
-          md.thumbnailpath = itFile->file_data.thumbnailpath;
-          md.filmname = itFile->file_data.filmname;
-          md.videotime = itFile->file_data.videotime;
-          md.bHide = itFile->file_data.bHide;
-          md.hash = itFile->file_data.hash;
-          md.createtime = itFile->file_data.createtime;
+        // store path
+        MediaPath mp;
+        mp.path = sFolderPath;
+        m_model.Add(mp);
 
-          m_model.Add(md);
-        }
-        else
+        // store file info
+        MediaTreeFiles &files = it->lsFiles;
+        MediaTreeFiles::iterator itFile = files.begin();
+        while (itFile != files.end())
         {
-          ssSQL.str(L"");
-          ssSQL << L"DELETE FROM media_data WHERE path='" << mp.path << L"'"
-            << L" and filename='" << itFile->file_data.filename << L"'";
-          MediaDB<>::exec(ssSQL.str());
-        }
+          if (exists(mp.path + itFile->file_data.filename))
+          {
+            MediaData md;
+            md.path = sFolderPath;
+            md.filename = itFile->file_data.filename;
+            md.thumbnailpath = itFile->file_data.thumbnailpath;
+            md.filmname = itFile->file_data.filmname;
+            md.videotime = itFile->file_data.videotime;
+            md.bHide = itFile->file_data.bHide;
+            md.hash = itFile->file_data.hash;
+            md.createtime = itFile->file_data.createtime;
 
-        ++itFile;
+            m_model.Add(md);
+          }
+          else
+          {
+            ssSQL.str(L"");
+            ssSQL << L"DELETE FROM media_data WHERE path='" << mp.path << L"'"
+              << L" and filename='" << itFile->file_data.filename << L"'";
+            MediaDB<>::exec(ssSQL.str());
+          }
+
+          ++itFile;
+        }
       }
-    }
-    else
-    {
-      ssSQL.str(L"");
-      ssSQL << L"DELETE FROM detect_path WHERE path='" << sFolderPath << L"'";
-      MediaDB<>::exec(ssSQL.str());
+      else
+      {
+        ssSQL.str(L"");
+        ssSQL << L"DELETE FROM detect_path WHERE path='" << sFolderPath << L"'";
+        MediaDB<>::exec(ssSQL.str());
 
-      ssSQL.str(L"");
-      ssSQL << L"DELETE FROM media_data WHERE path='" << sFolderPath << L"'";
-      MediaDB<>::exec(ssSQL.str());
-    }
+        ssSQL.str(L"");
+        ssSQL << L"DELETE FROM media_data WHERE path='" << sFolderPath << L"'";
+        MediaDB<>::exec(ssSQL.str());
+      }
 
-    ++it;
+      ++it;
+    }
+  }
+  catch (...)
+  {
+    MediaSQLite<>::exec(L"rollback transaction");  // rollback
+    throw;
   }
 
   MediaSQLite<>::exec(L"end transaction");

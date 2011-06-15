@@ -67,7 +67,7 @@ class tcl::basic_tree
 		stored_type* get() { return pElement; }
 		bool is_root() const { return pParent_node == 0; }
 		size_type size() const { return children.size(); }
-		size_type max_size() const { return std::numeric_limits<int>().max(); }
+		size_type max_size() const { return (std::numeric_limits<int>().max)(); }
 		bool empty() const { return children.empty(); }
 		tree_type* parent() { return pParent_node; }
 		const tree_type* parent() const { return pParent_node; }

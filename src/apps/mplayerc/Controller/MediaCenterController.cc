@@ -178,8 +178,7 @@ media_tree::model& MediaCenterController::GetMediaTree()
 
 HWND MediaCenterController::GetFilmNameEdit()
 {
-  //return m_blocklist.GetFilmNameEdit();
-  return NULL;
+  return m_mclist.GetFilmNameEdit();
 }
 
 CoverController& MediaCenterController::GetCoverDownload()
@@ -317,6 +316,12 @@ void MediaCenterController::HideMC()
 void MediaCenterController::SetFrame(HWND hwnd)
 {
   m_hwnd = hwnd;
+  m_mclist.InitTextEdit();  // create the text edit
+}
+
+HWND MediaCenterController::GetFrame()
+{
+  return m_hwnd;
 }
 
 BOOL MediaCenterController::GetPlaneState()
@@ -428,4 +433,22 @@ BOOL MediaCenterController::ActWindowChange(int w, int h)
 
   m_mclist.ActWindowChange(w, h);
   return TRUE;
+}
+
+BOOL MediaCenterController::ActLButtonDblClick(const POINT& pt)
+{
+  if (!m_planestate)
+    return FALSE;
+
+  m_mclist.ActLButtonDblClick(pt);
+
+  return TRUE;
+}
+
+BOOL MediaCenterController::ActRButtonUp(const POINT &pt)
+{
+  if (!m_planestate)
+    return FALSE;
+
+  return m_mclist.ActRButtonUp(pt);
 }

@@ -44,8 +44,11 @@ BOOL MCDBSource::PreLoad(UINT nums)
 
   SetReadNums(nums);
 
-  m_frontbuff.swap(m_tmpdatas);
-  m_frontcount = m_frontbuff.size();
+  if (m_frontbuff.empty())
+  {
+    m_frontbuff.swap(m_tmpdatas);
+    m_frontcount = m_frontbuff.size();
+  }
 
   if (nums > m_frontcount)
     nums = m_frontcount;
