@@ -2,6 +2,8 @@
 #define OPTIONSUBTITLEPAGE_WIN_H
 
 #include "../../resource.h"
+#include "../Support/FontParamsManage.h"
+#include "../Support/SubtitleStyle.h"
 
 class OptionSubtitlePage:
   public WTL::CPropertyPageImpl<OptionSubtitlePage>,
@@ -16,6 +18,7 @@ public:
     MSG_WM_INITDIALOG(OnInitDialog)
     MSG_WM_DESTROY(OnDestroy)
     COMMAND_HANDLER_EX(IDC_LIST, LBN_SELCHANGE, OnSubtitleStyleChange)
+    COMMAND_HANDLER_EX(IDC_LIST, LBN_DBLCLK, OnListDoubleClick)
     COMMAND_HANDLER_EX(IDC_BUTTON_SAVESUBTITLE_CUSTOM_FOLDER, BN_CLICKED, OnBrowserForFolder)
     COMMAND_HANDLER_EX(IDC_RADIO_SAVESUBTITLE_SAME_FOLDER, BN_CLICKED, OnSelectSameFolder)
     COMMAND_HANDLER_EX(IDC_RADIO_SAVESUBTITLE_CUSTOM_FOLDER, BN_CLICKED, OnSelectCustomFolder)
@@ -33,6 +36,7 @@ public:
   void OnDestroy();
 
   void OnSubtitleStyleChange(UINT uNotifyCode, int nID, CWindow wndCtl);
+  void OnListDoubleClick(UINT uNotifyCode, int nID, CWindow wndCtl);
 
   void OnBrowserForFolder(UINT uNotifyCode, int nID, CWindow wndCtl);
   void OnSelectSameFolder(UINT uNotifyCode, int nID, CWindow wndCtl);
@@ -48,6 +52,11 @@ public:
 
   void RefreshStyles();
 
+  // before draw list items.
+  void PreserveItemDivideRect(WTL::CRect rc, int index, BOOL bdivide);
+  WTL::CRect GetItemDivideRect(int index);
+  void PaintListItemBackground(HDC dc, int width, int height);
+
 private:
   WTL::CComboBox  m_secsubtitlestyle;
   WTL::CListBox   m_subtitlestyle;
@@ -61,6 +70,10 @@ private:
   int m_styleentry_width;
 
   int m_fetchsubtitlefromshooter;
+
+  FontParamsManage m_fontparams;
+  DrawSubtitle m_subtitle;
+  std::vector<WTL::CRect> m_rcvec;
 
   void ApplySubtitleStyle();
   int ApplySubtitleSavePath();
