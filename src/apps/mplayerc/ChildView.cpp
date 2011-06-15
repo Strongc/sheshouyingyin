@@ -629,16 +629,6 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
     if (!m_tip.CreateEx(WS_EX_NOACTIVATE|WS_EX_TOPMOST|dwTransFlag, _T("SVPLayered"), _T("TIP"), WS_POPUP, CRect( 20,20,21,21 ) , this,  0))
       AfxMessageBox(ResStr(IDS_MSG_CREATE_SEEKTIP_FAIL));
 
-
-//     m_blocklistview->SetFrameHwnd(m_hWnd);
-//     m_blocklistview->CreateTextEdit();  // create the film name editor
-//     m_blocklistview->SetScrollDirection(&m_direction);
-//     m_blocklistview->SetScrollSpeed(&m_scrollspeed);
-
-//     m_menu.LoadMenu(IDR_MEDIACENTERMENU);
-// 
-//     SetMenu(&m_menu);
-
 	return 0;
 }
 
@@ -736,25 +726,17 @@ BOOL CChildView::OnRButtonUP(UINT nFlags, CPoint point)
   BOOL bmenutrack = FALSE;
 
   if (m_mediacenter->GetPlaneState())
-  {
- /*   bmenutrack = m_blocklistview->HandleRButtonUp(point);*/
-  }
-
+    bmenutrack = m_mediacenter->ActRButtonUp(point);
   
   return bmenutrack;
 }
 
 BOOL CChildView::OnLButtonDBCLK(UINT nFlags, CPoint point)
 {
-  BOOL bl = FALSE;
+  if (m_mediacenter->ActLButtonDblClick(point))
+    return TRUE;
 
-  if (m_mediacenter->GetPlaneState())
-  {
-//     bl = TRUE;
-//     m_blocklistview->HandleLButtonDblClk(point);
-  }
-
-  return bl;
+  return FALSE;
 }
 
 LRESULT CChildView::OnNcHitTest(CPoint point)

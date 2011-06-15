@@ -78,6 +78,7 @@ public:
   // ****************************** //
 public:
   void SetFrame(HWND hwnd);
+  HWND GetFrame();
 
   void ShowMC();
   void HideMC();
@@ -96,6 +97,8 @@ public:
   BOOL ActMouseLBDown(const POINT& pt);
   BOOL ActMouseLBUp(const POINT& pt);
   BOOL ActWindowChange(int w, int h);
+  BOOL ActLButtonDblClick(const POINT& pt);
+  BOOL ActRButtonUp(const POINT &pt);
 
 private:
   HWND m_hwnd;
