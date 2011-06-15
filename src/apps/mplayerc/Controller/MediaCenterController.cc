@@ -108,24 +108,24 @@ std::wstring MediaCenterController::GetMediaHash(const std::wstring &sFilePath)
 // data control
 void MediaCenterController::SpiderThreadStart()
 {
-//   m_spider._Stop();
-//   m_spider._Start();
+   m_spider._Stop();
+   m_spider._Start();
 }
 
 void MediaCenterController::SpiderThreadStop()
 {
-   //m_spider._Stop(500);
+   m_spider._Stop(500);
 }
 
 void MediaCenterController::CoverThreadStart()
 {
-//   m_cover._Stop();
-//   m_cover._Start();
+   m_cover._Stop();
+   m_cover._Start();
 }
 
 void MediaCenterController::CoverThreadStop()
 {
-  //m_cover._Stop(500);
+  m_cover._Stop(500);
 }
 
 void MediaCenterController::SaveTreeDataToDB()
@@ -134,42 +134,12 @@ void MediaCenterController::SaveTreeDataToDB()
   m_treeModel.delTree();
 }
 
-// void MediaCenterController::LoadMediaData(int direction, std::list<BlockUnit*>* list,
-//                                           int viewcapacity, int listcapacity, 
-//                                           int remain, int times)
-// {
-//   m_loaddata._Stop();
-//   m_loaddata.SetList(list);
-//   m_loaddata.SetDirection(direction);
-//   m_loaddata.SetWindownCapacity(viewcapacity);
-//   m_loaddata.SetAmount(listcapacity);
-//   m_loaddata.SetListRemainItem(remain);
-//   m_loaddata.SetExecuteTime(times);
-//   m_loaddata._Start();
-// }
-
-// HANDLE MediaCenterController::GetMediaDataThreadHandle()
-// {
-//   return m_loaddata._GetThreadHandle();
-// }
-// 
-// BOOL MediaCenterController::LoadMediaDataAlive()
-// {
-//   return m_loaddata._Is_alive();
-// }
-
 //////////////////////////////////////////////////////////////////////////////
 //  GUI control
-
 void MediaCenterController::SetPlaneState(BOOL bl)
 {
   m_planestate = bl;
 }
-
-// BlockListView& MediaCenterController::GetBlockListView()
-// {
-//   return m_blocklist;
-// }
 
 media_tree::model& MediaCenterController::GetMediaTree()
 {
@@ -348,26 +318,6 @@ void MediaCenterController::Render()
 
 void MediaCenterController::DoPaint(HDC hdc, RECT rcClient)
 {
-//   if (m_blocklist.IsEmpty())
-//   {
-//     if (!m_mccover)
-//       return;
-// 
-//     WTL::CDC dcmem;
-//     HBITMAP  hold;
-// 
-//     dcmem.CreateCompatibleDC(hdc);
-//     hold = dcmem.SelectBitmap(m_mccover);
-// 
-//     SetStretchBltMode(hdc, HALFTONE);
-//     SetBrushOrgEx(hdc, 0, 0, NULL);
-//     StretchBlt(hdc, rcClient.left, rcClient.top, rcClient.right, rcClient.bottom,
-//                dcmem, 0, 0, m_mccoverbm.bmWidth, m_mccoverbm.bmHeight, SRCCOPY);
-// 
-//     dcmem.SelectBitmap(hold);
-//     dcmem.DeleteDC();
-//   }
-//   else
   WTL::CMemoryDC dc(hdc, rcClient);
   HBRUSH hbrush = ::CreateSolidBrush(COLORREF(0xb3b3b3));
   dc.FillRect(&rcClient, hbrush);
