@@ -85,6 +85,7 @@ private:
 
   std::vector<BlockUnit*> m_frontbuff;
   std::vector<BlockUnit*> m_tmpdatas;
+  UINT m_frontcount;
 
   BOOL m_isdbrun;
   // determine the db read direction

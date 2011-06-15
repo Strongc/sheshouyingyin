@@ -276,7 +276,19 @@ BOOL SPMCList::ActMouseLBUp(const POINT& pt)
   return ret;
 }
 
-BOOL SPMCList::ActWindowChange(int w, int h)
+void SPMCList::InitMCList(int w, int h)
+{
+  SetMCRect(w, h);
+  if (m_dbsource->PreLoad(m_blockcount))
+  {
+    m_listempty = FALSE;
+    m_sbar->SetDisplay(m_dbsource->IsMoreData());
+  }
+  else
+    SetCover();
+}
+
+void SPMCList::SetMCRect(int w, int h)
 {
   m_wndsize.cx = w;
   m_wndsize.cy = h;
@@ -284,24 +296,21 @@ BOOL SPMCList::ActWindowChange(int w, int h)
   AlignColumns();
   AlignRows();
 
-  UINT nums = m_x.size() * m_y.size();
- 
+  m_blockcount = m_x.size() * m_y.size();
+}
+
+BOOL SPMCList::ActWindowChange(int w, int h)
+{
+  SetMCRect(w, h);
+
   m_lockpaint = TRUE;
-  if (m_listempty)
-  {
-    if (m_dbsource->PreLoad(nums))
-      m_listempty = FALSE;
-    else
-      SetCover();
-  }
-  else
-  {
-    m_dbsource->AdjustRange(nums);
-    m_dbsource->SetReadNums(nums);
-  }
+
+  if (!m_listempty)
+    m_dbsource->AdjustRange(m_blockcount);
   
-  BOOL showsbar = (m_dbsource->IsMoreData()) ? TRUE : FALSE;
-  m_sbar->SetDisplay(showsbar);
+  m_dbsource->SetReadNums(m_blockcount);
+
+  m_sbar->SetDisplay(m_dbsource->IsMoreData());
 
   m_lockpaint = FALSE;
 

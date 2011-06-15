@@ -6,6 +6,7 @@ MCDBSource::MCDBSource(void):
   m_fixnums(0),
   m_pos(0),
   m_dbcount(80),
+  m_frontcount(0),
   m_dbprereadpoint(25),
   m_isdbrun(FALSE),
   m_direction(FALSE),
@@ -28,7 +29,7 @@ MCDBSource::~MCDBSource(void)
 
 BOOL MCDBSource::IsMoreData()
 {
-  return m_frontbuff.size() <= m_readnums ? FALSE : TRUE;
+  return (m_sp == m_frontbuff.begin() && m_frontcount <= m_readnums) ? FALSE : TRUE;
 }
 
 void MCDBSource::SetReadNums(UINT nums)
@@ -44,6 +45,10 @@ BOOL MCDBSource::PreLoad(UINT nums)
   SetReadNums(nums);
 
   m_frontbuff.swap(m_tmpdatas);
+  m_frontcount = m_frontbuff.size();
+
+  if (nums > m_frontcount)
+    nums = m_frontcount;
 
   m_sp = m_frontbuff.begin();
   m_ep = m_sp + nums;
@@ -63,6 +68,9 @@ void MCDBSource::AdjustRange(UINT nums)
   {
     log.Format(L"[AdjustRange_0_0] m_pos:%d\n", m_pos);MCDEBUG(log);
     int len = m_ep - m_sp;
+    x = m_frontbuff.end() - m_sp;
+    if (nums > x)
+      nums = x;
     m_ep = m_sp + nums;
     m_pos -= (len - nums);
     log.Format(L"[AdjustRange_0_1] m_pos:%d\n", m_pos);MCDEBUG(log);
@@ -70,7 +78,6 @@ void MCDBSource::AdjustRange(UINT nums)
   else if (nums > m_readnums)
   {
     x = m_frontbuff.end() - m_sp;
-
     if (nums > x)
       nums = x;
     log.Format(L"[AdjustRange_1_0] m_pos:%d\n", m_pos);MCDEBUG(log);

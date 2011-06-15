@@ -293,10 +293,12 @@ void MediaCenterController::ShowMC()
   SetClassLong(m_hwnd, GCL_HCURSOR, (LONG)::LoadCursor(NULL, IDC_ARROW));
   m_planestate = TRUE;
 
-  ::InvalidateRect(m_hwnd, NULL, TRUE);
-
   RECT rc;
   ::GetClientRect(m_hwnd, &rc);
+  m_mclist.InitMCList(rc.right-rc.left, rc.bottom-rc.top);
+
+  ::InvalidateRect(m_hwnd, NULL, TRUE);
+
   CString log(L"");
   MCDEBUG(log);
 }
