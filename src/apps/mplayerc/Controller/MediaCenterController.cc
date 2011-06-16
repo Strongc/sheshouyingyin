@@ -18,7 +18,8 @@ MediaCenterController::MediaCenterController():
   m_updatetime(0),
   m_initiablocklist(FALSE),
   m_hFilmTextFont(NULL),
-  m_nstatusbarheight(20)
+  m_nstatusbarheight(20),
+  m_hOldAccel(0)
 {
   // create film text font
   SetFilmTextFont(12, L"宋体");
@@ -147,11 +148,6 @@ media_tree::model& MediaCenterController::GetMediaTree()
   return m_treeModel;
 }
 
-HWND MediaCenterController::GetFilmNameEdit()
-{
-  return m_mclist.GetFilmNameEdit();
-}
-
 CoverController& MediaCenterController::GetCoverDownload()
 {
   return m_cover;
@@ -204,6 +200,105 @@ void MediaCenterController::SetFilmTextFont(int height, const std::wstring &fami
   fnTemp.CreateFontIndirect(&lf);
   m_hFilmTextFont = (HFONT)fnTemp;
   fnTemp.Detach();
+}
+
+void MediaCenterController::InitTextEdit()
+{
+  if (!m_pFilmNameEdit)
+  {
+    // create new editor
+    m_pFilmNameEdit.reset(new TextEdit);
+    m_pFilmNameEdit->Create(WS_CHILD | ES_AUTOHSCROLL | ES_MULTILINE | ES_CENTER, CRect(0, 0, 0, 0)
+      , CWnd::FromHandle(m_hwnd), 1111);
+
+    static CFont *pFont = CFont::FromHandle(GetFilmTextFont());
+    m_pFilmNameEdit->SetFont(pFont);
+    m_pFilmNameEdit->SetBKColor(0xe7, 0xe7, 0xe7);
+  }
+}
+
+HWND MediaCenterController::GetFilmNameEdit()
+{
+  if (m_pFilmNameEdit)
+    return m_pFilmNameEdit->GetSafeHwnd();
+  else
+    return 0;
+}
+
+void MediaCenterController::OnSetFilmName()  // set filmname by the edit control
+{
+  if (m_pFilmNameEdit && (m_pFilmNameEdit->IsWindowVisible()))
+  {
+    // restore the accelerate table
+    CMainFrame *pFrame = (CMainFrame *)(AfxGetMyApp()->GetMainWnd());
+    pFrame->m_hAccelTable = m_hOldAccel;
+
+    // set filmname
+    CString sNewFilmName;
+    m_pFilmNameEdit->GetWindowText(sNewFilmName);
+    (*m_itCurEdit)->m_mediadata.filmname = sNewFilmName;
+
+    // rename file
+    std::wstring sPath = (*m_itCurEdit)->m_mediadata.path;
+    std::wstring sOldFilename = (*m_itCurEdit)->m_mediadata.filename;
+    std::wstring sExt;
+    size_t nPos = sOldFilename.find_last_of('.');
+    if (nPos != std::wstring::npos)
+      sExt = sOldFilename.substr(nPos);
+
+    boost::system::error_code err;
+    boost::filesystem::rename(sPath + sOldFilename, sPath + (LPCTSTR)sNewFilmName + sExt, err);
+
+    if (err == boost::system::errc::success)
+    {
+      // set new filename
+      (*m_itCurEdit)->m_mediadata.filename = sNewFilmName;
+    }
+
+    // store info to database
+    media_tree::model &tree_model = GetMediaTree();
+    tree_model.addFile((*m_itCurEdit)->m_mediadata);
+  }
+}
+
+void MediaCenterController::ShowFilmNameEdit(MCDBSource::BUPOINTER it, const CRect &rc)
+{
+  if (m_pFilmNameEdit)
+  {
+    m_pFilmNameEdit->MoveWindow(rc);
+    m_pFilmNameEdit->ShowWindow(SW_SHOW);
+
+    CMainFrame *pFrame = (CMainFrame *)(AfxGetMyApp()->GetMainWnd());
+    m_hOldAccel = pFrame->m_hAccelTable;
+    pFrame->m_hAccelTable = 0;        // temp destroy the accelerate table
+
+    std::wstring sFilmName = (*it)->m_mediadata.filmname;
+    if (sFilmName.empty())
+      sFilmName = (*it)->m_mediadata.filename;
+
+    int pos = sFilmName.find_last_of('.');
+    if (pos != std::wstring::npos)
+      sFilmName = sFilmName.substr(0, pos);
+
+    m_pFilmNameEdit->SetTextVCenter();
+
+    m_pFilmNameEdit->SetWindowText(sFilmName.c_str());
+    m_pFilmNameEdit->SetFocus();
+
+    m_pFilmNameEdit->SetSel(0, -1); // only focus on filename, exclude the ext
+
+    m_itCurEdit = it;  // sp is defined in macro MCLoopList
+  }
+}
+
+void MediaCenterController::HideFilmNameEdit()
+{
+  // modify the block's filmname
+  OnSetFilmName();
+
+  // hide the editor
+  m_pFilmNameEdit->SetWindowText(L"");
+  m_pFilmNameEdit->ShowWindow(SW_HIDE);
 }
 
 void MediaCenterController::SetStatusText(const std::wstring &str)
@@ -302,12 +397,7 @@ void MediaCenterController::HideMC()
 void MediaCenterController::SetFrame(HWND hwnd)
 {
   m_hwnd = hwnd;
-  m_mclist.InitTextEdit();  // create the text edit
-}
-
-HWND MediaCenterController::GetFrame()
-{
-  return m_hwnd;
+  InitTextEdit();  // create the text edit
 }
 
 BOOL MediaCenterController::GetPlaneState()
@@ -381,6 +471,15 @@ BOOL MediaCenterController::ActMouseLBDown(const POINT& pt)
   if (m_mclist.GetScrollBar()->IsDragBar())
     ::SetCapture(m_hwnd);
 
+  // determine whether destroy the filmname editor
+  CRect rcEditor;
+  if (m_pFilmNameEdit)
+  {
+    m_pFilmNameEdit->GetClientRect(&rcEditor);
+    if (!rcEditor.PtInRect(pt))
+      HideFilmNameEdit();
+  }
+
   return TRUE;
 }
 
@@ -407,6 +506,11 @@ BOOL MediaCenterController::ActWindowChange(int w, int h)
   ::GetClientRect(m_hwnd, &rc);
   m_mcstatusbar.SetRect(CRect(0, rc.bottom - m_nstatusbarheight, rc.right, rc.bottom));
 
+  // set filmname if the child view's size is changed
+  // determine whether destroy the filmname editor
+  if (m_pFilmNameEdit)
+    HideFilmNameEdit();
+
   return TRUE;
 }
 
@@ -424,6 +528,9 @@ BOOL MediaCenterController::ActRButtonUp(const POINT &pt)
 {
   if (!m_planestate)
     return FALSE;
+
+  if (m_pFilmNameEdit)
+    HideFilmNameEdit();
 
   return m_mclist.ActRButtonUp(pt);
 }

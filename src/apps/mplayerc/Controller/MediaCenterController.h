@@ -40,7 +40,6 @@ public:
    void SetPlaneState(BOOL bl);
 
    media_tree::model& GetMediaTree();
-   HWND GetFilmNameEdit();
    CoverController& GetCoverDownload();
    
    HRGN CalculateUpdateRgn(WTL::CRect& rc);
@@ -48,6 +47,11 @@ public:
    //void SetCover(BlockUnit* unit, std::wstring orgpath);
    HFONT GetFilmTextFont();
    void SetFilmTextFont(int height, const std::wstring &family);
+   void InitTextEdit();
+   HWND GetFilmNameEdit();
+   void OnSetFilmName();  // set filmname by the edit control
+   void ShowFilmNameEdit(MCDBSource::BUPOINTER it, const CRect &rc);
+   void HideFilmNameEdit();
 
    void SetStatusText(const std::wstring &str);
 
@@ -72,7 +76,6 @@ public:
   // ****************************** //
 public:
   void SetFrame(HWND hwnd);
-  HWND GetFrame();
 
   void ShowMC();
   void HideMC();
@@ -104,7 +107,11 @@ private:
   MCStatusBar m_mcstatusbar;
   int m_nstatusbarheight;
 
-  // ****************************** //
+private:
+  // datas for film name edit
+  boost::shared_ptr<TextEdit> m_pFilmNameEdit;
+  HACCEL m_hOldAccel;
+  MCDBSource::BUPOINTER m_itCurEdit;  // the block unit we current edit it
   
 private: 
   BOOL m_isupdate;
