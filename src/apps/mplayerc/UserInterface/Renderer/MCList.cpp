@@ -312,6 +312,7 @@ void SPMCList::InitTextEdit()
 
     static CFont *pFont = CFont::FromHandle(MediaCenterController::GetInstance()->GetFilmTextFont());
     m_pFilmNameEdit->SetFont(pFont);
+    m_pFilmNameEdit->SetBKColor(0xe7, 0xe7, 0xe7);
   }
 }
 
