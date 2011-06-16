@@ -9,6 +9,7 @@
 //#include "..\UserInterface\Renderer\MCStatusBar.h"
 #include "CoverController.h"
 #include "..\UserInterface\Renderer\MCList.h"
+#include "..\UserInterface\Renderer\MCStatusBar.h"
 
 #define TIMER_MC_RENDER 12
 #define TIMER_MC_UPDATE 13
@@ -47,6 +48,8 @@ public:
    //void SetCover(BlockUnit* unit, std::wstring orgpath);
    HFONT GetFilmTextFont();
    void SetFilmTextFont(int height, const std::wstring &family);
+
+   void SetStatusText(const std::wstring &str);
 
 // slots
 public:
@@ -96,6 +99,8 @@ private:
   DWORD m_updatetime;
 
   SPMCList m_mclist;
+  MCStatusBar m_mcstatusbar;
+  int m_nstatusbarheight;
 
   // ****************************** //
   
