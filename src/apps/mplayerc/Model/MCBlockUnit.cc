@@ -71,6 +71,9 @@ BOOL BlockUnit::ActMouseOver(const POINT& pt)
   if (cover->ActMouseOver(pt))
     ret = TRUE;
 
+  // set hand cursor
+  MediaCenterController::GetInstance()->SetCursor();
+
   return ret;
 }
 
@@ -113,6 +116,9 @@ BOOL BlockUnit::ActMouseOut(const POINT& pt)
 
   // set status message
   MediaCenterController::GetInstance()->SetStatusText(L"");
+
+  // set arrow cursor
+  MediaCenterController::GetInstance()->SetCursor(IDC_ARROW);
 
   return ret;
 }
