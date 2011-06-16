@@ -11,8 +11,7 @@ SPMCList::SPMCList():
   m_lockpaint(FALSE),
   m_selblockunit(NULL),
   m_listempty(TRUE),
-  m_deltatime(0),
-  m_hOldAccel(0)
+  m_deltatime(0)
 {
   m_dbsource = new MCDBSource;
 
@@ -264,15 +263,6 @@ BOOL SPMCList::ActMouseMove(const POINT& pt)
 BOOL SPMCList::ActMouseLBDown(const POINT& pt)
 {
   BOOL ret = FALSE;
-
-  // determine whether destroy the filmname editor
-  CRect rcEditor;
-  if (m_pFilmNameEdit)
-  {
-    m_pFilmNameEdit->GetClientRect(&rcEditor);
-    if (!rcEditor.PtInRect(pt))
-      HideFilmNameEditor();
-  }
   
   ret = m_sbar->ActMouseLBDown(pt);
 
@@ -301,75 +291,6 @@ void SPMCList::InitMCList(int w, int h)
     SetCover();
 }
 
-void SPMCList::InitTextEdit()
-{
-  if (!m_pFilmNameEdit)
-  {
-    // create new editor
-    m_pFilmNameEdit.reset(new TextEdit);
-    m_pFilmNameEdit->Create(WS_CHILD | ES_AUTOHSCROLL | ES_MULTILINE | ES_CENTER, CRect(0, 0, 0, 0)
-                          , CWnd::FromHandle(MediaCenterController::GetInstance()->GetFrame()), 1111);
-
-    static CFont *pFont = CFont::FromHandle(MediaCenterController::GetInstance()->GetFilmTextFont());
-    m_pFilmNameEdit->SetFont(pFont);
-    m_pFilmNameEdit->SetBKColor(0xe7, 0xe7, 0xe7);
-  }
-}
-
-void SPMCList::OnSetFilmName()  // set filmname by the edit control
-{
-  if (m_pFilmNameEdit && (m_pFilmNameEdit->IsWindowVisible()))
-  {
-    // restore the accelerate table
-    CMainFrame *pFrame = (CMainFrame *)(AfxGetMyApp()->GetMainWnd());
-    pFrame->m_hAccelTable = m_hOldAccel;
-
-    // set filmname
-    CString sNewFilmName;
-    m_pFilmNameEdit->GetWindowText(sNewFilmName);
-    (*m_itCurEdit)->m_mediadata.filmname = sNewFilmName;
-
-    // rename file
-    std::wstring sPath = (*m_itCurEdit)->m_mediadata.path;
-    std::wstring sOldFilename = (*m_itCurEdit)->m_mediadata.filename;
-    std::wstring sExt;
-    size_t nPos = sOldFilename.find_last_of('.');
-    if (nPos != std::wstring::npos)
-      sExt = sOldFilename.substr(nPos);
-
-    boost::system::error_code err;
-    boost::filesystem::rename(sPath + sOldFilename, sPath + (LPCTSTR)sNewFilmName + sExt, err);
-
-    if (err == boost::system::errc::success)
-    {
-      // set new filename
-      (*m_itCurEdit)->m_mediadata.filename = sNewFilmName;
-    }
-
-    // store info to database
-    media_tree::model &tree_model = MediaCenterController::GetInstance()->GetMediaTree();
-    tree_model.addFile((*m_itCurEdit)->m_mediadata);
-  }
-}
-
-void SPMCList::HideFilmNameEditor()
-{
-  // modify the block's filmname
-  OnSetFilmName();
-
-  // hide the editor
-  m_pFilmNameEdit->SetWindowText(L"");
-  m_pFilmNameEdit->ShowWindow(SW_HIDE);
-}
-
-HWND SPMCList::GetFilmNameEdit()
-{
-  if (m_pFilmNameEdit)
-    return m_pFilmNameEdit->GetSafeHwnd();
-  else
-    return 0;
-}
-
 void SPMCList::SetMCRect(int w, int h)
 {
   m_wndsize.cx = w;
@@ -383,11 +304,6 @@ void SPMCList::SetMCRect(int w, int h)
 
 BOOL SPMCList::ActWindowChange(int w, int h)
 {
-  // set filmname if the child view's size is changed
-  // determine whether destroy the filmname editor
-  if (m_pFilmNameEdit)
-    HideFilmNameEditor();
-
   SetMCRect(w, h);
 
   m_lockpaint = TRUE;
@@ -411,32 +327,8 @@ BOOL SPMCList::ActLButtonDblClick(const POINT& pt)
 
   MCLoopList(m_dbsource)
     CRect rcText = MCLoopOne()->GetTextRect();
-    if (rcText.PtInRect(pt) && m_pFilmNameEdit)
-    {
-      m_pFilmNameEdit->MoveWindow(rcText);
-      m_pFilmNameEdit->ShowWindow(SW_SHOW);
-
-      CMainFrame *pFrame = (CMainFrame *)(AfxGetMyApp()->GetMainWnd());
-      m_hOldAccel = pFrame->m_hAccelTable;
-      pFrame->m_hAccelTable = 0;        // temp destroy the accelerate table
-
-      std::wstring sFilmName = MCLoopOne()->m_mediadata.filmname;
-      if (sFilmName.empty())
-        sFilmName = MCLoopOne()->m_mediadata.filename;
-
-      int pos = sFilmName.find_last_of('.');
-      if (pos != std::wstring::npos)
-        sFilmName = sFilmName.substr(0, pos);
-
-      m_pFilmNameEdit->SetTextVCenter();
-
-      m_pFilmNameEdit->SetWindowText(sFilmName.c_str());
-      m_pFilmNameEdit->SetFocus();
-
-      m_pFilmNameEdit->SetSel(0, -1); // only focus on filename, exclude the ext
-
-      m_itCurEdit = sp;  // sp is defined in macro MCLoopList
-    }
+    if (rcText.PtInRect(pt))
+      MediaCenterController::GetInstance()->ShowFilmNameEdit(sp, rcText);
   MCEndLoop()
 
   return TRUE;
@@ -447,9 +339,6 @@ BOOL SPMCList::ActRButtonUp(const POINT &pt)
   // if a blockunit deal with this message, then return TRUE to avoid popup menu
   BOOL bl = FALSE;
   BOOL blTemp = FALSE;
-
-  if (m_pFilmNameEdit)
-    HideFilmNameEditor();
 
   MCLoopList(m_dbsource)
     blTemp = MCLoopOne()->ActRButtonUp(pt);

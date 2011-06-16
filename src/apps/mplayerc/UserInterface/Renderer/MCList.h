@@ -20,10 +20,6 @@ public:
   void DoPaint(WTL::CDC& dc, RECT& rcclient);
 
   void InitMCList(int w, int h);
-  void InitTextEdit();
-  void OnSetFilmName();  // set filmname by the edit control
-  void HideFilmNameEditor();
-  HWND GetFilmNameEdit();
 
   BOOL ActMouseMove(const POINT& pt);
   BOOL ActMouseLBDown(const POINT& pt);
@@ -68,8 +64,4 @@ private:
 
   WTL::CBitmap m_cover;
   CSize m_coversize;
-
-  boost::shared_ptr<TextEdit> m_pFilmNameEdit;
-  HACCEL m_hOldAccel;
-  MCDBSource::BUPOINTER m_itCurEdit;  // the block unit we current edit it
 };
