@@ -30,6 +30,10 @@ BOOL BlockUnit::ActMouseMove(const POINT& pt)
   if (PtInRect(&rc, pt))
     ret = TRUE;
 
+  // set status message
+  std::wstring message = m_mediadata.path + m_mediadata.filename;
+  MediaCenterController::GetInstance()->SetStatusText(message);
+
   return ret;
 }
 
@@ -106,6 +110,10 @@ BOOL BlockUnit::ActMouseOut(const POINT& pt)
   cover->SetDisplay(FALSE);
   CString str;str.Format(L"%d\n", ret);
   OutputDebugString(str);
+
+  // set status message
+  MediaCenterController::GetInstance()->SetStatusText(L"");
+
   return ret;
 }
 

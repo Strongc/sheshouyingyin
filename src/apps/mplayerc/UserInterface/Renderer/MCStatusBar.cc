@@ -9,7 +9,8 @@ MCStatusBar::MCStatusBar()
 , m_pfnText(0)
 , m_pbrText(0)
 , m_pstrfm(0)
-, m_str(L"")
+, m_str(L"射手影音 生活相伴")
+, m_bVisible(false)
 {
   // Start GDI+ and load the background image
   CImage igForInit;    // Used only for start up GDI+
@@ -36,7 +37,10 @@ void MCStatusBar::SetRect(const CRect &rc)
 
 void MCStatusBar::SetText(const std::wstring &str)
 {
-  m_str = str;
+  if (str.empty())
+    m_str = L"射手影音 生活相伴";
+  else
+    m_str = str;
 }
 
 void MCStatusBar::SetVisible(bool bVisible)

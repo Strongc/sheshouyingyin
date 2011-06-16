@@ -17,7 +17,8 @@ MediaCenterController::MediaCenterController():
   m_planestate(FALSE),
   m_updatetime(0),
   m_initiablocklist(FALSE),
-  m_hFilmTextFont(NULL)
+  m_hFilmTextFont(NULL),
+  m_nstatusbarheight(20)
 {
   // create film text font
   SetFilmTextFont(12, L"宋体");
@@ -119,8 +120,8 @@ void MediaCenterController::SpiderThreadStop()
 
 void MediaCenterController::CoverThreadStart()
 {
-   m_cover._Stop();
-   m_cover._Start();
+   //m_cover._Stop();
+   //m_cover._Start();
 }
 
 void MediaCenterController::CoverThreadStop()
@@ -205,6 +206,11 @@ void MediaCenterController::SetFilmTextFont(int height, const std::wstring &fami
   fnTemp.Detach();
 }
 
+void MediaCenterController::SetStatusText(const std::wstring &str)
+{
+  m_mcstatusbar.SetText(str);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // slots to handle user events
 void MediaCenterController::HandlePlayback(const MediaData &md)
@@ -264,7 +270,12 @@ void MediaCenterController::ShowMC()
 
   RECT rc;
   ::GetClientRect(m_hwnd, &rc);
+  m_mclist.InitMCList(rc.right-rc.left, rc.bottom-rc.top - m_nstatusbarheight);
   m_mclist.InitMCList(rc.right-rc.left, rc.bottom-rc.top);
+
+  m_mcstatusbar.SetRect(CRect(0, rc.bottom - m_nstatusbarheight, rc.right, rc.bottom));
+  m_mcstatusbar.SetBKColor(RGB(0xb7, 0xb7, 0xb7));
+  m_mcstatusbar.SetVisible(true);
 
   ::InvalidateRect(m_hwnd, NULL, TRUE);
 
@@ -319,9 +330,13 @@ void MediaCenterController::Render()
 void MediaCenterController::DoPaint(HDC hdc, RECT rcClient)
 {
   WTL::CMemoryDC dc(hdc, rcClient);
-  HBRUSH hbrush = ::CreateSolidBrush(COLORREF(0xb7b7b7));
+  HBRUSH hbrush = ::CreateSolidBrush(RGB(0xb7, 0xb7, 0xb7));
   dc.FillRect(&rcClient, hbrush);
-  m_mclist.DoPaint(dc, rcClient);
+
+  RECT rcTemp = rcClient;
+  rcTemp.bottom -= m_nstatusbarheight;
+  m_mclist.DoPaint(dc, rcTemp);
+  m_mcstatusbar.Update(dc);
   DeleteObject(hbrush);
 }
 
@@ -381,7 +396,12 @@ BOOL MediaCenterController::ActWindowChange(int w, int h)
   if (!m_planestate)
     return FALSE;
 
-  m_mclist.ActWindowChange(w, h);
+  m_mclist.ActWindowChange(w, h - m_nstatusbarheight);
+
+  RECT rc;
+  ::GetClientRect(m_hwnd, &rc);
+  m_mcstatusbar.SetRect(CRect(0, rc.bottom - m_nstatusbarheight, rc.right, rc.bottom));
+
   return TRUE;
 }
 

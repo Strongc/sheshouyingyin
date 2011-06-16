@@ -11,7 +11,6 @@ public:
 
 /* Properties */
 public:
-  //void SetFrame(HWND hwnd);
   void SetRect(const CRect &rc);
   void SetText(const std::wstring &str);
   void SetVisible(bool bVisible);
