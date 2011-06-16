@@ -18,6 +18,7 @@ public:
   BOOL ActMouseMove(const POINT& pt);
   BOOL ActMouseLBDown(const POINT& pt);
   BOOL ActMouseLBUp(const POINT& pt);
+  BOOL ActRButtonUp(const POINT& pt);
 
 private:
   int m_fixx;

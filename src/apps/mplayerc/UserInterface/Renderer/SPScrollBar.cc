@@ -123,3 +123,13 @@ BOOL SPScrollBar::ActMouseLBUp(const POINT& pt)
 
   return FALSE;
 }
+
+BOOL SPScrollBar::ActRButtonUp(const POINT& pt)
+{
+  BOOL ret = FALSE;
+
+  if (::PtInRect(&m_rcsbar, pt))
+    ret = TRUE;
+
+  return ret;
+}
