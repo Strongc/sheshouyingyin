@@ -444,10 +444,20 @@ BOOL SPMCList::ActLButtonDblClick(const POINT& pt)
 
 BOOL SPMCList::ActRButtonUp(const POINT &pt)
 {
+  // if a blockunit deal with this message, then return TRUE to avoid popup menu
   BOOL bl = FALSE;
+  BOOL blTemp = FALSE;
 
   if (m_pFilmNameEdit)
     HideFilmNameEditor();
+
+  MCLoopList(m_dbsource)
+    blTemp = MCLoopOne()->ActRButtonUp(pt);
+    if (blTemp) bl = TRUE;
+  MCEndLoop()
+
+  blTemp = m_sbar->ActRButtonUp(pt);
+  if (blTemp) bl = TRUE;
 
   return bl;
 }

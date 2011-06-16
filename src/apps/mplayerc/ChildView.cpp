@@ -728,6 +728,7 @@ BOOL CChildView::OnRButtonUP(UINT nFlags, CPoint point)
   if (m_mediacenter->GetPlaneState())
     bmenutrack = m_mediacenter->ActRButtonUp(point);
   
+  // TRUE will not track the menu, otherwise will show the popup menu
   return bmenutrack;
 }
 

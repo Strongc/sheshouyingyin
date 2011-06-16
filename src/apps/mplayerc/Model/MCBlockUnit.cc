@@ -147,6 +147,24 @@ int BlockUnit::ActMouseDown(const POINT& pt)
   return 0;
 }
 
+BOOL BlockUnit::ActRButtonUp(const POINT& pt)
+{
+  BOOL ret = FALSE;
+
+  if (!m_layer) return ret;
+
+  UILayer* layer = 0;
+  BOOL bmark = m_layer->GetUILayer(L"background", &layer);
+  if (!bmark) return ret;
+
+  RECT rc;
+  layer->GetTextureRect(rc);
+  if (PtInRect(&rc, pt))
+    ret = TRUE;
+
+  return ret;
+}
+
 void BlockUnit::DefLayer()
 {
   m_layer->AddUILayer(L"background", new ULBackground(L"\\skin\\mark.png", FALSE, 2));
