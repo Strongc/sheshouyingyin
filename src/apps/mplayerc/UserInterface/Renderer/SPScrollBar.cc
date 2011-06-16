@@ -76,6 +76,9 @@ BOOL SPScrollBar::ActMouseMove(const POINT& pt)
       m_offset = abs(pt.y - m_lasty);
       ret = TRUE;
     }
+
+    // set hand cursor
+    MediaCenterController::GetInstance()->SetCursor(IDC_HAND);
   }
   else
   {
@@ -84,6 +87,9 @@ BOOL SPScrollBar::ActMouseMove(const POINT& pt)
       SetState(0);
       MediaCenterController::GetInstance()->Render();
     }
+
+    // set arrow cursor
+    MediaCenterController::GetInstance()->SetCursor(IDC_ARROW);
   }
   return ret;
 }

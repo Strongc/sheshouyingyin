@@ -51,6 +51,8 @@ public:
 
    void SetStatusText(const std::wstring &str);
 
+   void SetCursor(LPWSTR flag = IDC_HAND);
+
 // slots
 public:
   void HandlePlayback(const MediaData &md);

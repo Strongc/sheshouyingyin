@@ -211,6 +211,11 @@ void MediaCenterController::SetStatusText(const std::wstring &str)
   m_mcstatusbar.SetText(str);
 }
 
+void MediaCenterController::SetCursor(LPWSTR flag /* = IDC_HAND */)
+{
+  ::SetClassLong(m_hwnd, GCL_HCURSOR, (LONG)::LoadCursor(0, flag));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // slots to handle user events
 void MediaCenterController::HandlePlayback(const MediaData &md)
