@@ -462,6 +462,15 @@ BOOL MediaCenterController::ActMouseMove(const POINT& pt)
   return TRUE;
 }
 
+BOOL MediaCenterController::ActMouseLeave()
+{
+  // set status message to default
+  m_mcstatusbar.SetText(L"");
+  Render();
+
+  return TRUE;
+}
+
 BOOL MediaCenterController::ActMouseLBDown(const POINT& pt)
 {
   if (!m_planestate)

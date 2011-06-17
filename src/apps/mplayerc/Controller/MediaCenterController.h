@@ -91,6 +91,7 @@ public:
   void Update();
 
   BOOL ActMouseMove(const POINT& pt);
+  BOOL ActMouseLeave();
   BOOL ActMouseLBDown(const POINT& pt);
   BOOL ActMouseLBUp(const POINT& pt);
   BOOL ActWindowChange(int w, int h);

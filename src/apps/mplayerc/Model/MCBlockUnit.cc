@@ -28,11 +28,13 @@ BOOL BlockUnit::ActMouseMove(const POINT& pt)
   RECT rc;
   layer->GetTextureRect(rc);
   if (PtInRect(&rc, pt))
+  {
     ret = TRUE;
 
-  // set status message
-  std::wstring message = m_mediadata.path + m_mediadata.filename;
-  MediaCenterController::GetInstance()->SetStatusText(message);
+    // set status message
+    std::wstring message = m_mediadata.path + m_mediadata.filename;
+    MediaCenterController::GetInstance()->SetStatusText(message);
+  }
 
   return ret;
 }

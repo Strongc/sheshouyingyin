@@ -300,6 +300,7 @@ BEGIN_MESSAGE_MAP(CChildView, CWnd)
 	ON_WM_LBUTTONUP()
   ON_WM_RBUTTONUP()
   ON_WM_LBUTTONDBLCLK()
+  ON_WM_MOUSELEAVE()
 	ON_WM_NCHITTEST()
 	ON_WM_KEYUP()
   ON_WM_TIMER()
@@ -634,7 +635,13 @@ int CChildView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 BOOL CChildView::OnMouseMove(UINT nFlags, CPoint point)
 {
-	// TODO: Add your message handler code here and/or call default
+  // let child view receive mouse leave message
+  TRACKMOUSEEVENT tmet;
+  tmet.cbSize = sizeof(TRACKMOUSEEVENT);
+  tmet.dwFlags = TME_LEAVE;
+  tmet.hwndTrack = m_hWnd;
+  _TrackMouseEvent(&tmet);
+
   if (m_mediacenter->ActMouseMove(point))
     return TRUE;
 
@@ -670,7 +677,14 @@ BOOL CChildView::OnMouseMove(UINT nFlags, CPoint point)
   }
   
   CWnd::OnMouseMove(nFlags, point);
+  return TRUE;
 }
+
+void CChildView::OnMouseLeave()
+{
+  m_mediacenter->ActMouseLeave();
+}
+
 void CChildView::OnLButtonDown(UINT nFlags, CPoint point)
 {
   if (m_mediacenter->ActMouseLBDown(point))
