@@ -149,6 +149,26 @@ int BlockUnit::ActMouseDown(const POINT& pt)
   return 0;
 }
 
+BOOL BlockUnit::ActLButtonUp(const POINT& pt)
+{
+  BOOL bl = FALSE;
+
+  UILayer* play = NULL;
+  BOOL bplay = m_layer->GetUILayer(L"play", &play);
+  if (bplay)
+  {
+    RECT rc;
+    play->GetTextureRect(rc);
+    if (PtInRect(&rc, pt))
+    {
+      // notify the mc to playback a file
+      MediaCenterController::GetInstance()->HandlePlayback(m_mediadata);
+    }
+  }
+
+  return bl;
+}
+
 BOOL BlockUnit::ActRButtonUp(const POINT& pt)
 {
   BOOL ret = FALSE;

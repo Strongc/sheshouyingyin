@@ -23,16 +23,10 @@ MediaCenterController::MediaCenterController():
 {
   // create film text font
   SetFilmTextFont(12, L"宋体");
-
-  // load default mc cover
-  // SetMCCover();
-  // connect signals and slots
-  //m_blocklist.m_sigPlayback.connect(boost::bind(&MediaCenterController::HandlePlayback, this, _1));
 }
 
 MediaCenterController::~MediaCenterController()
 {
-  //m_loaddata._Stop();
   if (m_hFilmTextFont)
   {
     ::DeleteObject(m_hFilmTextFont);
@@ -164,20 +158,6 @@ void MediaCenterController::DelBlock(int index)
   //m_blocklist.DeleteBlock(index);
   //::InvalidateRect(m_hwnd, 0, FALSE);
 }
-
-// void MediaCenterController::SetCover(BlockUnit* unit, std::wstring orgpath)
-// {
-//   std::vector<MediaData> vtMD = m_blocklist.GetCurrentMediaDatas();
-//   std::vector<MediaData>::iterator it = vtMD.begin();
-//   while (it != vtMD.end())
-//   {
-//     m_cover.SetBlockUnit(*it);
-//     
-//     ++it;
-//   }
-// 
-//   m_cover._Start();
-// }
 
 HFONT MediaCenterController::GetFilmTextFont()
 {

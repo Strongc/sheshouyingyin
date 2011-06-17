@@ -20,6 +20,7 @@ public:
   BOOL ActMouseOver(const POINT& pt);
   BOOL ActMouseOut(const POINT& pt);
   int ActMouseDown(const POINT& pt);
+  BOOL ActLButtonUp(const POINT& pt);
   BOOL ActRButtonUp(const POINT& pt);
 
 public:
