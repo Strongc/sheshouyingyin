@@ -275,6 +275,10 @@ BOOL SPMCList::ActMouseLBUp(const POINT& pt)
 
   ret = m_sbar->ActMouseLBUp(pt);
 
+  MCLoopList(m_dbsource)
+    if (MCLoopOne()->ActLButtonUp(pt)) ret = TRUE;
+  MCEndLoop()
+
   m_deltatime = 0;
   return ret;
 }
@@ -338,15 +342,13 @@ BOOL SPMCList::ActRButtonUp(const POINT &pt)
 {
   // if a blockunit deal with this message, then return TRUE to avoid popup menu
   BOOL bl = FALSE;
-  BOOL blTemp = FALSE;
 
   MCLoopList(m_dbsource)
-    blTemp = MCLoopOne()->ActRButtonUp(pt);
-    if (blTemp) bl = TRUE;
+    if (MCLoopOne()->ActRButtonUp(pt)) bl = TRUE;
   MCEndLoop()
 
-  blTemp = m_sbar->ActRButtonUp(pt);
-  if (blTemp) bl = TRUE;
+  if (m_sbar->ActRButtonUp(pt))
+    bl = TRUE;
 
   return bl;
 }

@@ -44,7 +44,6 @@ public:
    
    HRGN CalculateUpdateRgn(WTL::CRect& rc);
 
-   //void SetCover(BlockUnit* unit, std::wstring orgpath);
    HFONT GetFilmTextFont();
    void SetFilmTextFont(int height, const std::wstring &family);
    void InitTextEdit();
@@ -60,7 +59,6 @@ public:
 // slots
 public:
   void HandlePlayback(const MediaData &md);
-
   //void HandleDelBlock(const BlockUnit *pBlock);
 
 public:

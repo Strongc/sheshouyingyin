@@ -6627,9 +6627,15 @@ void CMainFrame::OnFileCloseMedia()
 
   if (MediaCenterController::GetInstance()->GetPlaneState())
   {
-    //m_wndView.ShowMediaCenter(TRUE);
-    MediaCenterController::GetInstance()->HideMC();
     HideToolBar();
+    MediaCenterController::GetInstance()->ShowMC();
+    MediaCenterController::GetInstance()->Render();
+
+    // the toolbar didn't disappear when the player under the
+    // non-Aeroglass mode, so I add this code
+    CRect rc;
+    GetClientRect(&rc);
+    PostMessage(WM_SIZE, 0, MAKELPARAM(rc.Width(), rc.Height()));
   }
 }
 
@@ -14941,7 +14947,6 @@ void CMainFrame::OnShowMediaCenter()
     return;
 
   m_bmediacentershow  = !m_bmediacentershow;
-  //m_wndView.ShowMediaCenter(m_bmediacentershow);
   
   if (!m_bmediacentershow)
   {
