@@ -11,7 +11,12 @@ SPMCList::SPMCList():
   m_lockpaint(FALSE),
   m_selblockunit(NULL),
   m_listempty(TRUE),
-  m_deltatime(0)
+  m_deltatime(0),
+  m_anitime(0),
+  m_maxsbar(0),
+  m_maxoffset(0),
+  m_rowpos(0),
+  m_anispeed(0.f)
 {
   m_dbsource = new MCDBSource;
 
@@ -80,36 +85,31 @@ void SPMCList::DoPaint(WTL::CDC& dc, RECT& rcclient)
       m_sbar->SetClientRect(rcclient);
       m_sbar->DoPaint(dc);
     }
-//     std::vector<int>::iterator itx =  m_x.begin();
-//     std::vector<int>::iterator ity =  m_y.begin();
-//     std::vector<int>::iterator it;
-//     POINT pt;
-//     for (;ity != m_y.end(); ity++)
-//     {
-//       pt.y = *ity;
-//       for (it = itx; it != m_x.end(); it++)
-//       {
-//         pt.x = *it;
-//         MCLoopInit(m_dbsource);
-//         MCLoopCurData()->DoPaint(dc, pt);
-//         MCLoopNextData();
-//       }
-//     }
-    std::vector<int>::iterator itx =  m_x.begin();
-    std::vector<int>::iterator ity =  m_y.begin();
 
-    MCLoopList(m_dbsource)
-      if (itx == m_x.end())
+    POINT pt;
+    int rowpos = m_rowpos;
+    int colpos = 0;
+
+    MCDBSource::BUPOINTER sp, ep;
+    m_dbsource->GetPointer(sp, ep);
+
+    for (int y=1; y<=m_maxrows; ++y)
+    {
+      pt.y = rowpos;
+      colpos = m_columnpos;
+      for (int x=1; x<=m_maxcolumns; ++x)
       {
-        itx = m_x.begin();
-        ++ity;
+        pt.x = colpos;
+        (*sp)->DoPaint(dc, pt);
+        colpos = m_fixcolumnwidth * x + m_columnpos;
+        if (sp != ep)
+          sp++;
       }
+      rowpos = m_fixrowheight * y + m_rowpos;
+    }
 
-      POINT pt = {*itx, *ity};
-      MCLoopOne()->DoPaint(dc, pt);
-      ++itx;
-    MCEndLoop()
   }
+
 }
 
 void SPMCList::BlocksMouseMove(const POINT& pt)
@@ -144,113 +144,70 @@ void SPMCList::BlocksMouseMove(const POINT& pt)
 
 void SPMCList::Update(DWORD deltatime)
 {
-  int offset = m_sbar->GetSBarOffset();
-  m_deltatime += deltatime;
-  if (!offset || !deltatime)
-    return;
+//   if (!m_anitime)
+//     return;
 
   int status = m_dbsource->GetReaderStatus();
-  if (status == MCDBSource::MCDB_UNKNOW)
-    return;
-
-  CString log;
-  float v = (offset) / (float)(m_wndsize.cy/2/5) * 0.1f;
-  int distance = (int)(deltatime * v);
-
-  if (!distance)
-    return;
 
   m_lockpaint = TRUE;
-  BOOL dir = m_sbar->GetDirection();
-  if (dir) // move up
+  
+//   m_deltatime += deltatime;
+// 
+//   if (m_deltatime > m_anitime)
+//     m_deltatime = m_deltatime % m_anitime;
+
+  m_rowpos += (m_sbardir?1:-1) * (int)((float)deltatime * (float)m_anispeed);
+
+  if (m_sbardir) // move up
   {
-    if (status == MCDBSource::MCDB_TOSTART)
+    if (status != MCDBSource::MCDB_TOSTART)
     {
-      int heady = m_y.front();
-      if (heady == m_blocktop)
+      int tail = (m_fixrowheight * (m_maxrows - 1)) + m_rowpos;
+      if (tail >= m_wndsize.cy)
       {
-        m_lockpaint = FALSE;
-        return;
-      }
-      
-      if (heady + distance > m_blocktop)
-        distance = m_blocktop - heady;
-
-      std::vector<int>::iterator it = m_y.begin();
-      for (; it != m_y.end(); it++)
-        *it += distance;
-
-      m_lockpaint = FALSE;
-      return;
-    }
-
-    if (m_y.back() >= m_wndsize.cy+m_blockh+m_blocktop)
-    { CString log;log.Format(L"last y:%d\n", m_y.back());MCDEBUG(log);
-      m_dbsource->RemoveRowDatas(dir, m_x.size());
-      m_y.pop_back();
-    }
-
-    if (m_y.front() >= m_blocktop)
-    {
-      status = m_dbsource->LoadRowDatas(dir, m_x.size());
-      if (status == MCDBSource::MCDB_MORE)
-      {
-        m_y.insert(m_y.begin(), m_y.front()-m_blocktop-m_blockh);
-      }
-      else
-      {
-        m_lockpaint = FALSE;
-        return;
+        status = m_dbsource->LoadRowDatas(m_sbardir, m_maxcolumns);
+        if (status != MCDBSource::MCDB_TOSTART)
+          m_rowpos = m_rowpos - m_fixrowheight;
       }
     }
-
-    std::vector<int>::iterator it = m_y.begin();
-    for (; it != m_y.end(); it++)
-      *it += distance;
+    else if (m_rowpos > m_blocktop)   // align first line
+      m_rowpos = m_blocktop;
   }
-  else// move down
+  else  // move down
   {
-    if (status == MCDBSource::MCDB_TOEND)
+    if (status != MCDBSource::MCDB_TOEND)
     {
-      m_lockpaint = FALSE;
-      return;
-    }
-
-    if (m_y.front()+m_blockh <= 0)
-    {
-      m_dbsource->RemoveRowDatas(dir, m_x.size());
-      m_y.erase(m_y.begin());
-    }
-
-    int taily = m_y.back()+m_blockh;
-    if (m_wndsize.cy-taily >= m_blocktop)
-    {
-      status = m_dbsource->LoadRowDatas(dir, m_x.size());
-      if (status == MCDBSource::MCDB_MORE)
+      int head = m_rowpos + m_fixrowheight;
+      if (head <= 0)
       {
-        m_y.push_back(taily + m_blocktop);
-      }
-      else
-      {
-        m_lockpaint = FALSE;
-        return;
+        status = m_dbsource->LoadRowDatas(m_sbardir, m_maxcolumns);
+        if (status != MCDBSource::MCDB_TOEND)
+          m_rowpos = head;
       }
     }
-
-    std::vector<int>::iterator it = m_y.begin();
-    for (; it != m_y.end(); it++)
-      *it -= distance;
+    else  // align last line
+      m_rowpos = m_wndsize.cy - m_fixrowheight - (m_fixrowheight*(m_maxrows-1));
   }
+
   m_lockpaint = FALSE;
 }
 
 BOOL SPMCList::ActMouseMove(const POINT& pt)
 {
   BOOL ret = FALSE;
-  
+  UINT offset = 0;
+
   if (m_sbar->ActMouseMove(pt))
   {
-    ;
+    m_sbardir = m_sbar->GetDirection();
+    offset = m_sbar->GetSBarOffset();
+    if (offset)
+    {
+      if (offset > m_maxsbar)
+        offset = m_maxsbar;
+      m_anitime = (m_maxsbar/offset)*300;
+      m_anispeed = (float)m_maxoffset / (float)m_anitime;
+    }
   }
   else
   {
@@ -275,6 +232,9 @@ BOOL SPMCList::ActMouseLBUp(const POINT& pt)
 
   ret = m_sbar->ActMouseLBUp(pt);
 
+  m_anitime = 0;
+  m_anispeed = 0.f;
+
   MCLoopList(m_dbsource)
     if (MCLoopOne()->ActLButtonUp(pt)) ret = TRUE;
   MCEndLoop()
@@ -286,6 +246,7 @@ BOOL SPMCList::ActMouseLBUp(const POINT& pt)
 void SPMCList::InitMCList(int w, int h)
 {
   SetMCRect(w, h);
+
   if (m_dbsource->PreLoad(m_blockcount))
   {
     m_listempty = FALSE;
@@ -295,27 +256,33 @@ void SPMCList::InitMCList(int w, int h)
     SetCover();
 }
 
+void SPMCList::ReleaseList()
+{
+  m_dbsource->CleanData();
+}
+
 void SPMCList::SetMCRect(int w, int h)
 {
   m_wndsize.cx = w;
   m_wndsize.cy = h;
 
+  m_maxsbar = h / 2;
+  m_maxoffset = m_blocktop+m_blockh;
+
   AlignColumns();
   AlignRows();
 
-  m_blockcount = m_x.size() * m_y.size();
+  m_blockcount = m_maxcolumns * m_maxrows;
 }
 
 BOOL SPMCList::ActWindowChange(int w, int h)
 {
-  SetMCRect(w, h);
-
   m_lockpaint = TRUE;
-
+  SetMCRect(w, h);
   if (!m_listempty)
-    m_dbsource->AdjustRange(m_blockcount, m_x.size());
+    m_dbsource->AdjustRange(m_blockcount, m_maxcolumns);
   
-  m_dbsource->SetReadNums(m_blockcount);
+ m_dbsource->SetReadNums(m_blockcount);
 
   m_sbar->SetDisplay(m_dbsource->IsMoreData());
 
@@ -326,9 +293,6 @@ BOOL SPMCList::ActWindowChange(int w, int h)
 
 BOOL SPMCList::ActLButtonDblClick(const POINT& pt)
 {
-  std::vector<int>::iterator itx =  m_x.begin();
-  std::vector<int>::iterator ity =  m_y.begin();
-
   MCLoopList(m_dbsource)
     CRect rcText = MCLoopOne()->GetTextRect();
     if (rcText.PtInRect(pt))
@@ -357,40 +321,29 @@ void SPMCList::AlignColumns()
 {
   int barwidth = GetScrollBar()->GetBarWidth();
 
-  int w1 = m_wndsize.cx - barwidth - (m_wndmargin.left + m_wndmargin.right) + m_blockspacing;
-  int w2 = m_blockw + m_blockspacing;
-  int count = w1 / w2;
+  int maxwidth = m_wndsize.cx - barwidth - (m_wndmargin.left + m_wndmargin.right) + m_blockspacing;
+  int zone = m_blockw + m_blockspacing;
 
-  int remainspacing = w1 - count * w2;
-
+  int remains = maxwidth % zone;
   int spacing = 0;
-  if (remainspacing && count > 1)
-    spacing = remainspacing / (count - 1) + m_blockspacing;
 
-  m_x.clear();
-  int x = m_wndmargin.left;
+  m_maxcolumns = maxwidth / zone;
+  
+  if (remains && m_maxcolumns > 1)
+    spacing = remains / (m_maxcolumns - 1) + m_blockspacing;
 
-  while (count--)
-  {
-    m_x.push_back(x);
-    x += m_blockw + spacing;
-  }
+  m_columnpos = m_wndmargin.left;
+  m_fixcolumnwidth = m_blockw + spacing;
 }
 
 void SPMCList::AlignRows()
 {
-
-  int y = m_y.empty() ? m_blocktop : m_y.front();
-  int next = m_blockh + m_blocktop;
-  int len = m_wndsize.cy + next;
+  m_fixrowheight = m_blockh + m_blocktop;
+  int maxheight = m_wndsize.cy + m_fixrowheight;
   
-  m_y.clear();
+  m_maxrows = (maxheight-m_blocktop) / m_fixrowheight + 1;
 
-  while(y < len)
-  {
-    m_y.push_back(y);
-    y += next;
-  }
+  m_rowpos = (!m_rowpos) ? m_blocktop : m_rowpos;
 }
 
 void SPMCList::SetCover()
