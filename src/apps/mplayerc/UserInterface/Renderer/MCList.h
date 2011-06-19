@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-#include <vector>
 #include "SPScrollBar.h"
 #include "../../Model/MCBlockUnit.h"
 #include "../../Model/MCDBSource.h"
@@ -20,6 +19,7 @@ public:
   void DoPaint(WTL::CDC& dc, RECT& rcclient);
 
   void InitMCList(int w, int h);
+  void ReleaseList();
 
   BOOL ActMouseMove(const POINT& pt);
   BOOL ActMouseLBDown(const POINT& pt);
@@ -42,9 +42,6 @@ private:
   SPScrollBar* m_sbar;
   CSize m_wndsize;
 
-  std::vector<int> m_x;
-  std::vector<int> m_y;
-  
   BOOL m_listempty;
 
   BlockUnit* m_selblockunit;
@@ -59,7 +56,23 @@ private:
 
   BOOL m_lockpaint;
 
+  int m_maxrows;
+  int m_maxcolumns;
+
+  int m_rowpos;
+  int m_columnpos;
+  int m_fixcolumnwidth;
+  int m_fixrowheight;
+
+  UINT m_maxsbar;
+  UINT m_maxoffset;
+
+  float m_anispeed;
+  UINT m_anitime;
   DWORD m_deltatime;
+
+  BOOL m_sbardir;
+
   UINT m_blockcount;
 
   WTL::CBitmap m_cover;

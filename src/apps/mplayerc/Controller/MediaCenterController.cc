@@ -351,7 +351,7 @@ void MediaCenterController::ShowMC()
   RECT rc;
   ::GetClientRect(m_hwnd, &rc);
   m_mclist.InitMCList(rc.right-rc.left, rc.bottom-rc.top - m_nstatusbarheight);
-  m_mclist.InitMCList(rc.right-rc.left, rc.bottom-rc.top);
+  //m_mclist.InitMCList(rc.right-rc.left, rc.bottom-rc.top);
 
   m_mcstatusbar.SetRect(CRect(0, rc.bottom - m_nstatusbarheight, rc.right, rc.bottom));
   m_mcstatusbar.SetBKColor(RGB(0xb7, 0xb7, 0xb7));
@@ -359,8 +359,8 @@ void MediaCenterController::ShowMC()
 
   ::InvalidateRect(m_hwnd, NULL, TRUE);
 
-  CString log(L"");
-  MCDEBUG(log);
+//   CString log(L"");
+//   MCDEBUG(log);
 }
 
 void MediaCenterController::HideMC()
@@ -369,6 +369,9 @@ void MediaCenterController::HideMC()
 
   KillTimer(m_hwnd, TIMER_MC_RENDER);
   KillTimer(m_hwnd, TIMER_MC_UPDATE);
+  
+  m_mclist.ReleaseList();
+
   // restore defaults cursor
   SetClassLong(m_hwnd, GCL_HCURSOR, (LONG)::LoadCursor(NULL, IDC_HAND));
   ::InvalidateRect(m_hwnd, NULL, TRUE);
