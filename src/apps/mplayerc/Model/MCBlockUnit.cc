@@ -6,7 +6,7 @@
 
 BlockUnit::BlockUnit() :
 m_layer(new UILayerBlock),
-m_cove(0)
+m_cover(NULL)
 {
 }
 
@@ -275,15 +275,21 @@ void BlockUnit::DeleteLayer()
 
 void BlockUnit::SetCover()
 {
-  if (!m_mediadata.thumbnailpath.empty())
+  if (!m_cover && !m_mediadata.thumbnailpath.empty())
   {
     ResLoader resLoad;
     UILayer* def = NULL;
-    m_cove = resLoad.LoadBitmapFromDisk(m_mediadata.thumbnailpath, false);
+    m_cover = resLoad.LoadBitmapFromDisk(m_mediadata.thumbnailpath, false);
     m_layer->GetUILayer(L"def", &def);
-    if (m_cove)
-      def->SetTexture(m_cove);
+    if (m_cover)
+      def->SetTexture(m_cover);
   }
+}
+
+void BlockUnit::CleanCover()
+{
+  ::DeleteObject(m_cover);
+  m_cover = NULL;
 }
 
 CRect BlockUnit::GetTextRect()

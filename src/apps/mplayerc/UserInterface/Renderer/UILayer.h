@@ -33,6 +33,7 @@ public:
 private:
   WTL::CBitmap   m_texture;
   POINT          m_texturepos;
+  SIZE           m_orginalsize;
   BOOL           m_display;
   BITMAP         m_bm;
   int            m_stat;

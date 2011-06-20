@@ -52,7 +52,7 @@ BOOL MCDBSource::PreLoad(UINT nums)
 
   SetReadNums(nums);
 
-  for (int i = 0; i < nums; ++i)
+  for (UINT i = 0; i < nums; ++i)
   {
     BlockUnit* bu = new BlockUnit;
     bu->DefLayer();
@@ -130,7 +130,10 @@ int MCDBSource::LoadRowDatas(BOOL direction, UINT columns)
     BUPOINTER it = m_sp;
     MediaData md;
     for (int i = 0; it != m_sp+columns; ++it, ++i)
+    {
       (*it)->m_mediadata = md;
+      (*it)->CleanCover();
+    }
 
     m_pos -= nums;
   }
@@ -156,7 +159,10 @@ int MCDBSource::LoadRowDatas(BOOL direction, UINT columns)
     BUPOINTER it = m_ep - columns;
     MediaData md;
     for (int i=0;it != m_ep; ++it, ++i)
+    {
       (*it)->m_mediadata = md;
+      (*it)->CleanCover();
+    }
 
     m_pos += nums;
   }
@@ -173,9 +179,7 @@ void MCDBSource::_Thread()
   while(!_Exit_state(2000))
   {
     if (m_stopdb)
-    {
       continue;
-    }
 
     m_stopdb = TRUE;
 
