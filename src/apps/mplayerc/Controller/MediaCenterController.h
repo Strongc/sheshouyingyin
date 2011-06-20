@@ -6,7 +6,6 @@
 #include "../Model/MediaTreeModel.h"
 #include "MediaSpiderFolderTree.h"
 #include <map>
-//#include "..\UserInterface\Renderer\MCStatusBar.h"
 #include "CoverController.h"
 #include "..\UserInterface\Renderer\MCList.h"
 #include "..\UserInterface\Renderer\MCStatusBar.h"

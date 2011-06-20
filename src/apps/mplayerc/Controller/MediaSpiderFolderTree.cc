@@ -14,7 +14,7 @@ MediaSpiderFolderTree::MediaSpiderFolderTree()
 , m_nThreadStartInterval(30)
 {
   // Init the media type and the exclude folders & files from the database
-  // Warning: the case is sensitive !!!
+  // Note: the case is not sensitive, will change it to lowercase before compare
   SetSupportExtension(L".avi");
   SetSupportExtension(L".wmv");
   SetSupportExtension(L".mkv");
@@ -118,13 +118,9 @@ void MediaSpiderFolderTree::_Thread()
     MediaDB<>::exec(ssSQL.str());  // update the search path's info
     
     if (MediaDB<>::last_changes() != 0)
-    {
       Search(sPath);
-    }
     else
-    {
       bBreakType = !bBreakType;
-    }
 
     if (_Exit_state(0))
     {
@@ -134,7 +130,7 @@ void MediaSpiderFolderTree::_Thread()
       return;
     }
 
-    ::Sleep(m_tSleep * 1000);
+    ::Sleep((DWORD)(m_tSleep * 1000));
   }
 }
 
@@ -163,7 +159,7 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
     ssSQL.str(L"");
     ssSQL << L"SELECT path, filename, filmname, thumbnailpath, hide FROM media_data WHERE path='" << sFolder << L"'";
     MediaDB<wstring, wstring, wstring, wstring, bool>::exec(ssSQL.str(), &vtPath, &vtFilename, &vtFilmname, &vtThumbnailPath, &vtHide);
-    for (int i = 0; i < vtPath.size(); ++i)
+    for (size_t i = 0; i < vtPath.size(); ++i)
     {
       MediaData md;
       md.path = vtPath[i];
@@ -175,6 +171,8 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
       md.bHide = vtHide[i];
       m_treeModel.addFile(md);
 
+      if (_Exit_state(0))
+        return;
       ::Sleep(300);
     }
 
