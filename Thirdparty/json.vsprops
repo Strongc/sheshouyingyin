@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="gb2312"?>
+<VisualStudioPropertySheet
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="json"
+	>
+	<Tool
+		Name="VCCLCompilerTool"
+		AdditionalIncludeDirectories="&quot;$(SolutionDir)Thirdparty\jsoncpp\include&quot;"
+	/>
+	<Tool
+		Name="VCLinkerTool"
+		AdditionalDependencies="$(SolutionDir)Thirdparty\jsoncpp\build\vs71\release\lib_json\json_vc71_libmt.lib"
+	/>
+</VisualStudioPropertySheet>
