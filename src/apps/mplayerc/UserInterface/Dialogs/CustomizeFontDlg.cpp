@@ -99,7 +99,6 @@ void CustomizeFontDlg::DrawItem(LPDRAWITEMSTRUCT lpdis)
   HPEN oldpen = dc.SelectPen(pen);
   dc.Rectangle(0, 0, rc.Width(), rc.Height());
 
-  //dc.FillRect(&rc, COLOR_3DFACE);
   if (lpdis->CtlID == IDC_FONTPREVIEW)
   {
     WTL::CRect rcmain(lpdis->rcItem);
@@ -120,11 +119,6 @@ void CustomizeFontDlg::DrawItem(LPDRAWITEMSTRUCT lpdis)
   dc.SelectBitmap(oldbmp);
   dc.SelectPen(oldpen);
 }
-
-// void CustomizeFontDlg::MeasureItem(LPMEASUREITEMSTRUCT lpmis)
-// {
-//   
-// }
 
 void CustomizeFontDlg::InitFontNameList()
 {
@@ -247,14 +241,6 @@ void CustomizeFontDlg::SetFontParam(StyleParam* parammain, StyleParam* paramseco
   m_colormap[IDC_STROKECOLOR] = m_fontpamcurr->strokecolor;
   m_colormap[IDC_SHADOWCOLOR] = m_fontpamcurr->shadowcolor;
 }
-
-// StyleParam* CustomizeFontDlg::GetFontParam()
-// {
-//   StyleParam* sp = NULL;
-//   sp = new StyleParam(m_fontpammain);
-//   
-//   return sp;
-// }
 
 void CustomizeFontDlg::OnColorSelect(UINT uNotifyCode, int nID, CWindow wndCtl)
 {

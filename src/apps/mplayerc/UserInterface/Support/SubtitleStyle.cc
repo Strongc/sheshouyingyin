@@ -19,7 +19,7 @@ DrawSubtitle::DrawSubtitle():
  
   // create font
   WTL::CLogFont lf;
-  lf.lfHeight   = m_styleparam.fontsize*5/2;
+  lf.lfHeight   = m_styleparam.fontsize * 5 / 2;
   lf.lfQuality  = ANTIALIASED_QUALITY;
   lf.lfCharSet  = DEFAULT_CHARSET;
   wcscpy_s(lf.lfFaceName, 32, m_styleparam.fontname.c_str());
@@ -31,7 +31,6 @@ DrawSubtitle::DrawSubtitle():
   HFONT old_font = (HFONT)SelectObject(dc, font);
 
   // determine vertical and horizontal center of the |rc|
-  //WTL::CRect rc_textraw(0, 0, bmp_width, bmp_height);
   WTL::CRect rc_textraw(rc);
   SetBkMode(dc, TRANSPARENT);
   DrawText(dc, m_sptext.c_str(), -1, &rc_textraw, DT_CALCRECT|DT_EDITCONTROL);
@@ -45,14 +44,11 @@ DrawSubtitle::DrawSubtitle():
   {
     rc_textraw.OffsetRect(m_styleparam.shadowsize * 2, m_styleparam.shadowsize * 2);
     // blend the shadow lighter a bit
-    //int color = (0x00FFFFFF + m_styleparam.shadowcolor)/2;
     int r = GetRValue(m_styleparam.shadowcolor);
     int g = GetGValue(m_styleparam.shadowcolor);
     int b = GetBValue(m_styleparam.shadowcolor);
 
     COLORREF color = RGB((r + 255) / 2,  (g + 255) / 2, (b + 255) / 2);
-
-    //int color = m_styleparam.shadowcolor;
     SetTextColor(dc, color);
     // we choose to apply 1 pixel stroke for the shadow to make it look nicer
     // * + = original text dot position

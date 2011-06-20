@@ -48,7 +48,7 @@ public:
   void OnFontSizeChange(UINT uNotifyCode, int nID, CWindow wndCtl);
   //owner draw
   void DrawItem(LPDRAWITEMSTRUCT lpdis);
-  //void MeasureItem(LPMEASUREITEMSTRUCT lpmis);
+  
   void OnColorSelect(UINT uNotifyCode, int nID, CWindow wndCtl);
   void OnColorDoubleClick(UINT uNotifyCode, int nID, CWindow wndCtl);
   void OnStrokeSizeChange(UINT uNotifyCode, int nID, CWindow wndCtl);
@@ -67,7 +67,6 @@ public:
   
   void SetSampleText(std::wstring samplemain, std::wstring samplesecon);
   void SetFontParam(StyleParam* parammain, StyleParam* paramsecon, BOOL bmain);
-  //StyleParam* GetFontParam();
   void SetTitleText(std::wstring title);
 
 
