@@ -14,6 +14,7 @@ public:
   void DoPaint(WTL::CDC& dc, POINT& pt);
 
   void SetCover();
+  void CleanCover();
 
   CRect GetTextRect();
   BOOL ActMouseMove(const POINT& pt);
@@ -28,6 +29,6 @@ public:
 
 private:
   UILayerBlock* m_layer;
-  HBITMAP m_cove;
+  HBITMAP m_cover;
   CRect m_rcText;
 };

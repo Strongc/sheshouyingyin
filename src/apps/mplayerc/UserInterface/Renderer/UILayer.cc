@@ -1,13 +1,27 @@
 #include "stdafx.h"
 #include "UILayer.h"
 #include <ResLoader.h>
+#include <sstream>
 
 UILayer::UILayer(std::wstring respath, BOOL display /* = TRUE */, UINT nums /*= 1*/):
   m_stat(0)
 {
   ResLoader rs;
-  SetTexture(rs.LoadBitmap(respath), nums);
+  HBITMAP hBitmap = rs.LoadBitmap(respath);
+  SetTexture(hBitmap, nums);
   SetDisplay(display);
+
+  // set the original rect
+  m_orginalsize.cx = 0;
+  m_orginalsize.cy = 0;
+
+  BITMAP bmInfo = {0};
+  ::GetObject(hBitmap, sizeof(BITMAP), &bmInfo);
+
+  m_orginalsize.cx = bmInfo.bmWidth;
+  m_orginalsize.cy = bmInfo.bmHeight;
+  if (nums)
+    m_orginalsize.cy /= nums;
 }
 
 UILayer::~UILayer()
@@ -113,8 +127,8 @@ BOOL UILayer::DoPaint(WTL::CDC& dc)
   else
   {
     dc.SetStretchBltMode(COLORONCOLOR);
-    dc.StretchBlt(m_texturepos.x, m_texturepos.y, m_bm.bmWidth, m_bm.bmHeight,
-      texturedc, 0, m_bm.bmHeight * m_stat, m_bm.bmWidth, m_bm.bmHeight, SRCCOPY);
+    dc.StretchBlt(m_texturepos.x, m_texturepos.y, m_orginalsize.cx, m_orginalsize.cy
+                , texturedc, 0, 0, m_bm.bmWidth, m_bm.bmHeight, SRCCOPY);
   }
 
   texturedc.SelectBitmap(hold_texture);
