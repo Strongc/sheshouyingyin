@@ -15,6 +15,8 @@ public:
 
   void SetCover();
   void CleanCover();
+  
+  void SetDisplay(BOOL show = TRUE);
 
   CRect GetTextRect();
   BOOL ActMouseMove(const POINT& pt);
@@ -29,6 +31,7 @@ public:
 
 private:
   UILayerBlock* m_layer;
+  BOOL m_display;
   HBITMAP m_cover;
   CRect m_rcText;
 };

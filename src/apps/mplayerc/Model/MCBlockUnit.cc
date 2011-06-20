@@ -6,7 +6,8 @@
 
 BlockUnit::BlockUnit() :
 m_layer(new UILayerBlock),
-m_cover(NULL)
+m_cover(NULL),
+m_display(FALSE)
 {
 }
 
@@ -199,6 +200,9 @@ void BlockUnit::DefLayer()
 
 void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
 {
+  if (!m_display)
+    return;
+
   UILayer* layer = NULL;
   UILayer* def = NULL;
   UILayer* play = NULL;
@@ -295,4 +299,9 @@ void BlockUnit::CleanCover()
 CRect BlockUnit::GetTextRect()
 {
   return m_rcText;
+}
+
+void BlockUnit::SetDisplay(BOOL show)
+{
+  m_display = show;
 }

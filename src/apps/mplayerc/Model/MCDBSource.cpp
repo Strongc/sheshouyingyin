@@ -13,7 +13,6 @@ MCDBSource::MCDBSource(void):
   m_frontbuff.clear();
 
   m_sp = m_ep = m_frontbuff.begin();
-  m_total = m_db.GetCount();
 }
 
 MCDBSource::~MCDBSource(void)
@@ -45,6 +44,7 @@ void MCDBSource::CleanData()
 
 BOOL MCDBSource::PreLoad(UINT nums)
 {
+  m_total = m_db.GetCount();
   if (!m_total)
     return FALSE;
 
@@ -56,6 +56,8 @@ BOOL MCDBSource::PreLoad(UINT nums)
   {
     BlockUnit* bu = new BlockUnit;
     bu->DefLayer();
+    if (i < m_total)
+      bu->SetDisplay();
     m_frontbuff.push_back(bu);
   }
 
@@ -188,8 +190,11 @@ void MCDBSource::_Thread()
     m_db.Find(m_buffer, sqlwhere, (start < 0 ? 0 : start), m_readnums);
     MediaDatas::iterator val = m_buffer.begin();
     
-    for (BUPOINTER it=m_sp;it != m_ep; ++it,++val)
+    for (BUPOINTER it = m_frontbuff.begin(); val != m_buffer.end(); ++val, ++it)
+    {
       (*it)->m_mediadata = *val;
+      (*it)->SetDisplay();
+    }
 
     MediaCenterController::GetInstance()->Render();
     m_buffer.clear();
