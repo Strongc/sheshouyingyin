@@ -72,37 +72,37 @@ void CoverController::_Thread()
       //url = L"http://jay.webpj.com:8888/api/medias/getinfoBysphash/sphash: \
       25026521a390357bd1fcf52899268c97;c0c3ddd9b5a1c1d292131a91c9200648;cb72fdc1ff58dfc5cda9943e098c304b;e7752a7553168a73f29b0e36f09a86a8";
 
-      // Get http response
-      std::string results("");
-      BOOL bGet = HttpGetResponse(szFileHash, szFilePath, requesturl, results);
-      std::wstring cover;
+      //// Get http response
+      //std::string results("");
+      //BOOL bGet = HttpGetResponse(szFileHash, szFilePath, requesturl, results);
+      //std::wstring cover;
       std::wstring coverdownloadpath;
-      if (!bGet || results.empty())
+      //if (!bGet || results.empty())
       {
         // if no cover on the server, then get the snapshot by ourself
         coverdownloadpath = GetSnapshot(*it, szFileHash);
       }
-      else
-      {
-        // Parse the respond string
-        BOOL bParse = ParseRespondString(results, it->filmname, cover);
-        if (!bParse || cover.empty())
-        {
-          // if no cover on the server, then get the snapshot by ourself
-          coverdownloadpath = GetSnapshot(*it, szFileHash);
-        }
-        else
-        {
-          // Download cover
-          coverdownloadpath = MediaCenterController::GetCoverPath(it->path + it->filename);
-          BOOL bDownload = HttpDownloadCover(downloadurl, coverdownloadpath, cover);
-          if (!bDownload)
-          {
-            // if no cover on the server, then get the snapshot by ourself
-            coverdownloadpath = GetSnapshot(*it, szFileHash);
-          }
-        }
-      }
+      //else
+      //{
+      //  // Parse the respond string
+      //  BOOL bParse = ParseRespondString(results, it->filmname, cover);
+      //  if (!bParse || cover.empty())
+      //  {
+      //    // if no cover on the server, then get the snapshot by ourself
+      //    coverdownloadpath = GetSnapshot(*it, szFileHash);
+      //  }
+      //  else
+      //  {
+      //    // Download cover
+      //    coverdownloadpath = MediaCenterController::GetCoverPath(it->path + it->filename);
+      //    BOOL bDownload = HttpDownloadCover(downloadurl, coverdownloadpath, cover);
+      //    if (!bDownload)
+      //    {
+      //      // if no cover on the server, then get the snapshot by ourself
+      //      coverdownloadpath = GetSnapshot(*it, szFileHash);
+      //    }
+      //  }
+      //}
 
       // see if need to be stop
       if (_Exit_state(0))
