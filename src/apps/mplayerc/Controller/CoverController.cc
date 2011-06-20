@@ -7,6 +7,8 @@
 #include "logging.h"
 #include "MediaCenterController.h"
 #include "..\Model\MediaDB.h"
+#include "PlayerPreference.h"
+#include "SPlayerDefs.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Normal part
@@ -34,8 +36,8 @@ void CoverController::_Thread()
 {
   using namespace boost::filesystem;
 
-  std::wstring requesturl = L"http://m.shooter.cn/api/medias/getinfoBysphash/sphash:";
-  std::wstring downloadurl = L"http://img.shooter.cn/";
+  std::wstring requesturl = PlayerPreference::GetInstance()->GetStringVar(STRVAR_COVER_REQUESTURL);
+  std::wstring downloadurl = PlayerPreference::GetInstance()->GetStringVar(STRVAR_COVER_DOWNLOADURL);
   std::list<MediaData>::iterator it;
 
   while (true)
@@ -271,7 +273,7 @@ std::wstring CoverController::GetSnapshot(const MediaData &md, const std::string
 // For upload
 void CoverController::UploadCover(const MediaData &md)
 {
-  std::wstring url = L"http://zz.webpj.com:8888/api/medias/add_sfScreenshot";
+  std::wstring url = PlayerPreference::GetInstance()->GetStringVar(STRVAR_COVER_UPLOADURL);
 
   std::wstring szFilePath = md.path + md.filename; 
   std::wstring szFileHash = HashController::GetInstance()->GetSPHash(szFilePath.c_str());

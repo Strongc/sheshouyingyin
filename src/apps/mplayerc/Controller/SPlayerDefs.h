@@ -35,6 +35,10 @@
 #define STRVAR_AD                   1010        // string to get ads
 #define STRVAR_TIMEBMP_TYPE         1011        // "Display_TimeLeft", "Display_TimeTotal", "Display_Power"
 
+#define STRVAR_COVER_REQUESTURL     1012        // requesturl used in cover controller
+#define STRVAR_COVER_DOWNLOADURL    1013        // downloadurl used in cover controller
+#define STRVAR_COVER_UPLOADURL    1013        // uploadurl used in cover controller
+
 // string array variables
 #define STRARRAY_PLAYLIST           1000
 

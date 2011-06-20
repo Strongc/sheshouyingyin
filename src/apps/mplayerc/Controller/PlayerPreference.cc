@@ -42,6 +42,10 @@ PlayerPreference::PlayerPreference(void):
 
   m_map_strvar[STRVAR_AD] = GetProfileString(L"Settings", L"Ad", L"");   // ad
   m_map_strvar[STRVAR_TIMEBMP_TYPE] = GetProfileString(L"Settings", L"TimeBmpType", L"Display_TimeLeft");
+
+  m_map_strvar[STRVAR_COVER_REQUESTURL] = L"http://m.shooter.cn/api/medias/getinfoBysphash/sphash:"; // cover controller
+  m_map_strvar[STRVAR_COVER_DOWNLOADURL] = L"http://img.shooter.cn/";
+  m_map_strvar[STRVAR_COVER_UPLOADURL] = L"http://zz.webpj.com:8888/api/medias/add_sfScreenshot";
 }
 
 void PlayerPreference::Update()
