@@ -46,6 +46,7 @@ public:
   {
     // Find if the file is a media file
     std::wstring sExt = ::PathFindExtension(sFilePath.c_str());
+    std::transform(sExt.begin(), sExt.end(), sExt.begin(), std::tolower);  // change ext to lowercase
     if (find(m_supportexts.begin(), m_supportexts.end(), sExt) != m_supportexts.end())
       return TRUE;
 
