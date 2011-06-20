@@ -115,8 +115,8 @@ void MediaCenterController::SpiderThreadStop()
 
 void MediaCenterController::CoverThreadStart()
 {
-   //m_cover._Stop();
-   //m_cover._Start();
+   m_cover._Stop();
+   m_cover._Start();
 }
 
 void MediaCenterController::CoverThreadStop()

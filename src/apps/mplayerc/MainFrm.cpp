@@ -7308,7 +7308,11 @@ void CMainFrame::OnPlayStopDummy(){
 void CMainFrame::OnPlayStop()
 {
   // restart the cover thread
-  MediaCenterController::GetInstance()->CoverThreadStart();
+  AppSettings &s = AfxGetAppSettings();
+  if (!(s.nCLSwitches & CLSW_SNAPSHOT))
+  {
+    MediaCenterController::GetInstance()->CoverThreadStart();
+  }
 
   // other things
   m_l_been_playing_sec = 0;
