@@ -508,12 +508,14 @@ BOOL MediaCenterController::ActWindowChange(int w, int h)
 
 BOOL MediaCenterController::ActLButtonDblClick(const POINT& pt)
 {
+  BOOL bl = FALSE;
+
   if (!m_planestate)
     return FALSE;
 
-  m_mclist.ActLButtonDblClick(pt);
+  bl = m_mclist.ActLButtonDblClick(pt);
 
-  return TRUE;
+  return bl;
 }
 
 BOOL MediaCenterController::ActRButtonUp(const POINT &pt)
