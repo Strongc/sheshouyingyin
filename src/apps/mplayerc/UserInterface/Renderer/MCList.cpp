@@ -5,14 +5,13 @@
 #include "../../SUIButton.h"
 #include <ResLoader.h>
 #include "../../MainFrm.h"
+#include <math.h>
   
 SPMCList::SPMCList():
   m_dbsource(NULL),
   m_lockpaint(FALSE),
   m_selblockunit(NULL),
   m_listempty(TRUE),
-  m_deltatime(0),
-  m_anitime(0),
   m_maxsbar(0),
   m_maxoffset(0),
   m_rowpos(0),
@@ -144,17 +143,9 @@ void SPMCList::BlocksMouseMove(const POINT& pt)
 
 void SPMCList::Update(DWORD deltatime)
 {
-//   if (!m_anitime)
-//     return;
-
   int status = m_dbsource->GetReaderStatus();
 
   m_lockpaint = TRUE;
-  
-//   m_deltatime += deltatime;
-// 
-//   if (m_deltatime > m_anitime)
-//     m_deltatime = m_deltatime % m_anitime;
 
   m_rowpos += (m_sbardir?1:-1) * (int)((float)deltatime * (float)m_anispeed);
 
@@ -205,8 +196,7 @@ BOOL SPMCList::ActMouseMove(const POINT& pt)
     {
       if (offset > m_maxsbar)
         offset = m_maxsbar;
-      m_anitime = (m_maxsbar/offset)*300;
-      m_anispeed = (float)m_maxoffset / (float)m_anitime;
+      m_anispeed = 0.00005f * pow((float)offset, 2.0f);
     }
   }
   else
@@ -232,14 +222,12 @@ BOOL SPMCList::ActMouseLBUp(const POINT& pt)
 
   ret = m_sbar->ActMouseLBUp(pt);
 
-  m_anitime = 0;
   m_anispeed = 0.f;
 
   MCLoopList(m_dbsource)
     if (MCLoopOne()->ActLButtonUp(pt)) ret = TRUE;
   MCEndLoop()
 
-  m_deltatime = 0;
   return ret;
 }
 

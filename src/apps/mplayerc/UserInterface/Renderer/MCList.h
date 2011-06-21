@@ -68,8 +68,6 @@ private:
   UINT m_maxoffset;
 
   float m_anispeed;
-  UINT m_anitime;
-  DWORD m_deltatime;
 
   BOOL m_sbardir;
 
