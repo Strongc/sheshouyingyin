@@ -281,13 +281,18 @@ BOOL SPMCList::ActWindowChange(int w, int h)
 
 BOOL SPMCList::ActLButtonDblClick(const POINT& pt)
 {
+  BOOL bl = FALSE;
+
   MCLoopList(m_dbsource)
     CRect rcText = MCLoopOne()->GetTextRect();
     if (rcText.PtInRect(pt))
+    {
       MediaCenterController::GetInstance()->ShowFilmNameEdit(sp, rcText);
+      bl = TRUE;
+    }
   MCEndLoop()
 
-  return TRUE;
+  return bl;
 }
 
 BOOL SPMCList::ActRButtonUp(const POINT &pt)
