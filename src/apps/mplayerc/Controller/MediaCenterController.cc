@@ -482,9 +482,17 @@ BOOL MediaCenterController::ActMouseLBUp(const POINT& pt)
 
   if (m_mclist.GetScrollBar()->IsDragBar())
     ::ReleaseCapture();
+
   m_mclist.ActMouseLBUp(pt);
 
   return TRUE;
+}
+
+void MediaCenterController::ReleaseList()
+{
+  ::ReleaseCapture();
+  POINT pt;
+  m_mclist.GetScrollBar()->ActMouseLBUp(pt);
 }
 
 BOOL MediaCenterController::ActWindowChange(int w, int h)

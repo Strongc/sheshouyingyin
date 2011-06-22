@@ -95,6 +95,8 @@ public:
   BOOL ActLButtonDblClick(const POINT& pt);
   BOOL ActRButtonUp(const POINT &pt);
 
+  void ReleaseList();
+
 private:
   HWND m_hwnd;
   BOOL m_planestate;

@@ -62,35 +62,32 @@ BOOL SPScrollBar::ActMouseMove(const POINT& pt)
   BOOL ret = FALSE;
 
   GetTextureRect(m_rcsbar);
+
   if (::PtInRect(&m_rcsbar, pt))
   {
     if (GetState() != 1)
     {
       SetState(1);
+      // set hand cursor
+      MediaCenterController::GetInstance()->SetCursor(IDC_HAND);
       MediaCenterController::GetInstance()->Render();
     }
-
-    if (m_startdrag)
-    {
-      m_direction = (m_lasty > pt.y) ? TRUE/*up*/ : FALSE/*down*/;
-      m_offset = abs(pt.y - m_lasty);
-      ret = TRUE;
-    }
-
-    // set hand cursor
-    MediaCenterController::GetInstance()->SetCursor(IDC_HAND);
   }
-  else
+  else if (GetState() != 0)
   {
-    if (GetState() != 0)
-    {
-      SetState(0);
-      MediaCenterController::GetInstance()->Render();
-    }
-
+    SetState(0);
     // set arrow cursor
     MediaCenterController::GetInstance()->SetCursor(IDC_ARROW);
+    MediaCenterController::GetInstance()->Render();
   }
+  
+  if (m_startdrag)
+  {
+    m_direction = (m_lasty > pt.y) ? TRUE/*up*/ : FALSE/*down*/;
+    m_offset = abs(pt.y - m_lasty);
+    ret = TRUE;
+  }
+
   return ret;
 }
 
