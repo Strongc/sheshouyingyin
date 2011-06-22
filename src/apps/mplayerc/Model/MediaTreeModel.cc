@@ -152,7 +152,7 @@ void media_tree::model::addFile(const MediaData &md)
       fe.file_data.path = fullFolderPath(itFolder.node());
       fe.file_data.thumbnailpath = md.thumbnailpath;
       fe.file_data.hash = MediaCenterController::GetMediaHash(fe.file_data.path + fe.file_data.filename);
-      fe.file_data.createtime = ::time(0);
+      fe.file_data.createtime = (int)::time(0);
 
       fe.tFileCreateTime = ::time(0);
       files.push_back(fe);
@@ -163,6 +163,42 @@ void media_tree::model::addFile(const MediaData &md)
     // should never go here
   }
   m_cs.unlock();
+}
+
+bool media_tree::model::updateFile(const MediaData &old_md, const MediaData &new_md)
+{
+  bool ret = true;
+
+  m_cs.lock();
+  TreeIterator itFolder = findFolder(old_md.path, true);
+  TreeIterator itEnd;
+  if (itFolder != itEnd)
+  {
+    // modify something about this folder's file list
+    MediaTreeFiles &files = itFolder->lsFiles;
+    MediaTreeFiles::iterator itFiles = files.begin();
+    while (itFiles != files.end())
+    {
+      if (itFiles->file_data.filename == old_md.filename)
+      {
+        itFiles->file_data = new_md;
+        break;
+      }
+
+      ++itFiles;
+    }
+
+    // return false if the old file is not exists
+    if (itFiles == files.end())
+      ret = false;
+  }
+  else
+  {
+    // should never go here
+  }
+  m_cs.unlock();
+
+  return ret;
 }
 
 void media_tree::model::save2DB()
