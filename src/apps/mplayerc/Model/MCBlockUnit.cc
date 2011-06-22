@@ -264,7 +264,7 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
 
   m_rcText = rc;
 
-  std::wstring fmnm = m_mediadata.filmname.empty() ? m_mediadata.filename : m_mediadata.filmname;
+  std::wstring fmnm = m_mediadata.filename;  // just use filename now
 
   HFONT hOldFont = dc.SelectFont(MediaCenterController::GetInstance()->GetFilmTextFont());
   dc.DrawText(fmnm.c_str(), fmnm.size(), &rc, DT_END_ELLIPSIS|DT_CENTER|DT_VCENTER|DT_SINGLELINE);
