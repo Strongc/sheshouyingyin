@@ -194,9 +194,10 @@ void MCDBSource::_Thread()
     {
       (*it)->m_mediadata = *val;
       (*it)->SetDisplay();
+      MediaCenterController::GetInstance()->Render();
+      Sleep(20);
     }
 
-    MediaCenterController::GetInstance()->Render();
     m_buffer.clear();
   }
 }
