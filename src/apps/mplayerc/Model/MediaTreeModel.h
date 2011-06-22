@@ -31,6 +31,7 @@ public:
   void initHide(const std::wstring &sFolder, const std::wstring &sFilename, bool bHide);
   void addFolder(const std::wstring &sFolder, bool bIncreaseMerit = false);
   void addFile(const MediaData &md);
+  bool updateFile(const MediaData &old_md, const MediaData &new_md);
   void save2DB();
   void delTree();
   void splitPath(const std::wstring &sPath, std::stack<std::wstring> &skResult);
