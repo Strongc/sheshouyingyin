@@ -213,10 +213,9 @@ void MediaCenterController::OnSetFilmName()  // set filmname by the edit control
     CMainFrame *pFrame = (CMainFrame *)(AfxGetMyApp()->GetMainWnd());
     pFrame->m_hAccelTable = m_hOldAccel;
 
-    // set filmname
+    // get filmname
     CString sNewFilmName;
     m_pFilmNameEdit->GetWindowText(sNewFilmName);
-    (*m_itCurEdit)->m_mediadata.filmname = sNewFilmName;
 
     // rename file
     std::wstring sPath = (*m_itCurEdit)->m_mediadata.path;
@@ -231,13 +230,27 @@ void MediaCenterController::OnSetFilmName()  // set filmname by the edit control
 
     if (err == boost::system::errc::success)
     {
-      // set new filename
-      (*m_itCurEdit)->m_mediadata.filename = sNewFilmName;
-    }
+      // set new filename and filmname
+      (*m_itCurEdit)->m_mediadata.filename = (LPCTSTR)sNewFilmName + sExt;
+      (*m_itCurEdit)->m_mediadata.filmname = sNewFilmName;
 
-    // store info to database
-    media_tree::model &tree_model = GetMediaTree();
-    tree_model.addFile((*m_itCurEdit)->m_mediadata);
+      // store info to database, must delete old record in database
+      MediaFindCondition mf;
+      mf.uniqueid = 0;
+      mf.filename = sOldFilename;
+      m_model.Delete(mf);
+
+      media_tree::model &tree_model = GetMediaTree();
+      tree_model.addFile((*m_itCurEdit)->m_mediadata);
+      tree_model.save2DB();
+    }
+    else
+    {
+      // send status message to notify user the operation is failed
+      boost::system::system_error sys_err(err);
+      SetStatusText(Strings::StringToWString(sys_err.what()));
+      Render();
+    }
   }
 }
 
