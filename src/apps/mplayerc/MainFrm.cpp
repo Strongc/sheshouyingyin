@@ -2446,6 +2446,7 @@ void CMainFrame::OnActivateApp(BOOL bActive, DWORD dwThreadID)
   }
   if(!bActive){
     RedrawNonClientArea();
+    MediaCenterController::GetInstance()->ReleaseList();
   }
 }
 
