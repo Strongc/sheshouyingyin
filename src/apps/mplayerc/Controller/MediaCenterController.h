@@ -48,7 +48,7 @@ public:
    void InitTextEdit();
    HWND GetFilmNameEdit();
    void OnSetFilmName();  // set filmname by the edit control
-   void ShowFilmNameEdit(MCDBSource::BUPOINTER it, const CRect &rc);
+   void ShowFilmNameEdit(BlockUnit* bu);
    void HideFilmNameEdit();
 
    void SetStatusText(const std::wstring &str);
@@ -111,7 +111,7 @@ private:
   // datas for film name edit
   boost::shared_ptr<TextEdit> m_pFilmNameEdit;
   HACCEL m_hOldAccel;
-  MCDBSource::BUPOINTER m_itCurEdit;  // the block unit we current edit it
+  BlockUnit* m_itCurEdit;  // the block unit we current edit it
   
 private: 
   BOOL m_isupdate;

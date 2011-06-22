@@ -225,9 +225,11 @@ BOOL SPMCList::ActMouseLBUp(const POINT& pt)
 
   m_anispeed = 0.f;
 
-  MCLoopList(m_dbsource)
-    if (MCLoopOne()->ActLButtonUp(pt)) ret = TRUE;
-  MCEndLoop()
+  if (!m_sbar->IsDragBar() && m_selblockunit)
+  {
+    m_selblockunit->ActLButtonUp(pt);
+    ret = TRUE;
+  }
 
   return ret;
 }
@@ -284,14 +286,11 @@ BOOL SPMCList::ActLButtonDblClick(const POINT& pt)
 {
   BOOL bl = FALSE;
 
-  MCLoopList(m_dbsource)
-    CRect rcText = MCLoopOne()->GetTextRect();
-    if (rcText.PtInRect(pt))
-    {
-      MediaCenterController::GetInstance()->ShowFilmNameEdit(sp, rcText);
-      bl = TRUE;
-    }
-  MCEndLoop()
+  if (m_selblockunit)
+  {
+    bl = TRUE;
+    MediaCenterController::GetInstance()->ShowFilmNameEdit(m_selblockunit);
+  }
 
   return bl;
 }
@@ -301,9 +300,11 @@ BOOL SPMCList::ActRButtonUp(const POINT &pt)
   // if a blockunit deal with this message, then return TRUE to avoid popup menu
   BOOL bl = FALSE;
 
-  MCLoopList(m_dbsource)
-    if (MCLoopOne()->ActRButtonUp(pt)) bl = TRUE;
-  MCEndLoop()
+  if (m_selblockunit)
+  {
+    bl = TRUE;
+    m_selblockunit->ActRButtonUp(pt);
+  }
 
   if (m_sbar->ActRButtonUp(pt))
     bl = TRUE;

@@ -218,8 +218,8 @@ void MediaCenterController::OnSetFilmName()  // set filmname by the edit control
     m_pFilmNameEdit->GetWindowText(sNewFilmName);
 
     // rename file
-    std::wstring sPath = (*m_itCurEdit)->m_mediadata.path;
-    std::wstring sOldFilename = (*m_itCurEdit)->m_mediadata.filename;
+    std::wstring sPath = m_itCurEdit->m_mediadata.path;
+    std::wstring sOldFilename = m_itCurEdit->m_mediadata.filename;
     std::wstring sExt;
     size_t nPos = sOldFilename.find_last_of('.');
     if (nPos != std::wstring::npos)
@@ -231,8 +231,8 @@ void MediaCenterController::OnSetFilmName()  // set filmname by the edit control
     if (err == boost::system::errc::success)
     {
       // set new filename and filmname
-      (*m_itCurEdit)->m_mediadata.filename = (LPCTSTR)sNewFilmName + sExt;
-      (*m_itCurEdit)->m_mediadata.filmname = sNewFilmName;
+      m_itCurEdit->m_mediadata.filename = (LPCTSTR)sNewFilmName + sExt;
+      m_itCurEdit->m_mediadata.filmname = sNewFilmName;
 
       // store info to database, must delete old record in database
       MediaFindCondition mf;
@@ -241,7 +241,7 @@ void MediaCenterController::OnSetFilmName()  // set filmname by the edit control
       m_model.Delete(mf);
 
       media_tree::model &tree_model = GetMediaTree();
-      tree_model.addFile((*m_itCurEdit)->m_mediadata);
+      tree_model.addFile(m_itCurEdit->m_mediadata);
       tree_model.save2DB();
     }
     else
@@ -254,20 +254,21 @@ void MediaCenterController::OnSetFilmName()  // set filmname by the edit control
   }
 }
 
-void MediaCenterController::ShowFilmNameEdit(MCDBSource::BUPOINTER it, const CRect &rc)
+void MediaCenterController::ShowFilmNameEdit(BlockUnit* bu)
 {
   if (m_pFilmNameEdit)
   {
-    m_pFilmNameEdit->MoveWindow(rc);
+    RECT rc = bu->GetTextRect();
+    m_pFilmNameEdit->MoveWindow(&rc);
     m_pFilmNameEdit->ShowWindow(SW_SHOW);
 
     CMainFrame *pFrame = (CMainFrame *)(AfxGetMyApp()->GetMainWnd());
     m_hOldAccel = pFrame->m_hAccelTable;
     pFrame->m_hAccelTable = 0;        // temp destroy the accelerate table
 
-    std::wstring sFilmName = (*it)->m_mediadata.filmname;
+    std::wstring sFilmName = bu->m_mediadata.filmname;
     if (sFilmName.empty())
-      sFilmName = (*it)->m_mediadata.filename;
+      sFilmName = bu->m_mediadata.filename;
 
     int pos = sFilmName.find_last_of('.');
     if (pos != std::wstring::npos)
@@ -280,7 +281,7 @@ void MediaCenterController::ShowFilmNameEdit(MCDBSource::BUPOINTER it, const CRe
 
     m_pFilmNameEdit->SetSel(0, -1); // only focus on filename, exclude the ext
 
-    m_itCurEdit = it;  // sp is defined in macro MCLoopList
+    m_itCurEdit = bu;  // sp is defined in macro MCLoopList
   }
 }
 
