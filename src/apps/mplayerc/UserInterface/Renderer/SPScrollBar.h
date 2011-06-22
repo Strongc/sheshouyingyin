@@ -26,6 +26,7 @@ private:
 
   int m_offset;
 
+  RECT m_rcparent;
   RECT m_rcsbar;
   BOOL m_startdrag;
   int m_lasty;

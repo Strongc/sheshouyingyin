@@ -212,7 +212,8 @@ BOOL SPMCList::ActMouseLBDown(const POINT& pt)
   BOOL ret = FALSE;
   
   ret = m_sbar->ActMouseLBDown(pt);
-
+  if (m_sbar->GetSBarOffset() && ret)
+    ActMouseMove(pt);
   return ret;
 }
 

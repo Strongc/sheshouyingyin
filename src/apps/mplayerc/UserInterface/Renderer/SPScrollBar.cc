@@ -44,6 +44,7 @@ void SPScrollBar::SetClientRect(RECT& rc)
   else if (pt.y + m_fixy > rc.bottom)
     pt.y = rc.bottom - m_fixy;
 
+  m_rcparent = rc;
   SetTexturePos(pt);
 }
 
@@ -97,8 +98,30 @@ BOOL SPScrollBar::ActMouseLBDown(const POINT& pt)
 
   if (::PtInRect(&m_rcsbar, pt))
   {
-    m_lasty = pt.y;
     ret = TRUE;
+    m_lasty = pt.y;
+  }
+  else
+  {
+    GetTextureRect(m_rcsbar);
+    RECT rcclick = m_rcsbar;
+    rcclick.top = 0;
+    rcclick.bottom = m_rcparent.bottom;
+
+    if (::PtInRect(&rcclick, pt))
+    {
+      m_direction = (pt.y > m_rcsbar.top) ? FALSE : TRUE;
+      int y = m_fixy / 2;
+      m_lasty = m_rcsbar.top + y;
+      y = m_direction ? y : -1 * y;
+      m_offset = abs(m_rcsbar.top - pt.y) + y;
+      MediaCenterController::GetInstance()->Render();
+      ret = TRUE;
+    }
+  }
+
+  if (ret)
+  {
     m_startdrag = TRUE;
     MediaCenterController::GetInstance()->Update();
   }
