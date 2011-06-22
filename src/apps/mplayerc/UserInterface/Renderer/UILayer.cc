@@ -2,6 +2,7 @@
 #include "UILayer.h"
 #include <ResLoader.h>
 #include <sstream>
+#include "logging.h"
 
 UILayer::UILayer(std::wstring respath, BOOL display /* = TRUE */, UINT nums /*= 1*/):
   m_stat(0)
@@ -127,8 +128,34 @@ BOOL UILayer::DoPaint(WTL::CDC& dc)
   else
   {
     dc.SetStretchBltMode(COLORONCOLOR);
-    dc.StretchBlt(m_texturepos.x, m_texturepos.y, m_orginalsize.cx, m_orginalsize.cy
-                , texturedc, 0, 0, m_bm.bmWidth, m_bm.bmHeight, SRCCOPY);
+
+    // adjust the ratio
+    if ((m_bm.bmHeight != 0) && (m_bm.bmWidth != 0))
+    {
+      float fWHRatio = (float)(m_bm.bmWidth) / m_bm.bmHeight;
+      float fHWRatio = (float)(m_bm.bmHeight) / m_bm.bmWidth;
+
+      if (m_bm.bmWidth > m_orginalsize.cx)
+      {
+        // width is the same value as layer's width
+        // so we adjust the vertical position
+        int nYOffset = (m_orginalsize.cy - m_orginalsize.cx * fHWRatio) / 2.0;
+        dc.StretchBlt(m_texturepos.x, m_texturepos.y + nYOffset, m_orginalsize.cx, m_orginalsize.cx * fHWRatio
+          , texturedc, 0, 0, m_bm.bmWidth, m_bm.bmHeight, SRCCOPY);
+      } 
+      else
+      {
+        // height is the same value as layer's height
+        // so we adjust the horizontal position
+        int nXOffset = (m_orginalsize.cx - m_orginalsize.cy * fWHRatio) / 2.0;
+        dc.StretchBlt(m_texturepos.x + nXOffset, m_texturepos.y, m_orginalsize.cy * fWHRatio, m_orginalsize.cy
+          , texturedc, 0, 0, m_bm.bmWidth, m_bm.bmHeight, SRCCOPY);
+      }
+    }
+    else
+    {
+      Logging(L"layer height or width is invalid");
+    }
   }
 
   texturedc.SelectBitmap(hold_texture);
