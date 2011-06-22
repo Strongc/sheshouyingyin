@@ -59,7 +59,25 @@ BOOL BlockUnit::ActMouseOver(const POINT& pt)
     return FALSE;
 
   play->SetDisplay(TRUE);
-  hide->SetDisplay(TRUE);
+
+  RECT rcHide = {0};
+  hide->GetTextureRect(rcHide);
+  rcHide.left -= 20;  // Expand the size of the rect
+  rcHide.top -= 20;
+  rcHide.right += 20;
+  rcHide.bottom += 20;
+
+  if (PtInRect(&rcHide, pt))
+  {
+    hide->SetDisplay(TRUE);
+    MediaCenterController::GetInstance()->Render();
+  }
+  else
+  {
+    hide->SetDisplay(FALSE);
+    MediaCenterController::GetInstance()->Render();
+  }
+
   //favourite->SetDisplay(TRUE);
   //cover->SetDisplay(TRUE);
 
@@ -226,7 +244,7 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   POINT layer_fixpt = {pt.x + 10, pt.y};
   POINT play_fixpt = {40, 16};
   POINT def_fixpt = {15, 4};
-  POINT hide_fixpt = {83, 74};
+  POINT hide_fixpt = {92, 78};
   //POINT favourite_fixpt = {28, 74};
   //POINT cover_fixpt = {56, 74};
 
