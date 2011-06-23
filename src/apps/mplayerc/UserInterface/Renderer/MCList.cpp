@@ -236,6 +236,7 @@ BOOL SPMCList::ActMouseLBUp(const POINT& pt)
 
 void SPMCList::InitMCList(int w, int h)
 {
+  m_rowpos = 0;
   SetMCRect(w, h);
 
   if (m_dbsource->PreLoad(m_blockcount))
@@ -273,7 +274,7 @@ BOOL SPMCList::ActWindowChange(int w, int h)
   if (!m_listempty)
     m_dbsource->AdjustRange(m_blockcount, m_maxcolumns);
   
- m_dbsource->SetReadNums(m_blockcount);
+  m_dbsource->SetReadNums(m_blockcount);
 
   m_sbar->SetDisplay(m_dbsource->IsMoreData());
 
