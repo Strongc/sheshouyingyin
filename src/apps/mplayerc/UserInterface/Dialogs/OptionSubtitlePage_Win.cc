@@ -11,18 +11,8 @@
 OptionSubtitlePage::OptionSubtitlePage(void):
   m_mainstyle(0)
 , m_secstyle(0)
-, m_highlightstat(0)
 {
-  // init font sample string
-  WTL::CString text;
-  text.LoadString(IDS_SUBTITLESTYLES);
-  Strings::Split(text, L"|", m_samplevec);
-  
-  // init style entry height
-  m_styleentry_height = 80;//::GetSystemMetrics(SM_CYICON)*7/5;
 
-  m_listtextrc.clear(); 
-  m_listhittestrc.clear();
 }
 
 BOOL OptionSubtitlePage::OnInitDialog(HWND hwnd, LPARAM lParam)
@@ -42,19 +32,21 @@ BOOL OptionSubtitlePage::OnInitDialog(HWND hwnd, LPARAM lParam)
   m_subtitlestyle.SubclassWindow(GetDlgItem(IDC_LIST));
   m_subtitlestyle.GetWindowRect(&rc_stylelist);
   m_styleentry_width = rc_stylelist.right - rc_stylelist.left;
-  RefreshStyles();
+  m_subtitlestyle.InitializeList();
+  //RefreshStyles();
 
   AppSettings& s = AfxGetAppSettings();
   // calculate current settings according to AppSettings class s.subdefstyle
   // retrieve subtitle style settings, and check which available style is closest to
   // the given settings, then set |m_mainstyle| to corresponding one.
   // s.subdefstyle compare font type, font color, border color shadow color
-  for (int i = 0; i < m_fontparams.GetStyleCount(); i++)
+  for (int i = 0; i < m_subtitlestyle.GetCount(); i++)
   {
-    StyleParam* sp = NULL;
-    sp = m_fontparams.GetFontParam(i, TRUE);
-    if (sp->fontcolor == s.subdefstyle.colors[0] && sp->strokecolor == s.subdefstyle.colors[2] 
-        && sp->shadowcolor == s.subdefstyle.colors[3] 
+    StyleParam* mainsp = NULL;
+    StyleParam* secondsp = NULL;
+    m_subtitlestyle.GetItemData(i, &mainsp, &secondsp);
+    if (mainsp->fontcolor == s.subdefstyle.colors[0] && mainsp->strokecolor == s.subdefstyle.colors[2] 
+        && mainsp->shadowcolor == s.subdefstyle.colors[3] 
         /*&& (sp->_fontname == SubtitleStyle::DetectFontType((LPCTSTR)s.subdefstyle.fontName))*/ //×ÖÌå
        )
     {
@@ -109,99 +101,6 @@ void OptionSubtitlePage::OnDestroy()
   m_subtitlestyle.Detach();
 }
 
-void OptionSubtitlePage::OnMouseMove(UINT wParma, CPoint pt)
-{
-  int index = m_subtitlestyle.GetCurSel();
-  WTL::CRect mainrc = GetHittestDivideRect(2 * index);
-  WTL::CRect seconrc = GetHittestDivideRect(2 * index + 1);
-  WTL::CRect dlgrc;
-  WTL::CRect listrc;
-  GetWindowRect(&dlgrc);
-  m_subtitlestyle.GetWindowRect(&listrc);
-
-  listrc = listrc - dlgrc.TopLeft();
-  mainrc += listrc.TopLeft();
-  seconrc += listrc.TopLeft();
-
-  if (PtInRect(&mainrc, pt))
-  {
-    if (m_highlightstat == 1)
-      return;
-
-    SetClassLong(m_subtitlestyle.m_hWnd, GCL_HCURSOR, (LONG)LoadCursor(NULL, IDC_HAND));
-    ::SetCursor(LoadCursor(NULL, IDC_HAND));
-    m_highlightstat = 1;
-    m_subtitlestyle.SetCurSel(m_subtitlestyle.GetCurSel());
-    return;
-  }
-
-  if (PtInRect(&seconrc, pt))
-  {
-    if (m_highlightstat == 2)
-      return;
-
-    SetClassLong(m_subtitlestyle.m_hWnd, GCL_HCURSOR, (LONG)LoadCursor(NULL, IDC_HAND));
-    SetCursor(LoadCursor(NULL, IDC_HAND));
-    m_highlightstat = 2;
-    m_subtitlestyle.SetCurSel(m_subtitlestyle.GetCurSel());
-    return;
-  }
-
-  int bhightlightorg = m_highlightstat;
-  m_highlightstat = 0;
-
-  SetClassLong(m_subtitlestyle.m_hWnd, GCL_HCURSOR, (LONG)LoadCursor(NULL, IDC_ARROW));
-  SetCursor(LoadCursor(NULL, IDC_ARROW));
-
-  if (bhightlightorg != m_highlightstat)
-    m_subtitlestyle.SetCurSel(m_subtitlestyle.GetCurSel());
-}
-
-void OptionSubtitlePage::OnLButtonDbClick(UINT wParma, CPoint pt)
-{
-  int index = m_subtitlestyle.GetCurSel();
-  WTL::CRect mainrc = GetHittestDivideRect(2 * index);
-  WTL::CRect seconrc = GetHittestDivideRect(2 * index + 1);
-  WTL::CRect dlgrc;
-  WTL::CRect listrc;
-  GetWindowRect(&dlgrc);
-  m_subtitlestyle.GetWindowRect(&listrc);
-
-  listrc = listrc - dlgrc.TopLeft();
-  mainrc += listrc.TopLeft();
-  seconrc += listrc.TopLeft();
-
-  BOOL mainorsecon;
-  int  vecindex = MAXINT;
-
-  WTL::CString text;
-  std::vector<std::wstring> vec;
-  text.LoadString(IDS_CUSTOMIZEFONT_TITLE);
-  Strings::Split(text, L"|", vec);
-
-  if (PtInRect(&mainrc, pt))
-  {
-    mainorsecon = TRUE;
-    vecindex = 0;
-  }
-
-  if (PtInRect(&seconrc, pt))
-  {
-    mainorsecon = FALSE;
-    vecindex = 1;
-  }
-
-  if (vecindex != MAXINT)
-  {
-    CustomizeFontDlg fdlg;
-    fdlg.SetTitleText(vec[vecindex]);
-    fdlg.SetSampleText(m_samplevec[0], m_samplevec[1]);
-    fdlg.SetFontParam(m_fontparams.GetFontParam(index), m_fontparams.GetFontParam(index, FALSE), mainorsecon);
-    if (fdlg.DoModal() == IDC_FONTOK_BUTTON)
-      m_fontparams.WriteProfile();
-  } 
-}
-
 void OptionSubtitlePage::OnSubtitleStyleChange(UINT uNotifyCode, int nID, CWindow wndCtl)
 {
   m_mainstyle = m_subtitlestyle.GetCurSel();
@@ -247,86 +146,13 @@ void OptionSubtitlePage::OnSelectCustomFolder(UINT uNotifyCode, int nID, CWindow
 
 void OptionSubtitlePage::DrawItem(LPDRAWITEMSTRUCT lpdis)
 {
-  StyleParam* spmain = NULL;
-  StyleParam* spsecondary = NULL;
-  spmain = m_fontparams.GetFontParam(lpdis->itemID, TRUE);
-  spsecondary = m_fontparams.GetFontParam(lpdis->itemID, FALSE);
-
-  int top = 0;
-  if (spsecondary)
-    top = PreserveItemDivideRect(lpdis->rcItem, lpdis->itemID, TRUE);
-  else
-    top = PreserveItemDivideRect(lpdis->rcItem, lpdis->itemID, FALSE);
-
-  WTL::CDC dc;
-  WTL::CBitmap bmp;
-  dc.CreateCompatibleDC(lpdis->hDC);
-  bmp.CreateCompatibleBitmap(lpdis->hDC, 2 * (lpdis->rcItem.right - lpdis->rcItem.left), 
-    2 * (lpdis->rcItem.bottom - lpdis->rcItem.top));
-  HBITMAP oldbmp = dc.SelectBitmap(bmp);
-
-  WTL::CRect rc(0, 0, 2 * (lpdis->rcItem.right - lpdis->rcItem.left), 2 * (lpdis->rcItem.bottom - lpdis->rcItem.top));
-
-  dc.FillRect(&rc, COLOR_3DFACE);
-  if (lpdis->itemState & ODS_SELECTED)
-  {
-    PaintListItemBackground(dc, rc.Width(), rc.Height());
-    if (m_highlightstat != 0)
-    {
-      WTL::CRect itemrc;
-      WTL::CRect lightrc = rc;
-      BOOL       bmain = TRUE;
-
-      itemrc = GetHittestDivideRect(2 * lpdis->itemID);
-      lightrc.bottom = lightrc.top + 2 * itemrc.Height();
-
-      if (m_highlightstat == 2)
-      {
-        lightrc.top = lightrc.bottom;
-        lightrc.bottom = rc.bottom;
-        bmain = FALSE;
-      }
-      
-      PaintHighLightListBckground(dc, lightrc, bmain);
-    }
-  }
-
- 
-  WTL::CRect mainrc = GetTextDivideRect( 2 * lpdis->itemID);
-  int height = mainrc.Height();
-  mainrc.top = 2 * top;
-  mainrc.bottom = mainrc.top + 2 * height;
-  
-  if (spmain)
-  {
-    m_subtitle.SetFont(*m_fontparams.GetFontParam(lpdis->itemID));
-    m_subtitle.SetSampleText(m_samplevec[0]);
-    m_subtitle.Paint(dc, mainrc);
-  }
- 
-  WTL::CRect seconrc = GetTextDivideRect(2 * lpdis->itemID + 1);
-  int height2 = seconrc.Height();
-  seconrc.top = mainrc.bottom;
-  seconrc.bottom = seconrc.top + 2 * height2;
-  if (spsecondary)
-  {
-    m_subtitle.SetFont(*m_fontparams.GetFontParam(lpdis->itemID, FALSE));
-    m_subtitle.SetSampleText(m_samplevec[1]);
-    m_subtitle.Paint(dc, seconrc);
-  }
-
-  SetStretchBltMode(lpdis->hDC, HALFTONE);
-  SetBrushOrgEx(lpdis->hDC, 0, 0, NULL);
-  StretchBlt(lpdis->hDC, lpdis->rcItem.left, lpdis->rcItem.top, lpdis->rcItem.right - lpdis->rcItem.left, lpdis->rcItem.bottom - lpdis->rcItem.top,
-    dc, 0, 0, 2 * (lpdis->rcItem.right - lpdis->rcItem.left), 2 * (lpdis->rcItem.bottom - lpdis->rcItem.top), SRCCOPY);
- 
-  dc.SelectBitmap(oldbmp);
+  m_subtitlestyle.DrawItem(lpdis);
 }
 
 void OptionSubtitlePage::MeasureItem(LPMEASUREITEMSTRUCT lpmis)
 {
   if (lpmis->CtlID == IDC_LIST)
-    lpmis->itemHeight = m_styleentry_height;
+    m_subtitlestyle.MeasureItem(lpmis);
 }
 
 int OptionSubtitlePage::OnSetActive()
@@ -339,8 +165,9 @@ void OptionSubtitlePage::ApplySubtitleStyle()
   DoDataExchange(TRUE);
   AppSettings& s = AfxGetAppSettings();
   // retrieve variables from screen
-  StyleParam* mainsp = m_fontparams.GetFontParam(m_subtitlestyle.GetCurSel());
-  StyleParam* secondsp = m_fontparams.GetFontParam(m_subtitlestyle.GetCurSel(), FALSE);
+  StyleParam* mainsp;
+  StyleParam* secondsp;
+  m_subtitlestyle.GetItemData(m_subtitlestyle.GetCurSel(), &mainsp, &secondsp);
 
   if (mainsp)
   {
@@ -431,165 +258,9 @@ int OptionSubtitlePage::OnApply()
 void OptionSubtitlePage::RefreshStyles()
 {
   // insert bogus entries
-  m_subtitlestyle.SetCount(m_fontparams.GetStyleCount());
+  //m_subtitlestyle.SetCount(m_fontparams.GetStyleCount());
   m_subtitlestyle.Invalidate();
   m_subtitlestyle.UpdateWindow();
 }
 
-int OptionSubtitlePage::PreserveItemDivideRect(WTL::CRect rc, int index, BOOL bdivide)
-{
-  WTL::CRect maintextrc = rc;
-  WTL::CRect mainhittest = rc;
-  WTL::CRect secondtextrc = rc;
-  WTL::CRect secondhittest = rc;
-
-  StyleParam* mainstyle = m_fontparams.GetFontParam(index);
-  StyleParam* seconstyle = m_fontparams.GetFontParam(index, FALSE);
-
-  int mainheight = mainstyle->fontsize + mainstyle->strokesize + mainstyle->shadowsize;
-  int secondheight = seconstyle->fontsize + seconstyle->strokesize + seconstyle->shadowsize;
-
-  if (!bdivide)
-    secondheight = 0;
-
-  maintextrc.top = rc.top + (rc.Height() - mainheight - secondheight) / 2;
-  maintextrc.bottom =  rc.top + (rc.Height() - mainheight - secondheight) / 2 + mainheight + 2;
-  secondtextrc.top = maintextrc.bottom;
-  secondtextrc.bottom = secondtextrc.top + secondheight;
-
-  mainhittest.bottom = maintextrc.bottom;
-  secondhittest.top = secondtextrc.top;
-  
-  if (m_listtextrc.size() / 2 > index)
-  {
-    m_listtextrc[2 * index] = maintextrc;
-    m_listtextrc[2 * index + 1] = secondtextrc;
-    m_listhittestrc[2 * index] = mainhittest;
-    m_listhittestrc[2 * index + 1] = secondhittest;
-  }
-  else
-  {
-    m_listtextrc.push_back(maintextrc);
-    m_listtextrc.push_back(secondtextrc);
-    m_listhittestrc.push_back(mainhittest);
-    m_listhittestrc.push_back(secondhittest);
-  }
-
-  return (rc.Height() - mainheight - secondheight) / 2;
-}
-
-WTL::CRect OptionSubtitlePage::GetTextDivideRect(int index)
-{
-  if (index < 0 || index >= m_listtextrc.size())
-    return WTL::CRect(0, 0, 0, 0);
-
-  return m_listtextrc[index];
-}
-
-WTL::CRect OptionSubtitlePage::GetHittestDivideRect(int index)
-{
-  if (index < 0 || index >= m_listhittestrc.size())
-    return WTL::CRect(0, 0, 0, 0);
-
-  return m_listhittestrc[index];
-}
-
-void OptionSubtitlePage::PaintListItemBackground(HDC hdc, int width, int height)
-{
-  TRIVERTEX        vert[2] ;
-  GRADIENT_RECT    gRect;
-  vert[0] .x      = 1;
-  vert[0] .y      = 1;
-  vert[0] .Red    = 0xdc00;
-  vert[0] .Green  = 0xea00;
-  vert[0] .Blue   = 0xfc00;
-  vert[0] .Alpha  = 0x0000;
-
-  vert[1] .x      = width - 1;
-  vert[1] .y      = height - 1; 
-  vert[1] .Red    = 0xc100;
-  vert[1] .Green  = 0xdc00;
-  vert[1] .Blue   = 0xfc00;
-  vert[1] .Alpha  = 0x0000;
-
-  gRect.UpperLeft  = 0;
-  gRect.LowerRight = 1;
-  WTL::CPen pen;
-  pen.CreatePen(PS_SOLID, 1, ::GetSysColor(COLOR_MENUHILIGHT));
-  HPEN old_pen = (HPEN)SelectObject(hdc, pen);
-  Rectangle(hdc, 0, 0, width, height);
-  SelectObject(hdc, old_pen);
-  ::GradientFill(hdc, vert, 2, &gRect, 1, GRADIENT_FILL_RECT_V);
-}
-
-void OptionSubtitlePage::PaintHighLightListBckground(HDC dc, WTL::CRect rc, BOOL bmain)
-{
-  int color[4][4] = {{0xf000, 0xf800, 0xff00, 0x0000},
-                     {0xcf00, 0xec00, 0xff00, 0x0000},
-                     {0xc800, 0xe400, 0xff00, 0x0000},
-                     {0xe400, 0xf200, 0xff00, 0x0000}};
-
-  int index = bmain?0:2;
-  
-  TRIVERTEX        vert[2] ;
-  GRADIENT_RECT    gRect;
-  vert[0] .x      = rc.left + 1;
-  vert[0] .y      = rc.top + 1;
-  vert[0] .Red    = color[index][0];
-  vert[0] .Green  = color[index][1];
-  vert[0] .Blue   = color[index][2];
-  vert[0] .Alpha  = color[index][3];
-
-  vert[1] .x      = rc.right - 1;
-  vert[1] .y      = rc.bottom - 1; 
-  vert[1] .Red    = color[index+1][0];
-  vert[1] .Green  = color[index+1][1];
-  vert[1] .Blue   = color[index+1][2];
-  vert[1] .Alpha  = color[index+1][3];
-
-  gRect.UpperLeft  = 0;
-  gRect.LowerRight = 1;
-  ::GradientFill(dc, vert, 2, &gRect, 1, GRADIENT_FILL_RECT_V);
-}
-
-void OptionSubtitlePage::OnListDoubleClick(UINT uNotifyCode, int nID, CWindow wndCtl)
-{
-  POINT pt;
-  GetCursorPos(&pt);
-  ::ScreenToClient(m_subtitlestyle.m_hWnd, &pt);
-  
-  int index = m_subtitlestyle.GetCurSel();
-  WTL::CRect mainrc = GetHittestDivideRect(2 * index);
-  WTL::CRect seconrc = GetHittestDivideRect(2 * index + 1);
-
-  BOOL mainorsecon;
-  int  vecindex = MAXINT;
-  
-  WTL::CString text;
-  std::vector<std::wstring> vec;
-  text.LoadString(IDS_CUSTOMIZEFONT_TITLE);
-  Strings::Split(text, L"|", vec);
-
-  if (PtInRect(&mainrc, pt))
-  {
-    mainorsecon = TRUE;
-    vecindex = 0;
-  }
-  
-  if (PtInRect(&seconrc, pt))
-  {
-    mainorsecon = FALSE;
-    vecindex = 1;
-  }
-  
-  if (vecindex != MAXINT)
-  {
-    CustomizeFontDlg fdlg;
-    fdlg.SetTitleText(vec[vecindex]);
-    fdlg.SetSampleText(m_samplevec[0], m_samplevec[1]);
-    fdlg.SetFontParam(m_fontparams.GetFontParam(index), m_fontparams.GetFontParam(index, FALSE), mainorsecon);
-    if (fdlg.DoModal() == IDC_FONTOK_BUTTON)
-      m_fontparams.WriteProfile();
-  } 
-}
 
