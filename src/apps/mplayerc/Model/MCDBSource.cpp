@@ -7,6 +7,7 @@ MCDBSource::MCDBSource(void):
   m_pos(0),
   m_direction(FALSE),
   m_stopdb(TRUE),
+  m_isadjust(FALSE),
   m_readerstatus(MCDB_TOSTART)
 {
   m_buffer.clear();
@@ -75,6 +76,7 @@ void MCDBSource::AdjustRange(UINT nums, UINT columns)
   if (nums == m_readnums)
     return;
 
+  m_isadjust = TRUE;
   int len = nums - m_readnums;
   if (len > 0)
   {
@@ -96,7 +98,7 @@ void MCDBSource::AdjustRange(UINT nums, UINT columns)
       delete *it;
     m_frontbuff.erase(m_ep - len, m_ep);
     m_pos -= len;
-    m_readerstatus = MCDB_MORE;
+
     if (m_pos < 0)
       m_pos = 0;
   }
@@ -178,7 +180,7 @@ void MCDBSource::_Thread()
   sqlwhere.filename = L"";
   sqlwhere.uniqueid = 0;
 
-  while(!_Exit_state(2000))
+  do
   {
     if (m_stopdb)
       continue;
@@ -192,6 +194,12 @@ void MCDBSource::_Thread()
     
     for (BUPOINTER it = m_frontbuff.begin(); val != m_buffer.end(); ++val, ++it)
     {
+      if (m_isadjust)
+      {
+        m_isadjust = FALSE;
+        m_stopdb = FALSE;
+        break;
+      }
       (*it)->m_mediadata = *val;
       (*it)->SetDisplay();
       MediaCenterController::GetInstance()->Render();
@@ -199,5 +207,5 @@ void MCDBSource::_Thread()
     }
 
     m_buffer.clear();
-  }
+  } while (!_Exit_state(500));
 }
