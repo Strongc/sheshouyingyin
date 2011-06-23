@@ -9758,18 +9758,23 @@ void CMainFrame::ToggleFullscreen(bool fToNearest, bool fSwitchScreenResWhenHasT
 
   KillTimer(TIMER_FULLSCREENCONTROLBARHIDER);
   KillTimer(TIMER_FULLSCREENMOUSEHIDER);
-  if(m_fFullScreen)
+
+  if (!MediaCenterController::GetInstance()->GetPlaneState())
   {
-    // SVP_LogMsg5(L"Fullscreen");
-    m_fHideCursor = true;
-    SetTimer(TIMER_FULLSCREENMOUSEHIDER, 800, NULL);
-    ShowControls(CS_NONE, false);
-  }
-  else
-  {
-    m_lastMouseMove.x = m_lastMouseMove.y = -1;
-    m_fHideCursor = false;
-    ShowControls(AfxGetAppSettings().nCS);
+    // show control bar only under non-MC mode
+    if(m_fFullScreen)
+    {
+      // SVP_LogMsg5(L"Fullscreen");
+      m_fHideCursor = true;
+      SetTimer(TIMER_FULLSCREENMOUSEHIDER, 800, NULL);
+      ShowControls(CS_NONE, false);
+    }
+    else
+    {
+      m_lastMouseMove.x = m_lastMouseMove.y = -1;
+      m_fHideCursor = false;
+      ShowControls(AfxGetAppSettings().nCS);
+    }
   }
 
   m_wndView.SetWindowPos(NULL, 0, 0, 0, 0, SWP_FRAMECHANGED|SWP_NOSIZE|SWP_NOMOVE|SWP_NOZORDER);
