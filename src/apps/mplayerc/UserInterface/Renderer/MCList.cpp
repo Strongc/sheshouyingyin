@@ -123,6 +123,11 @@ void SPMCList::BlocksMouseMove(const POINT& pt)
           MediaCenterController::GetInstance()->Render();
         break;
       }
+      else if (MCLoopOne()->GetTextRect().PtInRect(pt))
+      {
+        // set if point in the text area
+        m_selblockunit = MCLoopOne();
+      }
     MCEndLoop()
   }
   else if (m_selblockunit)
@@ -132,7 +137,7 @@ void SPMCList::BlocksMouseMove(const POINT& pt)
       if (m_selblockunit->ActMouseOver(pt))
         MediaCenterController::GetInstance()->Render();
     }
-    else
+    else if (!m_selblockunit->GetTextRect().PtInRect(pt))
     {
       if (m_selblockunit->ActMouseOut(pt))
         MediaCenterController::GetInstance()->Render();
