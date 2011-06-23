@@ -84,6 +84,6 @@ private:
   BOOL m_stopdb;
 
   int m_readerstatus;
-
+  BOOL m_isadjust;
   CString log;
 };
