@@ -12,6 +12,7 @@
 
 #define TIMER_MC_RENDER 12
 #define TIMER_MC_UPDATE 13
+#define TIMER_MC_MOUSEWHEEL 14
 
 class MediaCenterController:
   public LazyInstanceImpl<MediaCenterController>
@@ -52,8 +53,9 @@ public:
    void HideFilmNameEdit();
 
    void SetStatusText(const std::wstring &str);
-
    void SetCursor(LPWSTR flag = IDC_HAND);
+
+   bool IsMouseWheelScroll();
 
 // slots
 public:
@@ -94,6 +96,7 @@ public:
   BOOL ActWindowChange(int w, int h);
   BOOL ActLButtonDblClick(const POINT& pt);
   BOOL ActRButtonUp(const POINT &pt);
+  BOOL ActMouseWheel(UINT nFlags, short zDelta, CPoint point);
 
   void ReleaseList();
 
@@ -106,6 +109,10 @@ private:
   SPMCList m_mclist;
   MCStatusBar m_mcstatusbar;
   int m_nstatusbarheight;
+
+  CPoint m_ptWheel;
+  bool m_bMouseWheel;
+  std::stack<int> m_skWheelEvent;
 
 private:
   // datas for film name edit

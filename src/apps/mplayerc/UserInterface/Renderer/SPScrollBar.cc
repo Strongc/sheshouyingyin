@@ -96,7 +96,8 @@ BOOL SPScrollBar::ActMouseLBDown(const POINT& pt)
 {
   BOOL ret = FALSE;
 
-  if (::PtInRect(&m_rcsbar, pt))
+  bool is_wheel_scroll = MediaCenterController::GetInstance()->IsMouseWheelScroll();
+  if (!is_wheel_scroll && ::PtInRect(&m_rcsbar, pt))
   {
     ret = TRUE;
     m_lasty = pt.y;

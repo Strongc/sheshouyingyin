@@ -19,8 +19,11 @@ MediaCenterController::MediaCenterController():
   m_initiablocklist(FALSE),
   m_hFilmTextFont(NULL),
   m_nstatusbarheight(20),
-  m_hOldAccel(0)
+  m_hOldAccel(0),
+  m_bMouseWheel(true)
 {
+  m_ptWheel.SetPoint(0, 0);
+
   // create film text font
   SetFilmTextFont(12, L"宋体");
 }
@@ -305,6 +308,11 @@ void MediaCenterController::SetCursor(LPWSTR flag /* = IDC_HAND */)
   ::SetClassLong(m_hwnd, GCL_HCURSOR, (LONG)::LoadCursor(0, flag));
 }
 
+bool MediaCenterController::IsMouseWheelScroll()
+{
+  return m_bMouseWheel;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // slots to handle user events
 void MediaCenterController::HandlePlayback(const MediaData &md)
@@ -358,6 +366,7 @@ void MediaCenterController::ShowMC()
 
   SetTimer(m_hwnd, TIMER_MC_RENDER, 33, NULL);
   SetTimer(m_hwnd, TIMER_MC_UPDATE, 13, NULL);
+  SetTimer(m_hwnd, TIMER_MC_MOUSEWHEEL, 99, 0);
 
   SetClassLong(m_hwnd, GCL_HCURSOR, (LONG)::LoadCursor(NULL, IDC_ARROW));
   m_planestate = TRUE;
@@ -365,16 +374,12 @@ void MediaCenterController::ShowMC()
   RECT rc;
   ::GetClientRect(m_hwnd, &rc);
   m_mclist.InitMCList(rc.right-rc.left, rc.bottom-rc.top - m_nstatusbarheight);
-  //m_mclist.InitMCList(rc.right-rc.left, rc.bottom-rc.top);
 
   m_mcstatusbar.SetRect(CRect(0, rc.bottom - m_nstatusbarheight, rc.right, rc.bottom));
   m_mcstatusbar.SetBKColor(RGB(0xb7, 0xb7, 0xb7));
   m_mcstatusbar.SetVisible(true);
 
   ::InvalidateRect(m_hwnd, NULL, TRUE);
-
-//   CString log(L"");
-//   MCDEBUG(log);
 }
 
 void MediaCenterController::HideMC()
@@ -383,6 +388,7 @@ void MediaCenterController::HideMC()
 
   KillTimer(m_hwnd, TIMER_MC_RENDER);
   KillTimer(m_hwnd, TIMER_MC_UPDATE);
+  KillTimer(m_hwnd, TIMER_MC_MOUSEWHEEL);
   
   m_mclist.ReleaseList();
 
@@ -447,6 +453,25 @@ void MediaCenterController::OnTimer(UINT_PTR nIDEvent)
     m_updatetime = timeGetTime();
     Render();
   }
+  else if (nIDEvent == TIMER_MC_MOUSEWHEEL)
+  {
+    if (!m_skWheelEvent.empty())
+    {
+      m_skWheelEvent.pop();
+
+      m_mclist.ActMouseMove(m_ptWheel);
+      m_mclist.ActMouseLBDown(m_ptWheel);
+      m_bMouseWheel = true;
+    }
+    else
+    {
+      if (m_bMouseWheel)
+      {
+        m_mclist.ActMouseLBUp(m_ptWheel);
+        m_bMouseWheel = false;
+      }
+    }
+  }
 }
 
 BOOL MediaCenterController::ActMouseMove(const POINT& pt)
@@ -454,7 +479,8 @@ BOOL MediaCenterController::ActMouseMove(const POINT& pt)
   if (!m_planestate)
     return FALSE;
 
-  m_mclist.ActMouseMove(pt);
+  if (!IsMouseWheelScroll())
+    m_mclist.ActMouseMove(pt);
 
   return TRUE;
 }
@@ -494,10 +520,9 @@ BOOL MediaCenterController::ActMouseLBUp(const POINT& pt)
   if (!m_planestate)
     return FALSE;
 
+  m_mclist.ActMouseLBUp(pt);
   if (m_mclist.GetScrollBar()->IsDragBar())
     ::ReleaseCapture();
-
-  m_mclist.ActMouseLBUp(pt);
 
   return TRUE;
 }
@@ -549,4 +574,31 @@ BOOL MediaCenterController::ActRButtonUp(const POINT &pt)
     HideFilmNameEdit();
 
   return m_mclist.ActRButtonUp(pt);
+}
+
+BOOL MediaCenterController::ActMouseWheel(UINT nFlags, short zDelta, CPoint point)
+{
+  BOOL ret = TRUE;
+
+  SPScrollBar *pscroll = m_mclist.GetScrollBar();
+  if (pscroll)
+  {
+    // adjust the mouse wheel detect area
+    RECT rc;
+    ::GetClientRect(m_hwnd, &rc);
+
+    int width = 0; 
+    int height = 0;
+    pscroll->GetTextureWH(width, height);
+
+    m_ptWheel.x = rc.right - width;
+    if (zDelta < 0)
+      m_ptWheel.y = (rc.bottom - m_nstatusbarheight) / 2 + height / 2 + 80;
+    else
+      m_ptWheel.y = (rc.bottom - m_nstatusbarheight) / 2 - height / 2 - 80;
+  }
+
+  m_skWheelEvent.push(0);
+
+  return ret;
 }
