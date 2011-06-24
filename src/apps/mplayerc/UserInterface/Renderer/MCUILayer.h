@@ -61,3 +61,10 @@ public:
   BOOL ActMouseLBDown(const POINT& pt);
   BOOL ActMouseLBUp(const POINT& pt);
 };
+
+class ULMask: public UILayer
+{
+public:
+  ULMask(std::wstring respath, BOOL display = TRUE, UINT nums = 1);
+  ~ULMask();
+};

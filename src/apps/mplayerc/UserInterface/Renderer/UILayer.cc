@@ -5,7 +5,9 @@
 #include "logging.h"
 
 UILayer::UILayer(std::wstring respath, BOOL display /* = TRUE */, UINT nums /*= 1*/):
-  m_stat(0)
+  m_stat(0),
+  m_displaywidth(0),
+  m_displayheight(0)
 {
   ResLoader rs;
   HBITMAP hBitmap = rs.LoadBitmap(respath);
@@ -110,6 +112,12 @@ BOOL UILayer::GetDisplay()
   return m_display;
 }
 
+void UILayer::SetDisplayWH(int w, int h)
+{
+  m_displaywidth = w;
+  m_displayheight = h;
+}
+
 BOOL UILayer::DoPaint(WTL::CDC& dc)
 {
   if (!m_display)
@@ -123,8 +131,13 @@ BOOL UILayer::DoPaint(WTL::CDC& dc)
 
   BLENDFUNCTION bf = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
   if (m_bm.bmBitsPixel == 32)
-    dc.AlphaBlend(m_texturepos.x, m_texturepos.y, m_bm.bmWidth, m_bm.bmHeight,
-    texturedc, 0, m_bm.bmHeight * m_stat, m_bm.bmWidth, m_bm.bmHeight, bf);
+  {
+    int w = (m_displaywidth) ? m_displaywidth : m_bm.bmWidth;
+    int h = (m_displayheight) ? m_displayheight: m_bm.bmHeight;
+
+    dc.AlphaBlend(m_texturepos.x, m_texturepos.y, w, h, 
+      texturedc, 0, m_bm.bmHeight * m_stat, m_bm.bmWidth, m_bm.bmHeight, bf);
+  }
   else
   {
     dc.SetStretchBltMode(COLORONCOLOR);

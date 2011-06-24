@@ -31,6 +31,8 @@ SPMCList::SPMCList():
   m_wndmargin.bottom = 22;
 
   AddScrollBar();
+
+  m_ulmask = new ULMask(L"\\skin\\mask.png", TRUE);
 }
 
 SPMCList::~SPMCList()
@@ -107,6 +109,7 @@ void SPMCList::DoPaint(WTL::CDC& dc, RECT& rcclient)
       rowpos = m_fixrowheight * y + m_rowpos;
     }
 
+    m_ulmask->DoPaint(dc);
   }
 
 }
@@ -274,8 +277,18 @@ void SPMCList::SetMCRect(int w, int h)
 
 BOOL SPMCList::ActWindowChange(int w, int h)
 {
+  int maskw, maskh;
+  POINT maskpt;
+
   m_lockpaint = TRUE;
   SetMCRect(w, h);
+
+  m_ulmask->GetTextureWH(maskw, maskh);
+  maskpt.x = 0;
+  maskpt.y = h - maskh;
+  m_ulmask->SetTexturePos(maskpt);
+  m_ulmask->SetDisplayWH(w, 0);
+
   if (!m_listempty)
     m_dbsource->AdjustRange(m_blockcount, m_maxcolumns);
   
