@@ -311,3 +311,14 @@ BOOL ULCover::ActMouseLBUp(const POINT& pt)
 {
   return FALSE;
 }
+
+ULMask::ULMask(std::wstring respath, BOOL display, UINT nums) :
+UILayer(respath, display, nums)
+{
+
+}
+
+ULMask::~ULMask()
+{
+
+}

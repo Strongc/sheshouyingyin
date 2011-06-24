@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "SPScrollBar.h"
+#include "MCUILayer.h"
 #include "../../Model/MCBlockUnit.h"
 #include "../../Model/MCDBSource.h"
 #include <boost/smart_ptr/shared_ptr.hpp>
@@ -75,4 +76,6 @@ private:
 
   WTL::CBitmap m_cover;
   CSize m_coversize;
+
+  ULMask* m_ulmask;
 };

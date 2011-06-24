@@ -13,6 +13,8 @@ public:
   BOOL SetDisplay(BOOL display = TRUE);
   BOOL GetDisplay();
 
+  void SetDisplayWH(int w, int h);
+
   BOOL GetTexturePos(POINT& pt);
   BOOL GetTextureRect(RECT& rc);
 
@@ -37,4 +39,6 @@ private:
   BOOL           m_display;
   BITMAP         m_bm;
   int            m_stat;
+  int            m_displaywidth;
+  int            m_displayheight;
 };
