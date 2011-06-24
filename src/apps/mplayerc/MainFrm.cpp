@@ -3746,6 +3746,17 @@ void CMainFrame::OnLButtonDblClk(UINT nFlags, CPoint point)
   if(!IsSomethingLoaded()){
     if (m_wndView.OnLButtonDBCLK(nFlags, point))
       return;
+
+    if (MediaCenterController::GetInstance()->GetPlaneState())
+    {
+      // If MC is shown then change the window to maximized
+      if (IsZoomed())
+        ShowWindow(SW_NORMAL);
+      else
+        ShowWindow(SW_SHOWMAXIMIZED);
+      return;
+    }
+
     if( !AfxGetAppSettings().htpcmode)
       SendMessage(WM_COMMAND, ID_VIEW_FULLSCREEN);
     else
