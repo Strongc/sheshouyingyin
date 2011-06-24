@@ -30,6 +30,9 @@ public:
   MediaData m_mediadata;
 
 private:
+  int m_coverwidth;
+  int m_coverheight;
+
   UILayerBlock* m_layer;
   BOOL m_display;
   HBITMAP m_cover;
