@@ -78,4 +78,5 @@ private:
   CSize m_coversize;
 
   ULMask* m_ulmask;
+  ULMCOpenButton* m_uiopenbtn;
 };

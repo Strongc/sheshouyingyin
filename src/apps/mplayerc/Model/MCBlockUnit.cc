@@ -134,8 +134,6 @@ BOOL BlockUnit::ActMouseOut(const POINT& pt)
   hide->SetDisplay(FALSE);
   //favourite->SetDisplay(FALSE);
   //cover->SetDisplay(FALSE);
-  CString str;str.Format(L"%d\n", ret);
-  OutputDebugString(str);
 
   // set status message
   MediaCenterController::GetInstance()->SetStatusText(L"");

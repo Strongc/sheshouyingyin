@@ -68,3 +68,12 @@ public:
   ULMask(std::wstring respath, BOOL display = TRUE, UINT nums = 1);
   ~ULMask();
 };
+
+class ULMCOpenButton: public UILayer
+{
+public:
+  ULMCOpenButton(std::wstring respath, BOOL display = TRUE, UINT nums = 1);
+  ~ULMCOpenButton();
+
+  BOOL ActMouseOver(const POINT& pt);
+};
