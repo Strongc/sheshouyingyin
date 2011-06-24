@@ -14,6 +14,8 @@ public:
   BOOL GetDisplay();
 
   void SetDisplayWH(int w, int h);
+  void SetBltPos(int x, int y);
+  void SetBltWH(int w, int h);
 
   BOOL GetTexturePos(POINT& pt);
   BOOL GetTextureRect(RECT& rc);
@@ -26,6 +28,9 @@ public:
   void SetState(int stat);
   int  GetState();
 
+  // Texture mode
+  void TiledTexture(int w, int h);
+
   virtual BOOL ActMouseMove(const POINT& pt) {return FALSE;}
   virtual BOOL ActMouseOver(const POINT& pt) {return FALSE;}
   virtual BOOL ActMouseOut(const POINT& pt) {return FALSE;}
@@ -35,10 +40,16 @@ public:
 private:
   WTL::CBitmap   m_texture;
   POINT          m_texturepos;
-  SIZE           m_orginalsize;
+
   BOOL           m_display;
   BITMAP         m_bm;
   int            m_stat;
+
   int            m_displaywidth;
   int            m_displayheight;
+
+  int            m_bltx;
+  int            m_blty;
+  int            m_bltw;
+  int            m_blth;
 };

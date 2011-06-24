@@ -7,24 +7,16 @@
 UILayer::UILayer(std::wstring respath, BOOL display /* = TRUE */, UINT nums /*= 1*/):
   m_stat(0),
   m_displaywidth(0),
-  m_displayheight(0)
+  m_displayheight(0),
+  m_bltx(0),
+  m_blty(0),
+  m_bltw(0),
+  m_blth(0)
 {
   ResLoader rs;
   HBITMAP hBitmap = rs.LoadBitmap(respath);
   SetTexture(hBitmap, nums);
   SetDisplay(display);
-
-  // set the original rect
-  m_orginalsize.cx = 0;
-  m_orginalsize.cy = 0;
-
-  BITMAP bmInfo = {0};
-  ::GetObject(hBitmap, sizeof(BITMAP), &bmInfo);
-
-  m_orginalsize.cx = bmInfo.bmWidth;
-  m_orginalsize.cy = bmInfo.bmHeight;
-  if (nums)
-    m_orginalsize.cy /= nums;
 }
 
 UILayer::~UILayer()
@@ -36,6 +28,13 @@ BOOL UILayer::SetTexture(HBITMAP texture, UINT nums)
 {
   if (texture == NULL)
     return FALSE;
+
+  m_displaywidth = 0;
+  m_displayheight = 0;
+  m_bltx = 0;
+  m_blty = 0;
+  m_bltw = 0;
+  m_blth = 0;
 
   m_texture.Attach(texture);
 
@@ -118,6 +117,52 @@ void UILayer::SetDisplayWH(int w, int h)
   m_displayheight = h;
 }
 
+void UILayer::SetBltPos(int x, int y)
+{
+  m_bltx = x;
+  m_blty = y;
+}
+
+void UILayer::SetBltWH(int w, int h)
+{
+  m_bltw = w;
+  m_blth = h;
+}
+
+void UILayer::TiledTexture(int w, int h)
+{
+  int bltw = w;
+  int blth = h;
+  int x = 0, y = 0;
+
+  if (m_bm.bmWidth <= w && m_bm.bmHeight <= h)
+  {
+    bltw = m_bm.bmWidth;
+    blth = m_bm.bmHeight;
+  }
+  else
+  {
+    float ratiow = (float)m_bm.bmWidth / (float)w;
+    float ratioh = (float)m_bm.bmHeight / (float)h;
+
+    if (ratiow > ratioh)
+    {
+      bltw = (float)(m_bm.bmHeight * w) / (float)h;
+      blth = m_bm.bmHeight;
+      x = (float)(m_bm.bmWidth - bltw) / 2.f;
+    }
+    else if (ratiow < ratioh)
+    {
+      blth = (float)(m_bm.bmWidth * h) / (float)w;
+      bltw = m_bm.bmWidth;
+      y = (float)(m_bm.bmHeight - blth) / 2.f;
+    }
+  }
+
+  SetBltPos(x, y);
+  SetBltWH(bltw, blth);
+}
+
 BOOL UILayer::DoPaint(WTL::CDC& dc)
 {
   if (!m_display)
@@ -129,46 +174,26 @@ BOOL UILayer::DoPaint(WTL::CDC& dc)
   texturedc.CreateCompatibleDC(dc);
   hold_texture = texturedc.SelectBitmap(m_texture);
 
-  BLENDFUNCTION bf = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
+  int displayw = m_displaywidth ? m_displaywidth : m_bm.bmWidth;
+  int displayh = m_displayheight ? m_displayheight : m_bm.bmHeight;
+
+  int bltx = m_bltx ? m_bltx : 0;
+  int blty = m_blty ? m_blty : m_bm.bmHeight * m_stat;
+
+  int bltw = m_bltw ? m_bltw : m_bm.bmWidth;
+  int blth = m_blth ? m_blth : m_bm.bmHeight;
+
   if (m_bm.bmBitsPixel == 32)
   {
-    int w = (m_displaywidth) ? m_displaywidth : m_bm.bmWidth;
-    int h = (m_displayheight) ? m_displayheight: m_bm.bmHeight;
-
-    dc.AlphaBlend(m_texturepos.x, m_texturepos.y, w, h, 
-      texturedc, 0, m_bm.bmHeight * m_stat, m_bm.bmWidth, m_bm.bmHeight, bf);
+    BLENDFUNCTION bf = {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA};
+    dc.AlphaBlend(m_texturepos.x, m_texturepos.y, displayw, displayh, 
+      texturedc, bltx, blty, bltw, blth, bf);
   }
   else
   {
     dc.SetStretchBltMode(COLORONCOLOR);
-
-    // adjust the ratio
-    if ((m_bm.bmHeight != 0) && (m_bm.bmWidth != 0))
-    {
-      float fWHRatio = (float)(m_bm.bmWidth) / m_bm.bmHeight;
-      float fHWRatio = (float)(m_bm.bmHeight) / m_bm.bmWidth;
-
-      if (m_bm.bmWidth > m_orginalsize.cx)
-      {
-        // width is the same value as layer's width
-        // so we adjust the vertical position
-        int nYOffset = (m_orginalsize.cy - m_orginalsize.cx * fHWRatio) / 2.0;
-        dc.StretchBlt(m_texturepos.x, m_texturepos.y + nYOffset, m_orginalsize.cx, m_orginalsize.cx * fHWRatio
-          , texturedc, 0, 0, m_bm.bmWidth, m_bm.bmHeight, SRCCOPY);
-      } 
-      else
-      {
-        // height is the same value as layer's height
-        // so we adjust the horizontal position
-        int nXOffset = (m_orginalsize.cx - m_orginalsize.cy * fWHRatio) / 2.0;
-        dc.StretchBlt(m_texturepos.x + nXOffset, m_texturepos.y, m_orginalsize.cy * fWHRatio, m_orginalsize.cy
-          , texturedc, 0, 0, m_bm.bmWidth, m_bm.bmHeight, SRCCOPY);
-      }
-    }
-    else
-    {
-      Logging(L"layer height or width is invalid");
-    }
+    dc.StretchBlt(m_texturepos.x, m_texturepos.y, displayw, displayh,
+      texturedc, bltx, blty, bltw, blth, SRCCOPY);
   }
 
   texturedc.SelectBitmap(hold_texture);
