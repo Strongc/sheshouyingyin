@@ -7,7 +7,9 @@
 BlockUnit::BlockUnit() :
 m_layer(new UILayerBlock),
 m_cover(NULL),
-m_display(FALSE)
+m_display(FALSE),
+m_coverwidth(0),
+m_coverheight(0)
 {
 }
 
@@ -269,6 +271,12 @@ void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
   //cover->SetTexturePos(coverpt);
 
   SetCover();
+  if (m_cover)
+  {
+    def->TiledTexture(m_coverwidth, m_coverheight);
+    def->SetDisplayWH(m_coverwidth, m_coverheight);
+  }
+
   m_layer->DoPaint(dc);
 
   dc.SetBkMode(TRANSPARENT);
@@ -303,8 +311,12 @@ void BlockUnit::SetCover()
     UILayer* def = NULL;
     m_cover = resLoad.LoadBitmapFromDisk(m_mediadata.thumbnailpath, false);
     m_layer->GetUILayer(L"def", &def);
-    if (m_cover)
+    if (m_cover && def)
+    {
+      if (!m_coverwidth && !m_coverheight)
+        def->GetTextureWH(m_coverwidth, m_coverheight);
       def->SetTexture(m_cover);
+    }
   }
 }
 
