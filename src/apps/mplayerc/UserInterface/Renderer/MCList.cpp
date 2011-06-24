@@ -33,6 +33,7 @@ SPMCList::SPMCList():
   AddScrollBar();
 
   m_ulmask = new ULMask(L"\\skin\\mask.png", TRUE);
+  m_uiopenbtn = new ULMCOpenButton(L"\\skin\\open.png", TRUE, 2);
 }
 
 SPMCList::~SPMCList()
@@ -76,42 +77,44 @@ void SPMCList::DoPaint(WTL::CDC& dc, RECT& rcclient)
 
     dcmem.SelectBitmap(hold);
     dcmem.DeleteDC();
-    return;
   }
-
-  if (!m_lockpaint)
+  else
   {
-    if (m_sbar->GetDisplay())
+    if (!m_lockpaint)
     {
-      m_sbar->SetClientRect(rcclient);
-      m_sbar->DoPaint(dc);
-    }
-
-    POINT pt;
-    int rowpos = m_rowpos;
-    int colpos = 0;
-
-    MCDBSource::BUPOINTER sp, ep;
-    m_dbsource->GetPointer(sp, ep);
-
-    for (int y=1; y<=m_maxrows; ++y)
-    {
-      pt.y = rowpos;
-      colpos = m_columnpos;
-      for (int x=1; x<=m_maxcolumns; ++x)
+      if (m_sbar->GetDisplay())
       {
-        pt.x = colpos;
-        (*sp)->DoPaint(dc, pt);
-        colpos = m_fixcolumnwidth * x + m_columnpos;
-        if (sp != ep)
-          sp++;
+        m_sbar->SetClientRect(rcclient);
+        m_sbar->DoPaint(dc);
       }
-      rowpos = m_fixrowheight * y + m_rowpos;
-    }
 
-    m_ulmask->DoPaint(dc);
+      POINT pt;
+      int rowpos = m_rowpos;
+      int colpos = 0;
+
+      MCDBSource::BUPOINTER sp, ep;
+      m_dbsource->GetPointer(sp, ep);
+
+      for (int y=1; y<=m_maxrows; ++y)
+      {
+        pt.y = rowpos;
+        colpos = m_columnpos;
+        for (int x=1; x<=m_maxcolumns; ++x)
+        {
+          pt.x = colpos;
+          (*sp)->DoPaint(dc, pt);
+          colpos = m_fixcolumnwidth * x + m_columnpos;
+          if (sp != ep)
+            sp++;
+        }
+        rowpos = m_fixrowheight * y + m_rowpos;
+      }
+
+      m_ulmask->DoPaint(dc);
+    }
   }
 
+  m_uiopenbtn->DoPaint(dc);
 }
 
 void SPMCList::BlocksMouseMove(const POINT& pt)
@@ -207,10 +210,21 @@ BOOL SPMCList::ActMouseMove(const POINT& pt)
       m_anispeed = 0.00005f * pow((float)offset, 2.0f);
     }
   }
+  else if (m_uiopenbtn->ActMouseOver(pt))
+  {
+    if (m_selblockunit)
+    {
+      POINT pt = {0, 0};
+      m_selblockunit->ActMouseOut(pt);
+    }
+    MediaCenterController::GetInstance()->Render();
+  }
   else
   {
+
     BlocksMouseMove(pt);
   }
+
 
   return ret;
 }
@@ -277,8 +291,8 @@ void SPMCList::SetMCRect(int w, int h)
 
 BOOL SPMCList::ActWindowChange(int w, int h)
 {
-  int maskw, maskh;
-  POINT maskpt;
+  int maskw, maskh, btnw, btnh;
+  POINT maskpt, btnpos;
 
   m_lockpaint = TRUE;
   SetMCRect(w, h);
@@ -288,6 +302,11 @@ BOOL SPMCList::ActWindowChange(int w, int h)
   maskpt.y = h - maskh;
   m_ulmask->SetTexturePos(maskpt);
   m_ulmask->SetDisplayWH(w, 0);
+
+  m_uiopenbtn->GetTextureWH(btnw, btnh);
+  btnpos.x = w - btnw - m_sbar->GetBarWidth();
+  btnpos.y = h - btnh;
+  m_uiopenbtn->SetTexturePos(btnpos);
 
   if (!m_listempty)
     m_dbsource->AdjustRange(m_blockcount, m_maxcolumns);

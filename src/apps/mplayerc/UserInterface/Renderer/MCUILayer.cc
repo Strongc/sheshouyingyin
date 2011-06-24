@@ -322,3 +322,35 @@ ULMask::~ULMask()
 {
 
 }
+
+ULMCOpenButton::ULMCOpenButton(std::wstring respath, BOOL display, UINT nums) :
+UILayer(respath, display, nums)
+{
+
+}
+
+ULMCOpenButton::~ULMCOpenButton()
+{
+
+}
+
+BOOL ULMCOpenButton::ActMouseOver(const POINT& pt)
+{
+  RECT rc;
+  GetTextureRect(rc);
+
+  BOOL ret = FALSE;
+
+  if (PtInRect(&rc, pt))
+  {
+    SetState(1);
+    ret = TRUE;
+  }
+  else if (GetState() == 1)
+  {
+    SetState(0);
+    ret = TRUE;
+  }
+
+  return ret;
+}
