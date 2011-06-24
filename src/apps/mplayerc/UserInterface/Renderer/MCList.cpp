@@ -311,6 +311,9 @@ BOOL SPMCList::ActLButtonDblClick(const POINT& pt)
     MediaCenterController::GetInstance()->ShowFilmNameEdit(m_selblockunit);
   }
 
+  if (m_sbar->ActLButtonDblClick(pt))
+    bl = TRUE;
+  
   return bl;
 }
 

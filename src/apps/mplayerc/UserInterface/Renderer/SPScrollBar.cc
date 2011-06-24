@@ -153,3 +153,23 @@ BOOL SPScrollBar::ActRButtonUp(const POINT& pt)
 
   return ret;
 }
+
+BOOL SPScrollBar::ActLButtonDblClick(const POINT& pt)
+{
+  BOOL ret = FALSE;
+
+  POINT point = {0};
+  GetTexturePos(point);
+
+  RECT rc = {0};
+  rc.left = point.x;
+  rc.top = m_rcparent.top;
+  rc.right = m_rcparent.right;
+  rc.bottom = m_rcparent.bottom;
+
+  // return TRUE if double click the whole scroll bar area
+  if (::PtInRect(&rc, pt))
+    ret = TRUE;
+
+  return ret;
+}
