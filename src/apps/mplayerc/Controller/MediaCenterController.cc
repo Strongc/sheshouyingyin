@@ -327,23 +327,37 @@ void MediaCenterController::SetCursor(LPWSTR flag /* = IDC_HAND */)
 // slots to handle user events
 void MediaCenterController::HandlePlayback(const MediaData &md)
 {
-  CMainFrame *pMainWnd = (CMainFrame *)(AfxGetApp()->GetMainWnd());
-  if (pMainWnd)
+  using namespace boost::filesystem;
+
+  try
   {
-    pMainWnd->SendMessage(WM_COMMAND, ID_FILE_CLOSEMEDIA);
-    pMainWnd->ShowWindow(SW_SHOW);
-    pMainWnd->SetForegroundWindow();
+    if (exists(md.path + md.filename))
+    {
+      CMainFrame *pMainWnd = (CMainFrame *)(AfxGetApp()->GetMainWnd());
+      if (pMainWnd)
+      {
+        pMainWnd->SendMessage(WM_COMMAND, ID_FILE_CLOSEMEDIA);
+        pMainWnd->ShowWindow(SW_SHOW);
+        pMainWnd->SetForegroundWindow();
 
-    CAtlList<CString> fns;
-    fns.AddTail((md.path + md.filename).c_str());
-    pMainWnd->m_wndPlaylistBar.Open(fns, false);
+        CAtlList<CString> fns;
+        fns.AddTail((md.path + md.filename).c_str());
+        pMainWnd->m_wndPlaylistBar.Open(fns, false);
 
-    if(pMainWnd->m_wndPlaylistBar.GetCount() == 1 && 
-       pMainWnd->m_wndPlaylistBar.IsWindowVisible() && 
-      !pMainWnd->m_wndPlaylistBar.IsFloating())
-        pMainWnd->ShowControlBar(&pMainWnd->m_wndPlaylistBar, FALSE, TRUE);
+        if(pMainWnd->m_wndPlaylistBar.GetCount() == 1 && 
+          pMainWnd->m_wndPlaylistBar.IsWindowVisible() && 
+          !pMainWnd->m_wndPlaylistBar.IsFloating())
+          pMainWnd->ShowControlBar(&pMainWnd->m_wndPlaylistBar, FALSE, TRUE);
 
-    pMainWnd->OpenCurPlaylistItem();
+        pMainWnd->OpenCurPlaylistItem();
+      }
+    }
+  }
+  catch (const filesystem_error &err)
+  {
+    Logging(err.what());
+    SetStatusText(Strings::StringToWString(err.what()));
+    Render();
   }
 }
 
