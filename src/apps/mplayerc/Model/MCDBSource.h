@@ -49,6 +49,8 @@ public:
   #define MCLoopNextData()  if(sp!=ep)sp++;
 
   BOOL PreLoad(UINT nums);
+  void HideData(const MediaData &md);
+  void Reload();   // refresh current datas
   void CleanData();
 
   void AdjustRange(UINT nums, UINT columns);

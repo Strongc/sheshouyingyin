@@ -19,7 +19,9 @@ public:
 
   void Update(DWORD deltatime);
   void DoPaint(WTL::CDC& dc, RECT& rcclient);
-
+  void HideData();
+  void Reload();  // reload current datas
+  
   void InitMCList(int w, int h);
   void ReleaseList();
 
