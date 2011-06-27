@@ -3,6 +3,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
 #include <tcl/tree.h>
+#include "logging.h"
 
 // *****************************************************************************
 // MediaData and MediaPath
@@ -134,10 +135,17 @@ inline std::wstring makePathPreferred(const std::wstring &sPath)
     sPathResult = sPath;
 
   // remove the filename in the end or add backslash if the path is a directory
-  if (!is_directory(sPrefix + sPathResult))
-    sPathResult = regex_replace(sPathResult, wregex(L"\\\\[^\\\\]+$"), std::wstring(L"\\"));
-  else
-    sPathResult = regex_replace(sPathResult, wregex(L"\\\\*$"), std::wstring(L"\\"));
+  try
+  {
+    if (!is_directory(sPrefix + sPathResult))
+      sPathResult = regex_replace(sPathResult, wregex(L"\\\\[^\\\\]+$"), std::wstring(L"\\"));
+    else
+      sPathResult = regex_replace(sPathResult, wregex(L"\\\\*$"), std::wstring(L"\\"));
+  }
+  catch (const filesystem_error &err)
+  {
+    Logging(err.what());
+  }
 
   // modify the path, let it to be normalized
   // replace all '/' to '\'

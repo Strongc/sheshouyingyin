@@ -56,7 +56,16 @@ bool MediaCenterController::IsMCFolderExist()
   CSVPToolBox toolbox;
   std::wstring sPath;
   toolbox.GetAppDataPath(sPath);
-  return exists(sPath + L"\\mc\\cover");
+
+  try
+  {
+    return exists(sPath + L"\\mc\\cover");
+  }
+  catch (const filesystem_error &err)
+  {
+    Logging(err.what());
+    return false;
+  }
 }
 
 void MediaCenterController::CreateMCFolder()
@@ -66,7 +75,15 @@ void MediaCenterController::CreateMCFolder()
   CSVPToolBox toolbox;
   std::wstring sPath;
   toolbox.GetAppDataPath(sPath);
-  create_directories(sPath + L"\\mc\\cover");
+
+  try
+  {
+    create_directories(sPath + L"\\mc\\cover");
+  }
+  catch (const filesystem_error &err)
+  {
+    Logging(err.what());
+  }
 }
 
 std::wstring MediaCenterController::GetMCFolder()

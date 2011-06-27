@@ -56,19 +56,33 @@ void CoverController::_Thread()
 
       // if already has thumbnail then continue
       std::wstring thumbnailpath = it->thumbnailpath;
-      if (exists(thumbnailpath) && !is_directory(thumbnailpath))
+      try
       {
-        //UploadCover(*it);
-        m_list.pop_front();
-        continue;
+        if (exists(thumbnailpath) && !is_directory(thumbnailpath))
+        {
+          //UploadCover(*it);
+          m_list.pop_front();
+          continue;
+        }
+      }
+      catch (const boost::filesystem::filesystem_error &err)
+      {
+        Logging(err.what());
       }
 
       thumbnailpath = MediaCenterController::GetCoverPath(it->path + it->filename);
-      if (exists(thumbnailpath) && !is_directory(thumbnailpath))
+      try
       {
-        //UploadCover(*it);
-        m_list.pop_front();
-        continue;
+        if (exists(thumbnailpath) && !is_directory(thumbnailpath))
+        {
+          //UploadCover(*it);
+          m_list.pop_front();
+          continue;
+        }
+      }
+      catch (const boost::filesystem::filesystem_error &err)
+      {
+        Logging(err.what());
       }
 
       //url = L"http://jay.webpj.com:8888/api/medias/getinfoBysphash/sphash: \

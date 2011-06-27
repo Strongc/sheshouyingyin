@@ -269,6 +269,11 @@ void media_tree::model::save2DB()
       ++it;
     }
   }
+  catch (const filesystem_error &err)
+  {
+    MediaSQLite<>::exec(L"rollback transaction");  // rollback
+    Logging(err.what());
+  }
   catch (...)
   {
     MediaSQLite<>::exec(L"rollback transaction");  // rollback
