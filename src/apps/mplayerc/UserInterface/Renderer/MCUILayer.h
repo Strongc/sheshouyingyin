@@ -76,4 +76,5 @@ public:
   ~ULMCOpenButton();
 
   BOOL ActMouseOver(const POINT& pt);
+  BOOL ActMouseOut(const POINT& pt);
 };

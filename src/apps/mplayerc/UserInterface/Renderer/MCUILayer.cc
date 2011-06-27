@@ -354,3 +354,19 @@ BOOL ULMCOpenButton::ActMouseOver(const POINT& pt)
 
   return ret;
 }
+
+BOOL ULMCOpenButton::ActMouseOut(const POINT& pt)
+{
+  BOOL ret = FALSE;
+
+  RECT rc;
+  GetTextureRect(rc);
+
+  if (GetState() == 1 && !PtInRect(&rc, pt))
+  {
+    ret = TRUE;
+    SetState(0);
+  }
+
+  return ret;
+}
