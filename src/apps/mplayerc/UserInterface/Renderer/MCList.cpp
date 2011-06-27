@@ -44,9 +44,14 @@ SPMCList::~SPMCList()
   delete m_sbar;
 }
 
+ULMCOpenButton* SPMCList::GetOpenFileBtn()
+{
+  return !m_uiopenbtn ? NULL : m_uiopenbtn;
+}
+
 SPScrollBar* SPMCList::GetScrollBar()
 {
-  return m_sbar;
+  return !m_sbar ? NULL : m_sbar;
 }
 
 CSize SPMCList::GetMCSize()
@@ -115,8 +120,6 @@ void SPMCList::DoPaint(WTL::CDC& dc, RECT& rcclient)
       m_ulmask->DoPaint(dc);
     }
   }
-
-  m_uiopenbtn->DoPaint(dc);
 }
 
 void SPMCList::BlocksMouseMove(const POINT& pt)
@@ -250,10 +253,10 @@ BOOL SPMCList::ActMouseMove(const POINT& pt)
   }
   else
   {
-
     BlocksMouseMove(pt);
   }
 
+  m_uiopenbtn->ActMouseOver(pt);
 
   return ret;
 }
@@ -337,7 +340,7 @@ BOOL SPMCList::ActWindowChange(int w, int h)
 
   m_uiopenbtn->GetTextureWH(btnw, btnh);
   btnpos.x = w - btnw - m_sbar->GetBarWidth();
-  btnpos.y = h - btnh;
+  btnpos.y = h + 15 - btnh;
   m_uiopenbtn->SetTexturePos(btnpos);
 
   if (!m_listempty)

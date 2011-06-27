@@ -443,6 +443,7 @@ void MediaCenterController::DoPaint(HDC hdc, RECT rcClient)
   rcTemp.bottom -= m_nstatusbarheight;
   m_mclist.DoPaint(dc, rcTemp);
   m_mcstatusbar.Update(dc);
+  m_mclist.GetOpenFileBtn()->DoPaint(dc);
   DeleteObject(hbrush);
 }
 
