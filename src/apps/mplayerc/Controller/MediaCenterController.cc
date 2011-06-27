@@ -523,9 +523,9 @@ BOOL MediaCenterController::ActMouseLBUp(const POINT& pt)
   if (!m_planestate)
     return FALSE;
 
-  m_mclist.ActMouseLBUp(pt);
   if (m_mclist.GetScrollBar()->IsDragBar())
     ::ReleaseCapture();
+  m_mclist.ActMouseLBUp(pt);
 
   return TRUE;
 }
