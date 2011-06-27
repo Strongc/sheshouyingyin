@@ -313,6 +313,9 @@ BOOL SPMCList::ActMouseLBUp(const POINT& pt)
     ret = TRUE;
   }
 
+  if (m_uiopenbtn->ActMouseLBUp(pt))
+    ret = TRUE;
+
   return ret;
 }
 

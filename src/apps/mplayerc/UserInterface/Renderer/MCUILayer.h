@@ -77,4 +77,5 @@ public:
 
   BOOL ActMouseOver(const POINT& pt);
   BOOL ActMouseOut(const POINT& pt);
+  BOOL ActMouseLBUp(const POINT& pt);
 };

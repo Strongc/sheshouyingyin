@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "MCUILayer.h"
+#include "..\..\Controller\MediaCenterController.h"
 
 
 ULBackground::ULBackground(std::wstring respath, BOOL display, UINT nums) :
@@ -366,6 +367,23 @@ BOOL ULMCOpenButton::ActMouseOut(const POINT& pt)
   {
     ret = TRUE;
     SetState(0);
+  }
+
+  return ret;
+}
+
+BOOL ULMCOpenButton::ActMouseLBUp(const POINT& pt)
+{
+  BOOL ret = FALSE;
+
+  RECT rc;
+  GetTextureRect(rc);
+  if (PtInRect(&rc, pt))
+  {
+    ret = TRUE;
+
+    // Just open the file_open dialog
+    MediaCenterController::GetInstance()->HandleFileOpen();
   }
 
   return ret;

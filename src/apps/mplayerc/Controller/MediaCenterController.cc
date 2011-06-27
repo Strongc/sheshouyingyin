@@ -379,6 +379,13 @@ void MediaCenterController::HandleDelBlock(const MediaData &md)
   Render();
 }
 
+void MediaCenterController::HandleFileOpen()
+{
+  // send message to MainFrame to open the file open dialog
+  CMainFrame *pMainWnd = (CMainFrame *)(AfxGetApp()->GetMainWnd());
+  if (pMainWnd)
+    pMainWnd->PostMessage(WM_COMMAND, ID_FILE_OPENQUICK);
+}
 
 void MediaCenterController::ShowMC()
 {
