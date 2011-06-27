@@ -3845,12 +3845,8 @@ BOOL CMainFrame::OnMouseWheel(UINT nFlags, short zDelta, CPoint point)
 {
   ScreenToClient(&point);
 
-  if (MediaCenterController::GetInstance()->GetPlaneState())
-  {
-    MediaCenterController::GetInstance()->ActMouseWheel(nFlags, zDelta, point);
-    MediaCenterController::GetInstance()->Render();
+  if (MediaCenterController::GetInstance()->ActMouseWheel(nFlags, zDelta, point))
     return TRUE;
-  } 
   else
   {
     BOOL fRet = 

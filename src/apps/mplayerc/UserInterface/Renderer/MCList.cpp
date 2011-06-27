@@ -15,6 +15,8 @@ SPMCList::SPMCList():
   m_maxsbar(0),
   m_maxoffset(0),
   m_rowpos(0),
+  m_mousewheel(FALSE),
+  m_mousewheelcount(0),
   m_anispeed(0.f)
 {
   m_dbsource = new MCDBSource;
@@ -152,13 +154,40 @@ void SPMCList::BlocksMouseMove(const POINT& pt)
   }
 }
 
+BOOL SPMCList::ActMouseWheel(UINT nFlags, short zDelta, CPoint point)
+{
+  BOOL ret = TRUE;
+
+  if (!m_mousewheelcount)
+    MediaCenterController::GetInstance()->Update();
+
+  m_mousewheel = TRUE;
+  m_mousewheelcount = 40;
+  m_anispeed = 0.00005f * pow(100.f, 2.0f);
+
+  if (zDelta < 0) // move down
+    m_sbardir = FALSE;
+  else // move up
+    m_sbardir = TRUE;
+
+  return ret;
+}
+
 void SPMCList::Update(DWORD deltatime)
 {
+  if (m_mousewheel && --m_mousewheelcount<=0)
+  {
+    m_mousewheel = FALSE;
+    MediaCenterController::GetInstance()->StopUpdate();
+    m_mousewheelcount = 0;
+    return;
+  }
+
   int status = m_dbsource->GetReaderStatus();
 
   m_lockpaint = TRUE;
 
-  m_rowpos += (m_sbardir?1:-1) * (int)((float)deltatime * (float)m_anispeed);
+  m_rowpos += (m_sbardir?1:-1) * (int)((float)deltatime * m_anispeed);
 
   if (m_sbardir) // move up
   {
@@ -236,6 +265,9 @@ BOOL SPMCList::ActMouseLBDown(const POINT& pt)
   ret = m_sbar->ActMouseLBDown(pt);
   if (m_sbar->GetSBarOffset() && ret)
     ActMouseMove(pt);
+  else if (ret)
+    m_mousewheel = FALSE;
+
   return ret;
 }
 
