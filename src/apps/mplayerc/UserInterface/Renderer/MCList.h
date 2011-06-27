@@ -62,6 +62,8 @@ private:
   int m_maxrows;
   int m_maxcolumns;
 
+  int m_updaterowpos;
+
   int m_rowpos;
   int m_columnpos;
   int m_fixcolumnwidth;
