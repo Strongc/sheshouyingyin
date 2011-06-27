@@ -153,7 +153,7 @@ void media_tree::model::addFile(const MediaData &md)
       fe.file_data.thumbnailpath = md.thumbnailpath;
       fe.file_data.hash = MediaCenterController::GetMediaHash(fe.file_data.path + fe.file_data.filename);
       fe.file_data.createtime = (int)::time(0);
-
+      fe.file_data.bHide = md.bHide;
       fe.tFileCreateTime = ::time(0);
       files.push_back(fe);
     }

@@ -185,6 +185,9 @@ BOOL BlockUnit::ActLButtonUp(const POINT& pt)
     }
   }
 
+  // hide the unit if needed
+  Hide(pt);
+
   return bl;
 }
 
@@ -299,6 +302,20 @@ void BlockUnit::DeleteLayer()
 {
   m_layer->DeleteAllLayer();
   delete m_layer;
+}
+
+void BlockUnit::Hide(const POINT &pt)
+{
+  UILayer *hide = 0;
+  BOOL bhide = m_layer->GetUILayer(L"hide", &hide);
+  if (bhide)
+  {
+    RECT rc;
+    hide->GetTextureRect(rc);
+    if (PtInRect(&rc, pt))
+      // hide the media
+      MediaCenterController::GetInstance()->HandleDelBlock(m_mediadata);
+  }
 }
 
 void BlockUnit::SetCover()

@@ -123,6 +123,17 @@ void SPMCList::DoPaint(WTL::CDC& dc, RECT& rcclient)
   }
 }
 
+void SPMCList::HideData()
+{
+  if (m_selblockunit)
+    m_dbsource->HideData(m_selblockunit->m_mediadata);
+}
+
+void SPMCList::Reload()
+{
+  m_dbsource->Reload();
+}
+
 void SPMCList::BlocksMouseMove(const POINT& pt)
 {
   if (!m_selblockunit)

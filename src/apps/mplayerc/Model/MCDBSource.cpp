@@ -71,6 +71,36 @@ BOOL MCDBSource::PreLoad(UINT nums)
   return TRUE;
 }
 
+void MCDBSource::Reload()
+{
+  m_stopdb = FALSE;
+}
+
+void MCDBSource::HideData(const MediaData &md)
+{
+  if (m_stopdb)
+  {
+    BUPOINTER cur = m_sp;
+    while (cur != m_ep)
+    {
+      if (((*cur)->m_mediadata.path == md.path)
+        && (*cur)->m_mediadata.filename == md.filename)
+        break;
+
+      ++cur;
+    }
+
+    if (cur != m_ep)
+    {
+      BlockUnit *temp = *cur;
+      m_frontbuff.push_back(temp);
+      m_frontbuff.erase(cur);
+      temp->SetDisplay(FALSE);
+      temp->CleanCover();
+    }
+  }
+}
+
 void MCDBSource::AdjustRange(UINT nums, UINT columns)
 {
   if (nums == m_readnums)
@@ -191,8 +221,9 @@ void MCDBSource::_Thread()
 
     m_db.Find(m_buffer, sqlwhere, (start < 0 ? 0 : start), m_readnums);
     MediaDatas::iterator val = m_buffer.begin();
-    
-    for (BUPOINTER it = m_frontbuff.begin(); val != m_buffer.end(); ++val, ++it)
+    BUPOINTER it = m_frontbuff.begin();
+
+    for (; val != m_buffer.end(); ++val, ++it)
     {
       if (m_isadjust)
       {
@@ -206,6 +237,16 @@ void MCDBSource::_Thread()
       Sleep(20);
     }
 
+    MediaData md;
+    while (it != m_frontbuff.end())
+    {
+      (*it)->m_mediadata = md;
+      (*it)->SetDisplay(FALSE);
+      (*it)->CleanCover();
+      ++it;
+    }
+    MediaCenterController::GetInstance()->Render();
+    
     m_buffer.clear();
   } while (!_Exit_state(500));
 }

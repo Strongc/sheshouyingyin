@@ -361,26 +361,23 @@ void MediaCenterController::HandlePlayback(const MediaData &md)
   }
 }
 
-// void MediaCenterController::HandleDelBlock(const BlockUnit *pBlock)
-// {
-//   //typedef media_tree::model::TreeIterator TreeIterator;
-//   //TreeIterator it = m_treeModel.findFolder(pBlock->m_itFile->file_data.path);
-//   //TreeIterator itEnd;
-//   //if (it != itEnd)
-//   //{
-//   //  MediaTreeFiles::iterator itFindFile = it->lsFiles.begin();
-//   //  while (itFindFile != it->lsFiles.end())
-//   //  {
-//   //    if (itFindFile->file_data.filename == pBlock->m_itFile->file_data.filename)
-//   //    {
-//   //      itFindFile->file_data.bHide = pBlock->m_itFile->file_data.bHide;
-//   //      break;
-//   //    }
-// 
-//   //    ++itFindFile;
-//   //  }
-//   //}
-// }
+void MediaCenterController::HandleDelBlock(const MediaData &md)
+{
+  // save settings to db
+  m_treeModel.addFile(md);
+
+  MediaData mdNew(md);
+  mdNew.bHide = true;
+  m_treeModel.updateFile(md, mdNew);
+
+  m_treeModel.save2DB();
+  m_treeModel.delTree();
+
+  // refresh current view
+  m_mclist.HideData();
+  m_mclist.Reload();
+  Render();
+}
 
 
 void MediaCenterController::ShowMC()

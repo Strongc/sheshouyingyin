@@ -11,6 +11,7 @@ public:
 
   void DefLayer();
   void DeleteLayer();
+  void Hide(const POINT &pt);
   void DoPaint(WTL::CDC& dc, POINT& pt);
 
   void SetCover();

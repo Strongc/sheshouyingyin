@@ -58,7 +58,7 @@ public:
 // slots
 public:
   void HandlePlayback(const MediaData &md);
-  //void HandleDelBlock(const BlockUnit *pBlock);
+  void HandleDelBlock(const MediaData &md);
 
 public:
   // Data control

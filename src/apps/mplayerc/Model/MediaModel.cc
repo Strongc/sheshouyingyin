@@ -21,7 +21,7 @@ int MediaModel::GetCount()
 {
   int nCount = 0;
 
-  MediaDB<int>::exec(L"SELECT count(*) FROM media_data", &nCount);
+  MediaDB<int>::exec(L"SELECT count(*) FROM media_data WHERE hide=0", &nCount);
 
   return nCount;
 }
@@ -247,6 +247,7 @@ void MediaModel::FindOne(MediaData& data, const MediaFindCondition& condition)
 }
 
 // limit_start represent the start number, limit_end represent the nums
+// Note: don't load the hidden items now !!!!!
 void MediaModel::Find(MediaDatas& data, const MediaFindCondition& condition,
           int limit_start, int limit_end)
 {
@@ -256,23 +257,22 @@ void MediaModel::Find(MediaDatas& data, const MediaFindCondition& condition,
   std::vector<std::wstring > vtFilmname;
   std::vector<std::wstring > vtThumbnailPath;
   std::vector<int> vtVideoTime;
-  std::vector<bool> vtHide;
 
   std::wstringstream sql;
-  typedef MediaDB<long long, std::wstring, std::wstring, std::wstring, std::wstring, int, bool> tpdMediaDBDB;
+  typedef MediaDB<long long, std::wstring, std::wstring, std::wstring, std::wstring, int> tpdMediaDBDB;
 
-  sql << L"SELECT uniqueid, path, filename, filmname, thumbnailpath, videotime, hide FROM media_data";
+  sql << L"SELECT uniqueid, path, filename, filmname, thumbnailpath, videotime FROM media_data WHERE hide=0";
 
   // Use the unique id
   if (condition.uniqueid > 0)
-    sql << L" WHERE uniqueid=" << condition.uniqueid;
+    sql << L" and uniqueid=" << condition.uniqueid;
   else if (!condition.filename.empty())
-    sql << L" WHERE filename='" << condition.filename << L"'";
+    sql << L" and filename='" << condition.filename << L"'";
 
   sql << L" limit " << limit_start << L"," << limit_end;
 
   OutputDebugString(sql.str().c_str());
-  tpdMediaDBDB::exec(sql.str(), &vtUniqueID, &vtPath, &vtFilename, &vtFilmname, &vtThumbnailPath, &vtVideoTime, &vtHide);
+  tpdMediaDBDB::exec(sql.str(), &vtUniqueID, &vtPath, &vtFilename, &vtFilmname, &vtThumbnailPath, &vtVideoTime);
 
   for (size_t i = 0; i < vtUniqueID.size(); ++i)
   {
@@ -283,7 +283,6 @@ void MediaModel::Find(MediaDatas& data, const MediaFindCondition& condition,
     md.filmname = vtFilmname[i];
     md.thumbnailpath = vtThumbnailPath[i];
     md.videotime = vtVideoTime[i];
-    md.bHide = vtHide[i];
 
     data.push_back(md);
   }
