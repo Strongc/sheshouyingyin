@@ -13,6 +13,7 @@ public:
   SPMCList();
   ~SPMCList();
 
+  ULMCOpenButton* GetOpenFileBtn();
   SPScrollBar* GetScrollBar();
   CSize GetMCSize();
 
