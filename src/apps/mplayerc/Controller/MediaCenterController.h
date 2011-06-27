@@ -55,8 +55,6 @@ public:
    void SetStatusText(const std::wstring &str);
    void SetCursor(LPWSTR flag = IDC_HAND);
 
-   bool IsMouseWheelScroll();
-
 // slots
 public:
   void HandlePlayback(const MediaData &md);
@@ -109,10 +107,6 @@ private:
   SPMCList m_mclist;
   MCStatusBar m_mcstatusbar;
   int m_nstatusbarheight;
-
-  CPoint m_ptWheel;
-  bool m_bMouseWheel;
-  std::stack<int> m_skWheelEvent;
 
 private:
   // datas for film name edit
