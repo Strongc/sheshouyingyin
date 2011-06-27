@@ -59,6 +59,7 @@ public:
 public:
   void HandlePlayback(const MediaData &md);
   void HandleDelBlock(const MediaData &md);
+  void HandleFileOpen();
 
 public:
   // Data control
