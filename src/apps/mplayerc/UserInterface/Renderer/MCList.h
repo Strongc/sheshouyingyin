@@ -28,6 +28,7 @@ public:
   BOOL ActWindowChange(int w, int h);
   BOOL ActLButtonDblClick(const POINT& pt);
   BOOL ActRButtonUp(const POINT &pt);
+  BOOL ActMouseWheel(UINT nFlags, short zDelta, CPoint point);
 
 private:
   void SetCover();
@@ -71,6 +72,9 @@ private:
   float m_anispeed;
 
   BOOL m_sbardir;
+
+  int m_mousewheelcount;
+  BOOL m_mousewheel;
 
   UINT m_blockcount;
 
