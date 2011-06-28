@@ -320,17 +320,34 @@ void BlockUnit::Hide(const POINT &pt)
 
 void BlockUnit::SetCover()
 {
-  if (!m_cover && !m_mediadata.thumbnailpath.empty())
+  using namespace boost::filesystem;
+
+  ResLoader resloader;
+  UILayer *def = 0;
+  m_layer->GetUILayer(L"def", &def);
+  boost::system::error_code err;
+  if (!m_cover && exists(m_mediadata.thumbnailpath, err))
   {
-    ResLoader resLoad;
-    UILayer* def = NULL;
-    m_cover = resLoad.LoadBitmapFromDisk(m_mediadata.thumbnailpath, false);
-    m_layer->GetUILayer(L"def", &def);
-    if (m_cover && def)
+    // If the thumbnail exist then load it
+    HBITMAP hCover = resloader.LoadBitmapFromDisk(m_mediadata.thumbnailpath, false);
+    if (hCover && def)
     {
+      m_cover = hCover;  // assign value
       if (!m_coverwidth && !m_coverheight)
         def->GetTextureWH(m_coverwidth, m_coverheight);
       def->SetTexture(m_cover);
+    }
+  }
+
+  if (!m_cover && !m_mediadata.filename.empty())
+  {
+    // If the thumbnail not exist then load the default picture
+    // the default picture maybe deleted in CleanCover in somewhere
+    HBITMAP hCover = resloader.LoadBitmap(L"\\skin\\def.png");
+    if (hCover && def)
+    {
+      m_cover = hCover;
+      def->SetTexture(hCover, 2);
     }
   }
 }
