@@ -37,5 +37,6 @@ private:
   UILayerBlock* m_layer;
   BOOL m_display;
   HBITMAP m_cover;
+  bool m_bUsingDefaultCover;  // is using default cover now ?
   CRect m_rcText;
 };

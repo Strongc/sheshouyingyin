@@ -9,7 +9,8 @@ m_layer(new UILayerBlock),
 m_cover(NULL),
 m_display(FALSE),
 m_coverwidth(0),
-m_coverheight(0)
+m_coverheight(0),
+m_bUsingDefaultCover(true)
 {
 }
 
@@ -217,6 +218,8 @@ void BlockUnit::DefLayer()
   m_layer->AddUILayer(L"hide", new ULDel(L"\\skin\\hide.png", FALSE, 2));
   //m_layer->AddUILayer(L"favourite", new ULFavourite(L"\\skin\\favourite.png", FALSE, 2));
   //m_layer->AddUILayer(L"insertcover", new ULCover(L"\\skin\\cover.png", FALSE, 2));
+
+  m_bUsingDefaultCover = true;  // using default cover by default
 }
 
 void BlockUnit::DoPaint(WTL::CDC& dc, POINT& pt)
@@ -322,31 +325,38 @@ void BlockUnit::SetCover()
 {
   using namespace boost::filesystem;
 
+  boost::system::error_code err;
   ResLoader resloader;
   UILayer *def = 0;
   m_layer->GetUILayer(L"def", &def);
-  boost::system::error_code err;
-  if (!m_cover && exists(m_mediadata.thumbnailpath, err))
+
+  // If cover not set, then load the cover if possible
+  // If cover set but we want to use media picture instead of default cover, then
+  //    load the cover if possible
+  bool bCoverNotExist = !m_cover && exists(m_mediadata.thumbnailpath, err);
+  bool bNeedChangeCover = m_bUsingDefaultCover && exists(m_mediadata.thumbnailpath, err);
+  if (bCoverNotExist || bNeedChangeCover)
   {
     // If the thumbnail exist then load it
     HBITMAP hCover = resloader.LoadBitmapFromDisk(m_mediadata.thumbnailpath, false);
     if (hCover && def)
     {
       m_cover = hCover;  // assign value
+      m_bUsingDefaultCover = false;  // using media picture
       if (!m_coverwidth && !m_coverheight)
         def->GetTextureWH(m_coverwidth, m_coverheight);
       def->SetTexture(m_cover);
     }
   }
 
-  if (!m_cover && !m_mediadata.filename.empty())
+  // If the cover not exist or load cover failure, then load the default cover
+  if (!m_cover)
   {
-    // If the thumbnail not exist then load the default picture
-    // the default picture maybe deleted in CleanCover in somewhere
     HBITMAP hCover = resloader.LoadBitmap(L"\\skin\\def.png");
     if (hCover && def)
     {
       m_cover = hCover;
+      m_bUsingDefaultCover = true;  // using default cover
       def->SetTexture(hCover, 2);
     }
   }
