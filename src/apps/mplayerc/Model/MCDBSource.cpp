@@ -231,6 +231,8 @@ void MCDBSource::_Thread()
         m_stopdb = FALSE;
         break;
       }
+      if (val->filename != (*it)->m_mediadata.filename)
+        (*it)->CleanCover();
       (*it)->m_mediadata = *val;
       (*it)->SetDisplay();
       MediaCenterController::GetInstance()->Render();
