@@ -83,20 +83,20 @@ void MCDBSource::HideData(const MediaData &md)
     BUPOINTER cur = m_sp;
     while (cur != m_ep)
     {
-      if (((*cur)->m_mediadata.path == md.path)
-        && (*cur)->m_mediadata.filename == md.filename)
+      if ((*cur)->m_mediadata.uniqueid == md.uniqueid)
         break;
-
       ++cur;
     }
 
     if (cur != m_ep)
     {
-      BlockUnit *temp = *cur;
-      m_frontbuff.push_back(temp);
+      BlockUnit* bu = *cur;
       m_frontbuff.erase(cur);
-      temp->SetDisplay(FALSE);
-      temp->CleanCover();
+      m_frontbuff.push_back(bu);
+      m_sp = m_frontbuff.begin();
+      m_ep = m_frontbuff.end();
+      bu->SetDisplay(FALSE);
+      bu->CleanCover();
     }
   }
 }
@@ -153,13 +153,12 @@ int MCDBSource::LoadRowDatas(BOOL direction, UINT columns)
       m_readerstatus = MCDB_TOSTART;
       return m_readerstatus;
     }
-
-    m_stopdb = FALSE;
     
     m_frontbuff.insert(m_frontbuff.begin(), m_ep-columns, m_ep);
     m_frontbuff.erase(m_frontbuff.end()-columns, m_frontbuff.end());
     m_sp = m_frontbuff.begin();
     m_ep = m_frontbuff.end();
+    m_stopdb = FALSE;
 
     BUPOINTER it = m_sp;
     MediaData md;
@@ -181,14 +180,12 @@ int MCDBSource::LoadRowDatas(BOOL direction, UINT columns)
     }
     else if (len < columns)
       nums = len;
-
-    m_stopdb = FALSE;
     
     m_frontbuff.insert(m_frontbuff.end(), m_sp, m_sp + columns);
     m_frontbuff.erase(m_frontbuff.begin(), m_frontbuff.begin() + columns);
-
     m_sp = m_frontbuff.begin();
     m_ep = m_frontbuff.end();
+    m_stopdb = FALSE;
     
     BUPOINTER it = m_ep - columns;
     MediaData md;
@@ -231,23 +228,14 @@ void MCDBSource::_Thread()
         m_stopdb = FALSE;
         break;
       }
-      if (val->filename != (*it)->m_mediadata.filename)
+      if (val->uniqueid != (*it)->m_mediadata.uniqueid)
         (*it)->CleanCover();
+
       (*it)->m_mediadata = *val;
       (*it)->SetDisplay();
       MediaCenterController::GetInstance()->Render();
       Sleep(20);
     }
-
-    MediaData md;
-    while (it != m_frontbuff.end())
-    {
-      (*it)->m_mediadata = md;
-      (*it)->SetDisplay(FALSE);
-      (*it)->CleanCover();
-      ++it;
-    }
-    MediaCenterController::GetInstance()->Render();
     
     m_buffer.clear();
   } while (!_Exit_state(500));
