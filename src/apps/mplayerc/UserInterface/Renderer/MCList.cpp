@@ -126,12 +126,11 @@ void SPMCList::DoPaint(WTL::CDC& dc, RECT& rcclient)
 void SPMCList::HideData()
 {
   if (m_selblockunit)
+  {
     m_dbsource->HideData(m_selblockunit->m_mediadata);
-}
-
-void SPMCList::Reload()
-{
-  m_dbsource->Reload();
+    m_dbsource->Reload();
+    m_selblockunit = NULL;
+  }
 }
 
 void SPMCList::BlocksMouseMove(const POINT& pt)

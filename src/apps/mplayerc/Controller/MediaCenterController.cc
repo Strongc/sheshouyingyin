@@ -373,10 +373,7 @@ void MediaCenterController::HandleDelBlock(const MediaData &md)
   m_treeModel.save2DB();
   m_treeModel.delTree();
 
-  // refresh current view
   m_mclist.HideData();
-  m_mclist.Reload();
-  Render();
 }
 
 void MediaCenterController::HandleFileOpen()
