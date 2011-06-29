@@ -14994,10 +14994,8 @@ void CMainFrame::OnShowMediaCenter()
   m_btoolbardisplay = !m_bmediacentershow;
   RedrawNonClientArea();
 
-  // why do this??
-  CRect rc;
-  GetClientRect(&rc);
-  PostMessage(WM_SIZE, 0, MAKELPARAM(rc.Width(), rc.Height()));
+  // recalc the layout
+  RecalcLayout();
 }
 
 void CMainFrame::HideToolBar()

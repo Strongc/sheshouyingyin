@@ -403,6 +403,10 @@ void MediaCenterController::ShowMC()
   m_mcstatusbar.SetBKColor(RGB(0xb7, 0xb7, 0xb7));
   m_mcstatusbar.SetVisible(true);
 
+  // Note: under the aeroglass mode, the child view didn't receive a WM_SIZE event
+  //       so we emulate a window change event to MC
+  ActWindowChange(rc.right - rc.left, rc.bottom - rc.top);
+
   ::InvalidateRect(m_hwnd, NULL, TRUE);
 }
 
