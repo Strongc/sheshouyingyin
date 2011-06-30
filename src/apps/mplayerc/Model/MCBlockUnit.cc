@@ -29,6 +29,9 @@ BOOL BlockUnit::ActMouseMove(const POINT& pt)
   UILayer* layer = NULL;
   BOOL bmark = m_layer->GetUILayer(L"background", &layer);
 
+  if (!bmark)
+    return FALSE;
+
   RECT rc;
   layer->GetTextureRect(rc);
   if (PtInRect(&rc, pt))
@@ -196,11 +199,13 @@ BOOL BlockUnit::ActRButtonUp(const POINT& pt)
 {
   BOOL ret = FALSE;
 
-  if (!m_layer) return ret;
+  if (!m_layer)
+    return FALSE;
 
   UILayer* layer = 0;
   BOOL bmark = m_layer->GetUILayer(L"background", &layer);
-  if (!bmark) return ret;
+  if (!bmark)
+    return FALSE;
 
   RECT rc;
   layer->GetTextureRect(rc);
@@ -328,7 +333,10 @@ void BlockUnit::SetCover()
   boost::system::error_code err;
   ResLoader resloader;
   UILayer *def = 0;
-  m_layer->GetUILayer(L"def", &def);
+  BOOL bdef = m_layer->GetUILayer(L"def", &def);
+
+  if (!bdef)
+    return;
 
   // If cover not set, then load the cover if possible
   // If cover set but we want to use media picture instead of default cover, then
