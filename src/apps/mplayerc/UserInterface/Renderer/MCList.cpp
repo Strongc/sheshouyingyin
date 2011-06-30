@@ -400,7 +400,10 @@ BOOL SPMCList::ActLButtonDblClick(const POINT& pt)
   if (m_selblockunit)
   {
     bl = TRUE;
-    MediaCenterController::GetInstance()->ShowFilmNameEdit(m_selblockunit);
+    RECT rc = {0};
+    rc = m_selblockunit->GetTextRect();
+    if (PtInRect(&rc, pt))
+      MediaCenterController::GetInstance()->ShowFilmNameEdit(m_selblockunit);
   }
 
   if (m_sbar->ActLButtonDblClick(pt))
