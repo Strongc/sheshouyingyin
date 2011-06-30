@@ -495,11 +495,19 @@ BOOL MediaCenterController::ActMouseMove(const POINT& pt)
 
 BOOL MediaCenterController::ActMouseLeave()
 {
+  BOOL ret = FALSE;
+
   // set status message to default
   m_mcstatusbar.SetText(L"");
+  ret = TRUE;
+
+  // set select block unit to null
+  if (!m_mclist.ActMouseLeave())
+    ret = FALSE;
+
   Render();
 
-  return TRUE;
+  return ret;
 }
 
 BOOL MediaCenterController::ActMouseLBDown(const POINT& pt)

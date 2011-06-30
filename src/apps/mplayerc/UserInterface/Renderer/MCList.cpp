@@ -187,6 +187,17 @@ BOOL SPMCList::ActMouseWheel(UINT nFlags, short zDelta, CPoint point)
   return ret;
 }
 
+BOOL SPMCList::ActMouseLeave()
+{
+  if (m_selblockunit)
+  {
+    m_selblockunit->ActMouseOut(CPoint(-1, -1));
+    m_selblockunit = 0;
+  }
+
+  return TRUE;
+}
+
 void SPMCList::Update(DWORD deltatime)
 {
   if (m_mousewheel && --m_mousewheelcount<=0)

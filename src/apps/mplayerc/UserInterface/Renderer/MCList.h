@@ -32,6 +32,7 @@ public:
   BOOL ActLButtonDblClick(const POINT& pt);
   BOOL ActRButtonUp(const POINT &pt);
   BOOL ActMouseWheel(UINT nFlags, short zDelta, CPoint point);
+  BOOL ActMouseLeave();
 
 private:
   void SetCover();
