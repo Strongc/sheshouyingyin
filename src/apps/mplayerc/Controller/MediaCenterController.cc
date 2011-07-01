@@ -279,6 +279,7 @@ void MediaCenterController::ShowFilmNameEdit(BlockUnit* bu)
     RECT rc = bu->GetTextRect();
     m_pFilmNameEdit->MoveWindow(&rc);
     m_pFilmNameEdit->ShowWindow(SW_SHOW);
+    m_pFilmNameEdit->EnableWindow(TRUE);
 
     CMainFrame *pFrame = (CMainFrame *)(AfxGetMyApp()->GetMainWnd());
     m_hOldAccel = pFrame->m_hAccelTable;
