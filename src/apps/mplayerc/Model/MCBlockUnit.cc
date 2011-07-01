@@ -10,7 +10,8 @@ m_cover(NULL),
 m_display(FALSE),
 m_coverwidth(0),
 m_coverheight(0),
-m_bUsingDefaultCover(true)
+m_bUsingDefaultCover(true),
+m_rcText(0, 0, 0, 0)
 {
 }
 
