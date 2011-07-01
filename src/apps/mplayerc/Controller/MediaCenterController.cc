@@ -352,6 +352,8 @@ void MediaCenterController::HandlePlayback(const MediaData &md)
 
         pMainWnd->OpenCurPlaylistItem();
       }
+
+      ActMouseLeave();
     }
   }
   catch (const filesystem_error &err)
