@@ -165,11 +165,18 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
       md.path = vtPath[i];
       md.filename = vtFilename[i];
       md.filmname = vtFilmname[i];
-      //md.thumbnailpath = vtThumbnailPath[i];
-      md.thumbnailpath = MediaCenterController::GetCoverPath(md.path + md.filename);
-      MediaCenterController::GetInstance()->GetCoverDownload().SetBlockUnit(md);
       md.bHide = vtHide[i];
+
+      // dynamic get the cover path first
+      // if fail, then use database's thumbnail path
+      md.thumbnailpath = MediaCenterController::GetCoverPath(md.path + md.filename);
+      if (md.thumbnailpath.empty())
+        md.thumbnailpath = vtThumbnailPath[i];
+
       m_treeModel.addFile(md);
+
+      // add media to cover thread to get the cover
+      MediaCenterController::GetInstance()->GetCoverDownload().SetBlockUnit(md);
 
       if (_Exit_state(0))
         return;
