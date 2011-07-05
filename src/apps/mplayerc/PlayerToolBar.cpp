@@ -408,7 +408,7 @@ void CPlayerToolBar::OnPaint()
       width = 0;
    
     if (size.cx > 0)
-      btnrc.right = btnrc.left + min(width, size.cx);
+      btnrc.right = btnrc.left + width;//min(width, size.cx);
     else
       btnrc.right = btnrc.left;
     //btnrc.right -= 5;
@@ -682,8 +682,11 @@ void CPlayerToolBar::OnMouseMove(UINT nFlags, CPoint point)
     if (rcAd.PtInRect(pi))
     {
       SetCursor(cursorHand);
+      m_adctrl.SetCloseBtnDisplay(true);
       m_adctrl._mouseover_time = time(NULL);
     }
+    else
+      m_adctrl.SetCloseBtnDisplay(false);
   }
 
   if(m_nItemToTrack == ID_VOLUME_THUMB && m_bMouseDown)
@@ -994,12 +997,26 @@ void CPlayerToolBar::OnLButtonUp(UINT nFlags, CPoint point)
   // if click on ads
   if (m_adctrl.GetVisible())
   {
-    CRect rcAd = m_adctrl.GetRect();
-    if (rcAd.PtInRect(point))
-    {
+    CRect rc = m_adctrl.GetRect();
+    CRect rcBtn = m_adctrl.GetCloseBtnRect();
+    CRect rcAd = m_adctrl.GetAdRect();
+
+    if (rc.PtInRect(point))
       SetCursor(cursorHand);
-      m_adctrl.OnAdClick();
+
+    if (rcBtn.PtInRect(point) && m_adctrl.IsCloseBtnCanClick())
+    {
+      m_adctrl.DoHideAd();
+      if (m_adctrl.IsAdsEmpty())
+      {
+        m_adctrl.SetVisible(false);
+        InvalidateRect(&m_adctrl.GetRect(), false);
+      }
+      return;
     }
+
+    if (rcAd.PtInRect(point))
+      m_adctrl.OnAdClick();
   }
 
   CPoint xpoint = point + rc.TopLeft() ;
@@ -1084,11 +1101,11 @@ void CPlayerToolBar::OnTimer(UINT nIDEvent){
         // If no ads exists, then didn't show ads, otherwise show ads
         if (m_adctrl.IsAdsEmpty())
           break;
-
+        
         m_adctrl.AllowAnimate(true);
         Invalidate();
         break;
-      }
+      } 
     case TIMER_ADPLAYSWITCH:
       {
         // If no ads exists, then don't show ads
