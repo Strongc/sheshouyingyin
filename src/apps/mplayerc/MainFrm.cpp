@@ -1728,10 +1728,6 @@ void CMainFrame::OnResetSetting(){
 }
 void CMainFrame::OnDestroy()
 {
-   MediaCenterController::GetInstance()->SpiderThreadStop();
-   MediaCenterController::GetInstance()->CoverThreadStop();
-   //MediaCenterController::GetInstance()->SaveTreeDataToDB();
-
   //AfxMessageBox(_T("2"));
   ShowTrayIcon(false);
 
@@ -1754,6 +1750,10 @@ void CMainFrame::OnDestroy()
       TerminateThread(m_pGraphThread->m_hThread, -1);
     }
   }
+
+  // stop the spider and cover thread
+  MediaCenterController::GetInstance()->SpiderThreadStop();
+  MediaCenterController::GetInstance()->CoverThreadStop();
 
   __super::OnDestroy();
 }
@@ -7333,9 +7333,7 @@ void CMainFrame::OnPlayStop()
   // restart the cover thread
   AppSettings &s = AfxGetAppSettings();
   if (!(s.nCLSwitches & CLSW_SNAPSHOT))
-  {
     MediaCenterController::GetInstance()->CoverThreadStart();
-  }
 
   // other things
   m_l_been_playing_sec = 0;
