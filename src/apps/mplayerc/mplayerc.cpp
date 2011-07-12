@@ -78,8 +78,8 @@ DECLARE_LAZYINSTANCE(UpdateController);
 DECLARE_LAZYINSTANCE(MediaCenterController);
 DECLARE_LAZYINSTANCE(UserShareController);
 DECLARE_LAZYINSTANCE(PingPongController);
+DECLARE_LAZYINSTANCE(pHashController);
 DECLARE_LAZYINSTANCE(UserAccountController);
-
 /////////
 static bool _skip_db = false;
 

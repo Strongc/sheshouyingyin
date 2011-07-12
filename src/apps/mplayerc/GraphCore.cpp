@@ -621,6 +621,8 @@ long find_string_in_buf ( char *buf, size_t len,
 
 bool CGraphCore::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
 {
+
+
   CString err, aborted(_T("Aborted"));
   AppSettings& s = AfxGetAppSettings();
 
@@ -720,6 +722,7 @@ bool CGraphCore::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
         }
       }
 
+
       if(m_fOpeningAborted) throw aborted;
 
       OpenCreateGraphObject(pOMD);
@@ -764,6 +767,7 @@ bool CGraphCore::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
         }
         SetShaders(true);
       }
+
       // === EVR !
       pGB->FindInterface(__uuidof(IMFVideoDisplayControl), (void**)&m_pMFVDC,  TRUE);
       if (m_pMFVDC)
@@ -812,11 +816,24 @@ bool CGraphCore::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
       {
         if(p->rtStart > 0)
           GetMainFrame()->PostMessage(WM_RESUMEFROMSTATE, (WPARAM)PM_FILE, (LPARAM)(p->rtStart/10000)); // REFERENCE_TIME doesn't fit in LPARAM under a 32bit env.
+        else
+        {
+          if (CComQIPtr<IAudioSwitcherFilter> pASF = FindFilter(__uuidof(CAudioSwitcherFilter), pGB))
+            pHashController::GetInstance()->Check(p->rtStart, pMS, pASF, m_fnCurPlayingFile);
+        }
       }
       else if(OpenDVDData* p = dynamic_cast<OpenDVDData*>(pOMD.m_p))
       {
         if(p->pDvdState)
           GetMainFrame()->PostMessage(WM_RESUMEFROMSTATE, (WPARAM)PM_DVD, (LPARAM)(CComPtr<IDvdState>(p->pDvdState).Detach())); // must be released by the called message handler
+        else
+        {
+          if (CComQIPtr<IAudioSwitcherFilter> pASF = FindFilter(__uuidof(CAudioSwitcherFilter), pGB))
+          {
+            REFERENCE_TIME st = 0;
+            pHashController::GetInstance()->Check(st, pMS, pASF, m_fnCurPlayingFile);
+          }
+        }
       }
       else if(OpenDeviceData* p = dynamic_cast<OpenDeviceData*>(pOMD.m_p))
         ApplyOptionToCaptureBar(p);
@@ -892,8 +909,10 @@ void CGraphCore::CloseMediaPrivate()
   CAutoLock mOpenCloseLock(&m_csOpenClose);
   SVP_LogMsg5(L"CloseMediaPrivate");
   m_iMediaLoadState = MLS_CLOSING;
-
+ 
   OnPlayStop(); // SendMessage(WM_COMMAND, ID_PLAY_STOP);
+
+  pHashController::GetInstance()->PHashCommCfg.stop = TRUE;
 
   m_iPlaybackMode = PM_NONE;
   m_iSpeedLevel = 0;

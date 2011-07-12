@@ -27,6 +27,7 @@
 
 #include "Controller/SnapUploadController.h"
 #include "Controller/SubTransController.h"
+#include "Controller/pHashController.h"
 
 #include "GraphCore.h"
 
@@ -703,6 +704,7 @@ public:
   afx_msg void OnUpdateShowColorControlBar(CCmdUI *pCmdUI);
   afx_msg void OnSetsnapshotpath();
   afx_msg void OnMovieShare();
+  afx_msg void OnFilledUp4pHash(); // response to data filled up
 
   /*NEW UI*/
   LRESULT OnNcPaint( WPARAM wParam, LPARAM lParam );

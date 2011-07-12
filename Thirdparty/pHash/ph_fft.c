@@ -23,7 +23,7 @@
 */
 
 #include "ph_fft.h"
-
+#include <Windows.h>
 scomplex polar_to_complex(const double r, const double theta)
 {
     scomplex result;
@@ -36,20 +36,23 @@ void fft_calc(const int N,const double *x,scomplex  *X,scomplex *P,const int ste
 {
     scomplex *S;
     S = P + N/2;
-    if (N == 1){
-	X[0] = x[0];
-	return;
+    if (N == 1)
+    {
+        X[0] = x[0];
+        return;
     }
 
     fft_calc(N/2, x,      S,   X,2*step, twids);
     fft_calc(N/2, x+step, P,   X,2*step, twids);
 
     int k;
-    for (k=0;k<N/2;k++){
-	P[k]     = P[k]*twids[k*step];
-	X[k]     = S[k] + P[k];
-	X[k+N/2] = S[k] - P[k];
+    for (k=0; k<N/2; k++)
+    {
+        P[k]     = P[k]*twids[k*step];
+        X[k]     = S[k] + P[k];
+        X[k+N/2] = S[k] - P[k];
     }
+    
 
 }
 
@@ -61,11 +64,12 @@ int fft(double *x, int N, scomplex *X)
     scomplex  *Xt = (scomplex *)malloc(sizeof(scomplex)*N);
 
     int k;
-    for (k=0;k<N/2;k++){
-	twiddle_factors[k] = polar_to_complex(1.0, 2.0*PI*k/N);
+    for (k=0; k<N/2; k++)
+    {
+        twiddle_factors[k] = polar_to_complex(1.0, 2.0*PI*k/N);
     }
     fft_calc(N, x, X, Xt, 1, twiddle_factors);
-
+    Sleep(1);
     free(twiddle_factors);
     free(Xt);
 
