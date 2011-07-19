@@ -176,8 +176,8 @@ BOOL SPMCList::ActMouseWheel(UINT nFlags, short zDelta, CPoint point)
     MediaCenterController::GetInstance()->Update();
 
   m_mousewheel = TRUE;
-  m_mousewheelcount = 40;
-  m_anispeed = 0.00005f * pow(100.f, 2.0f);
+  m_mousewheelcount = 10;
+  m_anispeed = 1.2;
 
   if (zDelta < 0) // move down
     m_sbardir = FALSE;
