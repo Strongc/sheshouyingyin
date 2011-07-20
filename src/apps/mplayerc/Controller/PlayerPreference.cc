@@ -41,11 +41,17 @@ PlayerPreference::PlayerPreference(void):
   m_map_strvar[STRVAR_SUBTITLE_SAVE_CUSTOMPATH] = GetProfileString(L"Settings", L"SubtitleSaveFolder", L"");  // subtitle save folder
 
   m_map_strvar[STRVAR_AD] = GetProfileString(L"Settings", L"Ad", L"");   // ad
+  m_map_strvar[STRVAR_HIDEAD] = GetProfileString(L"Settings", L"HideAd", L""); // hide ads
   m_map_strvar[STRVAR_TIMEBMP_TYPE] = GetProfileString(L"Settings", L"TimeBmpType", L"Display_TimeLeft");
 
+  m_map_strvar[STRVAR_USER_ACCOUNT_NAME] = GetProfileString(L"Settings", L"UserAccountName", L"false");  // default value is 'false'
+  m_map_strvar[STRVAR_MAINSUBTITLEFONT] = GetProfileString(L"Settings", L"MainSubtitleFont", L"");
+  
   m_map_strvar[STRVAR_COVER_REQUESTURL] = L"http://m.shooter.cn/api/medias/getinfoBysphash/sphash:"; // cover controller
   m_map_strvar[STRVAR_COVER_DOWNLOADURL] = L"http://img.shooter.cn/";
   m_map_strvar[STRVAR_COVER_UPLOADURL] = L"http://zz.webpj.com:8888/api/medias/add_sfScreenshot";
+
+  m_map_strvar[STRVAR_SECONDARYSUBTITLEFONT] = GetProfileString(L"Settings", L"SecondarySubtitleFont", L"");
 }
 
 void PlayerPreference::Update()
@@ -73,7 +79,11 @@ void PlayerPreference::Update()
 
   WriteProfileString(L"Settings", L"LastSpiderPath", m_map_strvar[STRVAR_LASTSPIDERPATH].c_str());  // last spider path
   WriteProfileString(L"Settings", L"Ad", m_map_strvar[STRVAR_AD].c_str());
+  WriteProfileString(L"Settings", L"HideAd", m_map_strvar[STRVAR_HIDEAD].c_str());
   WriteProfileString(L"Settings", L"TimeBmpType", m_map_strvar[STRVAR_TIMEBMP_TYPE].c_str());
+
+  WriteProfileString(L"Settings", L"MainSubtitleFont", m_map_strvar[STRVAR_MAINSUBTITLEFONT].c_str());
+  WriteProfileString(L"Settings", L"SecondarySubtitleFont", m_map_strvar[STRVAR_SECONDARYSUBTITLEFONT].c_str());
 }
 
 PlayerPreference::~PlayerPreference(void)

@@ -27,10 +27,12 @@
 
 #include "Controller/SnapUploadController.h"
 #include "Controller/SubTransController.h"
+#include "Controller/pHashController.h"
 
 #include "GraphCore.h"
 
 #include "SkinFolderManager.h"
+#include "UserInterface/Dialogs/OAuthDlg.h"
 
 
 class CMainFrame : public CFrameWnd, public CDropTarget , public CGraphCore
@@ -296,6 +298,7 @@ private:
   CSize m_original_size_of_current_video;
   CSize m_last_size_of_current_kind_of_video;
   int m_movieShared;
+  OAuthDlg *m_pUserAccountDlg;
 public:
   void SVPSubDownloadByVPath(CString szVPath, CAtlList<CString>* szaStatMsgs = NULL);
   void SVP_UploadSubFileByVideoAndSubFilePath(CString fnVideoFilePath, CString szSubPath, int iDelayMS = 0, CAtlList<CString>* szaStatMsgs = NULL, CStringArray* szaPostTerms = NULL);
@@ -512,6 +515,8 @@ public:
   afx_msg void OnFileClosePlaylist();
   afx_msg void OnFileCloseMedia(); // no menu item
   afx_msg void OnUpdateFileClose(CCmdUI* pCmdUI);
+  afx_msg void OnUserShare();  // show the user's logging status
+  afx_msg void OnUpdateUserShare(CCmdUI* pCmdUI);
 
   afx_msg void OnViewCaptionmenu();
   afx_msg void OnUpdateViewCaptionmenu(CCmdUI* pCmdUI);
@@ -672,7 +677,7 @@ public:
 
   afx_msg void OnAudioDeviceChange(UINT nID);
   afx_msg void OnUpdateAudioDeviceChange(CCmdUI *pCmdUI);
-  afx_msg void OnVisitbbs();
+  afx_msg void OnVisitShop();
   afx_msg void OnSendemail();
   afx_msg void OnCheckDefaultPlayer();
   afx_msg void OnCheckAndSetDefaultPlayer();
@@ -682,6 +687,12 @@ public:
   afx_msg void OnLanguage(UINT nID);
   afx_msg void OnColorControl(UINT nID);
 
+  afx_msg void On3DStereoControl(UINT nID);
+  afx_msg void OnUpdate3DStereoControl(CCmdUI *pCmdUI);
+  afx_msg void On3DStereoKeepAR();
+  afx_msg void OnUpdate3DStereoKeepAR(CCmdUI *pCmdUI);
+  void Save3DStereoPerference();
+  
   afx_msg void OnShowSUBVoteControlBar();
   afx_msg void OnShowEQControlBar();
   afx_msg void OnShowChannelNormalizerBar();
@@ -693,6 +704,7 @@ public:
   afx_msg void OnUpdateShowColorControlBar(CCmdUI *pCmdUI);
   afx_msg void OnSetsnapshotpath();
   afx_msg void OnMovieShare();
+  afx_msg void OnFilledUp4pHash(); // response to data filled up
 
   /*NEW UI*/
   LRESULT OnNcPaint( WPARAM wParam, LPARAM lParam );

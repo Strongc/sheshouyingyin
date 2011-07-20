@@ -21,22 +21,19 @@ public:
   void ShareMovie(std::wstring uuid, std::wstring sphash, std::wstring film);
 
   void SetCommentPlaneParent(HWND hwnd);
-  void CreateCommentPlane();
   void CalcCommentPlanePos();
   BOOL ShowCommentPlane();
   void HideCommentPlane();
-  void ToggleCommentPlane();
+  BOOL ToggleCommentPlane();
 
   BOOL OpenShooterMedia();
   BOOL CloseShooterMedia();
   std::wstring GenerateKey();
   std::wstring GetResponseData();
+  BOOL CloseShareWnd();
 
 private:
   std::wstring EncodeString(std::wstring str);
-
-private:
-  DLGTEMPLATE* _dialogTemplate;
 
   std::wstring m_uuid;
   std::wstring m_sphash;

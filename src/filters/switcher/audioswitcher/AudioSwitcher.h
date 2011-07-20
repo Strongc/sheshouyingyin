@@ -20,7 +20,7 @@
 
 #include "StreamSwitcher.h"
 #include "..\..\..\svplib\SVPEqualizer.h"
-
+#include "..\..\..\apps\mplayerc\Model\PHashComm.h"
 
 #define MAX_OUTPUT_CHANNELS 18
 #define MAX_INPUT_CHANNELS 18
@@ -44,13 +44,31 @@ interface __declspec(uuid("CEDB2890-53AE-4231-91A3-B0AAFCD1DBDE")) IAudioSwitche
 			,float pSpeakerToChannelMapOffset[MAX_INPUT_CHANNELS][MAX_NORMALIZE_CHANNELS], int iSimpleSwitch, int iSS, bool map_centerch2lr = true) = 0;
 	STDMETHOD(SetEQControl) ( int lEQBandControlPreset, float pEQBandControl[MAX_EQ_BAND]) = 0;
 
-	STDMETHOD (SetRate)(double dRate) = 0;
+	STDMETHOD(SetRate) (double dRate) = 0;
+  STDMETHOD(SetPhashCfg) (PHashCommCfg_st* cfg) = 0;
+};
+
+class FingerCollect
+{
+public:
+  FingerCollect(void);
+  ~FingerCollect(void);
+  void PHashCollect(BYTE* pDataIn, int pcmtype, WAVEFORMATEX* wfe, IMediaSample* pIn, REFERENCE_TIME& rtDur);
+
+  PHashCommCfg_st* PHashCommCfg;
+private:
+  void FillRawBuffer(BYTE* pDataout, int len);
+  int GetRawLength(REFERENCE_TIME dur, int channels, 
+    int bitsPerSample, int samplePerSec);
 };
 
 class AudioStreamResampler;
 
 
-class __declspec(uuid("18C16B08-6497-420e-AD14-22D21C2CEAB7")) CAudioSwitcherFilter : public CStreamSwitcherFilter, public IAudioSwitcherFilter
+class __declspec(uuid("18C16B08-6497-420e-AD14-22D21C2CEAB7")) CAudioSwitcherFilter :
+                                                  public CStreamSwitcherFilter, 
+                                                  public FingerCollect,
+                                                  public IAudioSwitcherFilter
 {
 	//typedef struct {DWORD Speaker, Channel;} ChMap;
 	//CAtlArray<ChMap> m_chs[18];
@@ -145,4 +163,5 @@ public:
 	// IAMStreamSelect
 	STDMETHODIMP Enable(long lIndex, DWORD dwFlags);
 
+  STDMETHODIMP SetPhashCfg(PHashCommCfg_st* cfg);
 };

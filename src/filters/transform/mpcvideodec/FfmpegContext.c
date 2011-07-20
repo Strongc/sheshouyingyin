@@ -272,6 +272,16 @@ int FFH264CheckCompatibility(int nWidth, int nHeight, struct AVCodecContext* pAV
 
             
         }
+        else if (nPCIVendor == PCIV_Intel)
+        {
+          if(nPCIDevice >> 8 == 0x01)
+          {
+            //HD Graphics (Sandy Bridge)
+            //  0x0102, 0x0112, 0x0122, 0x0106, 0x0116, 0x0126, 0x010a
+            return 3;
+          }
+          
+        }
 
         // Check maximum allowed number reference frames
         if (cur_sps->ref_frame_count > max_ref_frames)
@@ -308,8 +318,10 @@ int FFH264CheckCompatibility(int nWidth, int nHeight, struct AVCodecContext* pAV
 	if (cur_sps != NULL)
 	{
 		*refFrameCount = cur_sps->ref_frame_count;
-        
-        
+
+    if(0x8086 == nPCIVendor && m_nPCIDevice == 0x116) // hang on DXVA HD3000
+      return 1; 
+
 		if (nPCIVendor == 4318) { //NV
 			// nVidia cards support level 5.1 since drivers v6.14.11.7800 for XP and drivers v7.15.11.7800 for Vista
 			// vA.B.C.D

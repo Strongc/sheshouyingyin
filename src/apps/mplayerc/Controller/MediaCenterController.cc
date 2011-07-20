@@ -548,6 +548,9 @@ BOOL MediaCenterController::ActMouseLBUp(const POINT& pt)
 
 void MediaCenterController::ReleaseList()
 {
+  if (!m_planestate)
+    return;
+
   ::ReleaseCapture();
   POINT pt;
   m_mclist.GetScrollBar()->ActMouseLBUp(pt);
