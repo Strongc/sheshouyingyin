@@ -214,7 +214,7 @@ void CPlayerToolBar::ArrangeControls()
       m_btnList.SetHideStat(ID_NAVIGATE_SKIPFORWARD , 0);
       m_btnList.SetHideStat(ID_MOVIESHARE, 1);
     }
-  }
+  }  
 
   m_btnList.OnSize(rc);
 
@@ -379,26 +379,42 @@ void CPlayerToolBar::OnPaint()
 
   if (!sTimeBtnString.empty())
   {
+    int prom_margin = 8;
     CSize size = dc.GetTextExtent(sTimeBtnString.c_str());
 
     CSUIButton* cbtn = m_btnList.GetButton(L"SHARE");
-    int prom_margin = 8;
-    if (cbtn->m_currenthide)
+    
+    if (cbtn && cbtn->m_currenthide)
     {
       cbtn = m_btnList.GetButton(L"LOGO");
-      prom_margin = -10;
+      if (cbtn && !cbtn->m_currenthide)
+        prom_margin = -10;
     }
-    CRect btnrc = cbtn->m_rcHitest - rc.TopLeft();
-    btnrc.left = btnrc.right + prom_margin;
-    int width = m_btnList.GetRelativeMinLength(rc, cbtn) - cbtn->m_rcHitest.Width() - 8;
+    if (cbtn && cbtn->m_currenthide)
+      cbtn = NULL;
+    
+    CRect btnrc(prom_margin, 0, 0, 0);
+    if (cbtn)
+    {
+      btnrc = cbtn->m_rcHitest - rc.TopLeft();
+      btnrc.left = btnrc.right + prom_margin;
+    }
+    
+    int width = m_btnList.GetRelativeMinLength(rc, cbtn) - prom_margin;
+    if (cbtn)
+      width -= cbtn->m_rcHitest.Width();
+
+    if (width < 30)
+      width = 0;
+   
     if (size.cx > 0)
-      btnrc.right = btnrc.left + min(width, size.cx);
+      btnrc.right = btnrc.left + width;//min(width, size.cx);
     else
       btnrc.right = btnrc.left;
-    btnrc.right -= 5;
+    //btnrc.right -= 5;
     btnrc.top = (rc.Height() - size.cy) / 2;
     btnrc.bottom = btnrc.top + size.cy;
-
+    
     m_adctrl.SetRect(btnrc, &hdc);
     m_adctrl.Paint(&hdc);  
   }
@@ -407,18 +423,21 @@ void CPlayerToolBar::OnPaint()
 }
 void CPlayerToolBar::UpdateButtonStat(){
   CMainFrame* pFrame = ((CMainFrame*)AfxGetMainWnd());
+  if (!pFrame) return;
+
   BOOL fShow = pFrame->GetUIStat( ID_PLAY_MANUAL_STOP );
   m_btnList.SetHideStat( ID_PLAY_PLAY , fShow );
   //m_btnList.SetHideStat( ID_PLAY_MANUAL_STOP , !fShow );
   //m_btnList.SetHideStat( ID_PLAY_FRAMESTEP , !fShow );
   m_btnList.SetHideStat( ID_PLAY_PAUSE , !fShow );
   BOOL bLoaded = pFrame->IsSomethingLoaded() ;
+  BOOL bShowSub = bLoaded && !pFrame->IsSomethingLoading() && !pFrame->m_fAudioOnly;
   m_btnList.SetHideStat(_T("SPLAYER.BMP"), bLoaded);
   m_btnList.SetHideStat( ID_MOVIESHARE , m_movieshare_hidestat);
 
-  m_btnList.SetHideStat( ID_SUBTOOLBARBUTTON, !bLoaded);
-  m_btnList.SetHideStat( ID_SUBDELAYINC, !bLoaded);
-  m_btnList.SetHideStat( ID_SUBDELAYDEC, !bLoaded);
+  m_btnList.SetHideStat(ID_SUBTOOLBARBUTTON, !bShowSub);
+  m_btnList.SetHideStat( ID_SUBDELAYINC, !bShowSub);
+  m_btnList.SetHideStat( ID_SUBDELAYDEC, !bShowSub);
 
   if(!bLoaded)
     m_timerstr.Empty();
@@ -627,6 +646,7 @@ INT_PTR CPlayerToolBar::OnToolHitTest(	CPoint point,TOOLINFO* pTI 	) const
   return -1;
 
 };
+
 void CPlayerToolBar::OnMouseMove(UINT nFlags, CPoint point)
 {
   int diffx = m_lastMouseMove.x - point.x;
@@ -657,13 +677,21 @@ void CPlayerToolBar::OnMouseMove(UINT nFlags, CPoint point)
   if (m_adctrl.GetVisible())
   {
 /*    CRect rcAd = m_btnplaytime->m_rcHitest - rc.TopLeft();*/
-    CRect rcAd = m_adctrl.GetRect();
+    CRect rc = m_adctrl.GetRect();
     CPoint pi = point;
     ScreenToClient(&pi);
-    if (rcAd.PtInRect(pi))
+    if (rc.PtInRect(pi))
     {
+      SetClassLong(GetSafeHwnd(), GCL_HCURSOR, (LONG)cursorHand);
       SetCursor(cursorHand);
-      m_adctrl._mouseover_time = time(NULL);
+      m_adctrl._mouseover = true;
+      m_adctrl._mouseover_time = timeGetTime();
+    }
+    else
+    {
+      m_adctrl._mouseover = false;
+      m_adctrl.SetCloseBtnDisplay(false);
+      SetClassLong(GetSafeHwnd(), GCL_HCURSOR, (LONG)LoadCursor(NULL, IDC_ARROW));
     }
   }
 
@@ -975,12 +1003,26 @@ void CPlayerToolBar::OnLButtonUp(UINT nFlags, CPoint point)
   // if click on ads
   if (m_adctrl.GetVisible())
   {
-    CRect rcAd = m_adctrl.GetRect();
-    if (rcAd.PtInRect(point))
-    {
+    CRect rc = m_adctrl.GetRect();
+    CRect rcBtn = m_adctrl.GetCloseBtnRect();
+    CRect rcAd = m_adctrl.GetAdRect();
+
+    if (rc.PtInRect(point))
       SetCursor(cursorHand);
-      m_adctrl.OnAdClick();
+
+    if (rcBtn.PtInRect(point) && m_adctrl.IsCloseBtnCanClick())
+    {
+      m_adctrl.DoHideAd();
+      if (m_adctrl.IsAdsEmpty())
+      {
+        m_adctrl.SetVisible(false);
+        SetClassLong(GetSafeHwnd(), GCL_HCURSOR, (LONG)LoadCursor(NULL, IDC_ARROW));
+        InvalidateRect(&m_adctrl.GetRect(), false);
+      }
     }
+    else if (rcAd.PtInRect(point))
+      m_adctrl.OnAdClick();
+      
   }
 
   CPoint xpoint = point + rc.TopLeft() ;
@@ -1065,11 +1107,14 @@ void CPlayerToolBar::OnTimer(UINT nIDEvent){
         // If no ads exists, then didn't show ads, otherwise show ads
         if (m_adctrl.IsAdsEmpty())
           break;
+        
+        if (m_adctrl._mouseover && timeGetTime() - m_adctrl._mouseover_time > 400)
+          m_adctrl.SetCloseBtnDisplay(true);
 
         m_adctrl.AllowAnimate(true);
         Invalidate();
         break;
-      }
+      } 
     case TIMER_ADPLAYSWITCH:
       {
         // If no ads exists, then don't show ads
@@ -1086,7 +1131,7 @@ void CPlayerToolBar::OnTimer(UINT nIDEvent){
         if (m_adctrl.IsCurAdShownDone())
         {
           m_adctrl.ShowNextAd();
-          if ((time(NULL) - m_adctrl._mouseover_time) > 3)
+          if ((timeGetTime() - m_adctrl._mouseover_time) > 3000)
             SetTimer(TIMER_ADPLAYSWITCH, 5000, NULL);
           else
             SetTimer(TIMER_ADPLAYSWITCH, 3000, NULL);

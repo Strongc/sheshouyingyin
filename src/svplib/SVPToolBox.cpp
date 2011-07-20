@@ -1414,7 +1414,7 @@ int CSVPToolBox::GetWMIGPURam()
 	return iGPUMAXRAM;
 }
 int CSVPToolBox::GetGPUString(CStringArray * szaGPUString){
-  int ret = 0; //no gpu
+  int ret = -1; //no gpu
   IDirect3D9* pD3D;
   int m_nPCIVendor = 0;
   int m_nPCIDevice = 0;
@@ -1471,6 +1471,8 @@ int CSVPToolBox::GetGPUString(CStringArray * szaGPUString){
 
         szDetect.MakeUpper();
         if(szDetect.Find(_T("ATI")) >= 0 || 0x1002 == m_nPCIVendor){
+          ret = 0;
+          /* ATI is no good for DXVA
           int imodel = _wtoi(szDetect);
           if(m_nPCIDevice >= 0x9000){
             ret = 1;
@@ -1484,7 +1486,7 @@ int CSVPToolBox::GetGPUString(CStringArray * szaGPUString){
           }else if(imodel > 2000 && imodel < 7000){
             ret = 1;
           }
-
+          */
         }else if(szDetect.Find(_T("NVIDIA")) >= 0  || 0x10DE == m_nPCIVendor){
           int imodel = _wtoi(szDetect);
           if (m_VideoDriverVersion.HighPart > 170) {
@@ -1497,7 +1499,9 @@ int CSVPToolBox::GetGPUString(CStringArray * szaGPUString){
             ret = 1; // G45
           }else if(m_nPCIDevice >= 0x2a40 && m_nPCIDevice <= 0x2a4f){
             ret = 1; // G45 移动版
-          }
+          }else // if(m_nPCIDevice == 0x116) // hang on DXVA HD3000
+            ret = 0; 
+
         }
 
         if(ret)
@@ -1509,7 +1513,7 @@ int CSVPToolBox::GetGPUString(CStringArray * szaGPUString){
 
     pD3D->Release();
   }
-
+  /* be conservative on DXVA
   int iGPURam = GetWMIGPURam();
   if(iGPURam){
     CString szBuf;
@@ -1520,11 +1524,14 @@ int CSVPToolBox::GetGPUString(CStringArray * szaGPUString){
     if(ret > 0){
       if(iGPURam < 256)
         ret = 0;
-    }else if(iGPURam > 256)
+    }else if(ret < 0 && iGPURam > 256)
     {
       ret = 1;
     }
   }
+  */
+  if (ret < 0)
+	  ret = 0;
   return ret;
 }
 BOOL CSVPToolBox::ifDirWritable(CString szDir)

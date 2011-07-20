@@ -126,7 +126,8 @@ enum
   CLSW_STARTFULL=CLSW_HTPCMODE<<1,
 	CLSW_CREATTOOLBARBUTTONFILE=CLSW_STARTFULL<<1,
   CLSW_SNAPSHOT=CLSW_CREATTOOLBARBUTTONFILE<<1,
-  CLSW_UNRECOGNIZEDSWITCH = CLSW_SNAPSHOT<<1
+  CLSW_MEDIACENTER=CLSW_SNAPSHOT<<1,
+  CLSW_UNRECOGNIZEDSWITCH = CLSW_MEDIACENTER<<1
 };
 
 enum
@@ -453,6 +454,8 @@ public:
 		bool fVMR9MixerYUV;
 		bool fFasterSeeking;
 		int				iLanguage;
+    int  i3DStereo;
+    int  i3DStereoKeepAspectRatio;
 
 		int nVolume;
 		int nBalance;

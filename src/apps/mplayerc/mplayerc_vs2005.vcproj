@@ -21,7 +21,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets=".\wtl_integration.vsprops;$(SolutionDir)src\apps\mplayerc\atlserver_integration.vsprops;$(SolutionDir)src\common.vsprops;$(SolutionDir)src\release.vsprops;$(SolutionDir)Thirdparty\sinet.vsprops;..\..\..\Thirdparty\sqlitepp.vsprops;$(SolutionDir)Thirdparty\sphash.vsprops;$(SolutionDir)Thirdparty\unrar_dll.vsprops;..\..\..\Thirdparty\boost.vsprops;..\..\..\Thirdparty\tcl.vsprops;..\..\..\Thirdparty\json.vsprops"
+			InheritedPropertySheets=".\wtl_integration.vsprops;$(SolutionDir)src\apps\mplayerc\atlserver_integration.vsprops;$(SolutionDir)src\common.vsprops;$(SolutionDir)src\release.vsprops;$(SolutionDir)Thirdparty\sinet.vsprops;..\..\..\Thirdparty\sqlitepp.vsprops;$(SolutionDir)Thirdparty\sphash.vsprops;$(SolutionDir)Thirdparty\unrar_dll.vsprops;..\..\..\Thirdparty\boost.vsprops;..\..\..\Thirdparty\tcl.vsprops;..\..\..\Thirdparty\jsoncpp.vsprops;..\..\..\Thirdparty\librhash.vsprops"
 			UseOfMFC="1"
 			UseOfATL="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -53,7 +53,7 @@
 				AdditionalOptions="/D &quot;CURL_STATICLIB&quot;  /MP"
 				Optimization="2"
 				AdditionalIncludeDirectories="..\..\ZenLib\Source;..\..\..\include;..\..\mediainfo\Source\;..\..\mediainfo\Source\MediaInfo\;..\..\filters\BaseClasses;..\..\filters\transform\webm\vp8_sdk\include;..\..\filters\transform\webm\IDL;..\..\filters\transform\webm\common;..\..\filters\transform\mpcvideodec;..\..\svplib;..\..\..\thirdparty;..\..\..\include\dx"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;"
 				EnableEnhancedInstructionSet="0"
 				OpenMP="false"
 				UsePrecompiledHeader="2"
@@ -75,7 +75,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386  /LTCG "
-				AdditionalDependencies="subpicru.lib Rpcrt4.lib lzma_sdk.lib base.lib courgette_lib.lib Winmm.lib Wbemuuid.lib Dsound.lib Imm32.lib Dbghelp.lib Psapi.lib libssfru.lib detours.lib unrar.lib sphash.lib qtmlClient.lib dxguid.lib"
+				AdditionalDependencies="subpicru.lib Rpcrt4.lib Winmm.lib Wbemuuid.lib Dsound.lib Imm32.lib Dbghelp.lib Psapi.lib libssfru.lib detours.lib unrar.lib sphash.lib qtmlClient.lib dxguid.lib libsamplerate.a libzmq.lib libphashaudio.a"
 				OutputFile="$(SolutionDir)..\splayer.exe"
 				AdditionalLibraryDirectories="../../../Thirdparty/sqlitepp/lib;../../../lib;../../../lib/wm7;../../../lib/qt6;../../../lib/detours;../../../thirdparty/courgette\Release\"
 				GenerateManifest="true"
@@ -1072,18 +1072,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\res\newui\bitmap1.bmp"
-				>
-			</File>
-			<File
-				RelativePath=".\res\newui\bitmap4.bmp"
-				>
-			</File>
-			<File
-				RelativePath=".\res\newui\bitmap5.bmp"
-				>
-			</File>
-			<File
 				RelativePath=".\res\web\blank.gif"
 				>
 			</File>
@@ -1264,10 +1252,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\res\icon\DVD.ico"
-				>
-			</File>
-			<File
 				RelativePath=".\res\newui\FAST_BACKWORD.bmp"
 				>
 			</File>
@@ -1428,6 +1412,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\res\newui\oauthcloseout.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\newui\oauthcloseover.bmp"
+				>
+			</File>
+			<File
 				RelativePath=".\res\web\ok.jpg"
 				>
 			</File>
@@ -1496,11 +1488,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\res\newui\playtime_battery.bmp"
+				>
+			</File>
+			<File
 				RelativePath=".\res\newui\playtime_colon.bmp"
 				>
 			</File>
 			<File
 				RelativePath=".\res\newui\playtime_minus.bmp"
+				>
+			</File>
+			<File
+				RelativePath=".\res\newui\playtime_percent.bmp"
 				>
 			</File>
 			<File
@@ -1672,10 +1672,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\res\ecio.icons\video.ico"
-				>
-			</File>
-			<File
 				RelativePath=".\res\icon\video.ico"
 				>
 			</File>
@@ -1710,6 +1706,10 @@
 			<Filter
 				Name="shaders"
 				>
+				<File
+					RelativePath=".\res\shaders\3dstereo.psh"
+					>
+				</File>
 				<File
 					RelativePath=".\res\shaders\BT601BT701.psh"
 					>
@@ -1924,6 +1924,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Controller\pHashController.cc"
+				>
+			</File>
+			<File
+				RelativePath=".\Controller\pHashController.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Controller\PlayerPreference.cc"
 				>
 			</File>
@@ -2010,6 +2018,14 @@
 					RelativePath=".\Controller\ShareController.h"
 					>
 				</File>
+				<File
+					RelativePath=".\Controller\UserAccountController.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\Controller\UserAccountController.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter
@@ -2089,6 +2105,10 @@
 			</File>
 			<File
 				RelativePath=".\Model\MediaTreeModel.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Model\PHashComm.h"
 				>
 			</File>
 			<File
@@ -2198,18 +2218,6 @@
 			<Filter
 				Name="Updater"
 				>
-				<File
-					RelativePath="..\..\..\Updater\conrgette_interface.cpp"
-					>
-					<FileConfiguration
-						Name="Release Unicode|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
-						/>
-					</FileConfiguration>
-				</File>
 				<File
 					RelativePath="..\..\..\Updater\cupdatenetlib.cpp"
 					>
@@ -2475,11 +2483,35 @@
 				Name="Dialogs"
 				>
 				<File
+					RelativePath=".\UserInterface\Dialogs\CustomizeFontDlg.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\CustomizeFontDlg.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\DhtmlDlgBase.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\DhtmlDlgBase.h"
+					>
+				</File>
+				<File
 					RelativePath=".\UserInterface\Dialogs\MovieComment_Win.cc"
 					>
 				</File>
 				<File
 					RelativePath=".\UserInterface\Dialogs\MovieComment_Win.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\OAuthDlg.cc"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Dialogs\OAuthDlg.h"
 					>
 				</File>
 				<File
@@ -2572,6 +2604,22 @@
 				</File>
 				<File
 					RelativePath=".\UserInterface\Support\BtnEditCtrl.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Support\FontParamsManage.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Support\FontParamsManage.h"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Support\ListImpl.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\UserInterface\Support\ListImpl.h"
 					>
 				</File>
 				<File

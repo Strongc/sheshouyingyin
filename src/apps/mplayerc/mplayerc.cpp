@@ -66,6 +66,7 @@
 #include "ButtonManage.h"
 #include "GUIConfigManage.h"
 #include <ResLoader.h>
+#include "Controller/UserAccountController.h"
 
 DECLARE_LAZYINSTANCE(HotkeyController);
 DECLARE_LAZYINSTANCE(PlayerPreference);
@@ -77,7 +78,8 @@ DECLARE_LAZYINSTANCE(UpdateController);
 DECLARE_LAZYINSTANCE(MediaCenterController);
 DECLARE_LAZYINSTANCE(UserShareController);
 DECLARE_LAZYINSTANCE(PingPongController);
-
+DECLARE_LAZYINSTANCE(pHashController);
+DECLARE_LAZYINSTANCE(UserAccountController);
 /////////
 static bool _skip_db = false;
 
@@ -1016,7 +1018,7 @@ void CMPlayerCApp::PreProcessCommandLine()
 			CFileStatus fs;
 			if(!str2.IsEmpty() && CFileGetStatus(str2, fs)) str = str2;
 		}
-    if (str.CompareNoCase(L"snapshot")) _skip_db = true;
+    if (str.CompareNoCase(L"/snapshot") == 0) _skip_db = true;
 
 		m_cmdln.AddTail(str);
 	}
@@ -1573,6 +1575,9 @@ void CMPlayerCApp::InitInstanceThreaded(INT64 CLS64){
       sqlite_local_record->exec_sql(L"CREATE TABLE  IF NOT EXISTS histories_stream (\"fpath\" TEXT, \"subid\" INTEGER, \"subid2\" INTEGER, \"audioid\" INTEGER, \"videoid\" INTEGER )");
       sqlite_local_record->exec_sql(L"CREATE UNIQUE INDEX  IF NOT EXISTS \"hispks\" on histories_stream (fpath ASC)");
 
+      sqlite_local_record->exec_sql(L"CREATE TABLE  IF NOT EXISTS histories_stereo (\"fpath\" TEXT, \"arg1\" INTEGER, \"arg2\" INTEGER, \"arg3\" INTEGER, \"arg4\" INTEGER )");
+      sqlite_local_record->exec_sql(L"CREATE UNIQUE INDEX  IF NOT EXISTS \"hispkd\" on histories_stereo (fpath ASC)");
+
       sqlite_local_record->exec_sql(L"CREATE TABLE  IF NOT EXISTS histories (\"fpath\" TEXT, \"subid\" INTEGER, \"subid2\" INTEGER, \"audioid\" INTEGER, \"stoptime\" INTEGER, \"modtime\" INTEGER )");
       sqlite_local_record->exec_sql(L"CREATE UNIQUE INDEX  IF NOT EXISTS \"hispk\" on histories (fpath ASC)");
       sqlite_local_record->exec_sql(L"CREATE INDEX  IF NOT EXISTS \"modtime\" on histories (modtime ASC)");
@@ -1723,6 +1728,10 @@ void CMPlayerCApp::InitInstanceThreaded(INT64 CLS64){
 
   Sleep(1000);
   PingPongController::GetInstance()->PingPong();
+
+  // get the user account info from web
+  UserAccountController::GetInstance()->_Stop();
+  UserAccountController::GetInstance()->_Start();
 
   SVP_LogMsg5(L"Settings::InitInstanceThreaded 23");
 }
@@ -2348,6 +2357,8 @@ CMPlayerCApp::Settings::Settings()
   , bUsePowerDVD()
   , skinid(0)
   , skinname(L"")
+  , i3DStereo(0)
+  , i3DStereoKeepAspectRatio(0)
 {
 
 }
@@ -4539,7 +4550,7 @@ void CMPlayerCApp::Settings::ParseCommandLine(CAtlList<CString>& cmdln)
 			else if(sw == _T("hibernate")) nCLSwitches |= CLSW_HIBERNATE;
 			else if(sw == _T("shutdown")) nCLSwitches |= CLSW_SHUTDOWN;
 			else if(sw == _T("fromdmp")) { nCLSwitches |= CLSW_STARTFROMDMP; /*SVP_LogMsg5(L"dmpfrom %x", nCLSwitches);*/}
-			else if(sw == _T("htpc")) { nCLSwitches |= CLSW_HTPCMODE|CLSW_FULLSCREEN; }
+			else if(sw == _T("htpc")) { nCLSwitches |= CLSW_HTPCMODE|CLSW_FULLSCREEN|CLSW_MEDIACENTER; }
 			else if(sw == _T("logoff")) nCLSwitches |= CLSW_LOGOFF;
 			else if(sw == _T("genui")) {nCLSwitches |= CLSW_GENUIINI;bGenUIINIOnExit = true; }
       else if(sw == _T("creattoolbarbuttonfile")){nCLSwitches |= CLSW_CREATTOOLBARBUTTONFILE;m_bcreattoolbarbuttonflie = true;}

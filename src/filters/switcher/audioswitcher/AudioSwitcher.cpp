@@ -36,7 +36,6 @@
 #include "..\..\..\svplib\svplib.h"
 #include <afxtempl.h>
 #include "..\..\..\apps\mplayerc\mplayerc.h"
-
 //#define TRACE SVP_LogMsg5
 #undef  SVP_LogMsg5
 #define SVP_LogMsg5 __noop
@@ -321,16 +320,24 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
 	
 	int iWePCMType = WETYPE_UNKNOWN;
 
-	if(fPCM && wfe->wBitsPerSample == 8) iWePCMType = WETYPE_PCM8;
-	else if(fPCM && wfe->wBitsPerSample == 16) iWePCMType = WETYPE_PCM16;
-	else if(fPCM && wfe->wBitsPerSample == 24) iWePCMType = WETYPE_PCM24;
-	else if(fPCM && wfe->wBitsPerSample == 32) iWePCMType = WETYPE_PCM32;
-	else if(fFloat && wfe->wBitsPerSample == 32) iWePCMType = WETYPE_FPCM32;
-	else if(fFloat && wfe->wBitsPerSample == 64) iWePCMType = WETYPE_FPCM64;
+  if(fPCM && wfe->wBitsPerSample == 8) 
+    iWePCMType = WETYPE_PCM8;
+	else if(fPCM && wfe->wBitsPerSample == 16) 
+    iWePCMType = WETYPE_PCM16;
+  else if(fPCM && wfe->wBitsPerSample == 24) 
+    iWePCMType = WETYPE_PCM24;
+	else if(fPCM && wfe->wBitsPerSample == 32) 
+    iWePCMType = WETYPE_PCM32;
+	else if(fFloat && wfe->wBitsPerSample == 32)   
+    iWePCMType = WETYPE_FPCM32;
+	else if(fFloat && wfe->wBitsPerSample == 64)
+    iWePCMType = WETYPE_FPCM64;
 
 	int lTotalInputChannels = wfe->nChannels;
 	int lTotalOutputChannels =  wfeout->nChannels;
-	
+  
+  PHashCollect(pDataIn, iWePCMType, wfe, pIn, rtDur);
+
 	SVP_LogMsg5(L"Chan %d %d %d %d %d %d %d %d %d",lTotalInputChannels ,lTotalOutputChannels , wfe->nSamplesPerSec , wfeout->nSamplesPerSec, wfe->wBitsPerSample, wfeout->wBitsPerSample
 		,wfe->nBlockAlign , wfeout->nBlockAlign, pIn->GetActualDataLength());
 	if(m_lastInputChannelCount2 != lTotalInputChannels || m_lastOutputChannelCount2 != lTotalOutputChannels )
@@ -821,8 +828,7 @@ HRESULT CAudioSwitcherFilter::Transform(IMediaSample* pIn, IMediaSample* pOut)
 	
 			if(m_fEQControlOn || sample_mul > 1 || bChangeRate || m_fUpSampleTo ){
 				//SVP_LogMsg5(L"maul %f %f %f %f" ,m_boost , log10(m_boost) , sample_mul, sample_mul * (1+log10(m_boost)) );
-SVP_LogMsg5(L"Buffer Size %d, ActualLength %d", pOut->GetSize(), samples);
-				
+      SVP_LogMsg5(L"Buffer Size %d, ActualLength %d", pOut->GetSize(), samples);
 				
 				switch(iWePCMType){
 								case WETYPE_PCM8:
@@ -863,12 +869,11 @@ SVP_LogMsg5(L"Buffer Size %d, ActualLength %d", pOut->GetSize(), samples);
 		}
 	}
 
-	
 	SVP_LogMsg5(L"Buffer Size %d, ActualLength %d", pOut->GetSize(), lenout*bps*wfeout->nChannels);
 	SVP_LogMsg5(L"Out %d %d %d %d %d %d %d" , ((short*)pDataOut)[1], ((short*)pDataOut)[11], ((short*)pDataOut)[21], ((short*)pDataOut)[61], ((short*)pDataOut)[91], ((short*)pDataOut)[111], ((short*)pDataOut)[121]);
-
 	pOut->SetActualDataLength(lenout*bps*wfeout->nChannels);
-	
+
+
 	return S_OK;
 }
 
@@ -1283,4 +1288,78 @@ STDMETHODIMP CAudioSwitcherFilter::SetEQControl ( int lEQBandControlPreset, floa
 
 	return S_OK;
 
+}
+
+STDMETHODIMP CAudioSwitcherFilter::SetPhashCfg(PHashCommCfg_st* cfg)
+{
+  PHashCommCfg = cfg;
+  return S_OK;
+}
+
+FingerCollect::FingerCollect(void)
+{
+  PHashCommCfg = NULL;
+}
+
+FingerCollect::~FingerCollect(void)
+{
+
+}
+
+void FingerCollect::PHashCollect(BYTE* pDataIn, int pcmtype, WAVEFORMATEX* wfe, IMediaSample* pIn, REFERENCE_TIME& rtDur)
+{
+  if (!PHashCommCfg || PHashCommCfg->stop)
+    return;
+
+  if (wfe->nChannels != 2 && wfe->nChannels != 6)
+    return;
+
+  REFERENCE_TIME rtStart, rtStop;
+  if (VFW_E_SAMPLE_TIME_NOT_SET == pIn->GetTime(&rtStart, &rtStop))
+    return;
+
+  PHashCommCfg->pcmtype = pcmtype;
+  PHashCommCfg->format = *wfe;
+
+  rtStop = rtDur + rtStart;
+
+  if (rtStart < PHashCommCfg->stime && rtStop > PHashCommCfg->stime 
+    && rtStop < PHashCommCfg->etime)                                        // the first part of data
+  {
+    int len = GetRawLength(PHashCommCfg->stime - rtStart, wfe->nChannels, wfe->wBitsPerSample, wfe->nSamplesPerSec);
+    FillRawBuffer(pDataIn+len, pIn->GetActualDataLength() - len);
+  }
+  else if (rtStart == PHashCommCfg->stime)
+    FillRawBuffer(pDataIn, pIn->GetActualDataLength());
+
+  else if (rtStart == PHashCommCfg->etime)
+    PostMessage(AfxGetApp()->m_pMainWnd->m_hWnd, WM_COMMAND, ID_PHASH_COLLECTEND, NULL);
+
+  else if (rtStop > PHashCommCfg->etime && rtStart < PHashCommCfg->etime
+    && rtStart > PHashCommCfg->stime)
+  {
+    int len = GetRawLength(PHashCommCfg->etime - rtStart, wfe->nChannels, wfe->wBitsPerSample, wfe->nSamplesPerSec);
+    FillRawBuffer(pDataIn, len);
+    PostMessage(AfxGetApp()->m_pMainWnd->m_hWnd, WM_COMMAND, ID_PHASH_COLLECTEND, NULL);
+  }
+  else if (rtStart > PHashCommCfg->stime && rtStop < PHashCommCfg->etime)
+    FillRawBuffer(pDataIn, pIn->GetActualDataLength());
+}
+
+void FingerCollect::FillRawBuffer(BYTE* pDataIn, int len)
+{
+  for (int i = 0; i < len; i++)
+    PHashCommCfg->data->push_back(pDataIn[i]);
+}
+
+int FingerCollect::GetRawLength(REFERENCE_TIME dur, int channels, 
+                                int bitsPerSample, int samplePerSec)
+{
+  if (dur < 0)
+    dur *= -1;
+
+  double bps = (float)channels * (float)(bitsPerSample>>3) * (float)(samplePerSec/UNITS);
+  int len = dur * bps;
+
+  return len;
 }
