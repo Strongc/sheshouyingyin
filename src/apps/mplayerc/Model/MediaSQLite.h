@@ -387,7 +387,7 @@ protected:
 
         g_dbMediaSQLite << L"CREATE TABLE IF NOT EXISTS spider_info(already_run integer default 0, last_time integer default 0)";
         g_dbMediaSQLite << L"CREATE TABLE IF NOT EXISTS detect_path (" \
-          L"uniqueid integer PRIMARY KEY, path text, merit integer default 0, lastspidetime integer default 0, breakpoint integer default 0)";
+          L"uniqueid integer PRIMARY KEY, path text, merit integer default 0, lasttime integer default 0)";
         g_dbMediaSQLite << L"CREATE TABLE IF NOT EXISTS media_data ("
           L"uniqueid integer PRIMARY KEY, path text, filename text, filmname text, "
           L"thumbnailpath text, hash text, create_time integer default 0, videotime integer default 0, hide integer default 0)";
