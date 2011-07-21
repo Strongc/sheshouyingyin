@@ -99,42 +99,38 @@ void MediaSpiderFolderTree::_Thread()
     }
   }
 
-  // do something
-  bool bBreakType = 1;
   while (true)
   {
-    // fetch a record
     wstring sPath;
-    time_t tLastSpideTime = 0;
-    ssSQL.str(L"");
-    ssSQL << L"SELECT path, lastspidetime FROM detect_path WHERE breakpoint=" << (int)bBreakType << L" ORDER BY merit";
-    MediaDB<wstring, time_t>::exec(ssSQL.str(), &sPath, &tLastSpideTime);
+    UINT uniqueid = 0;
+    time_t lasttime = ::time(0) - m_nThreadStartInterval;
 
-    // update database
     ssSQL.str(L"");
-    ssSQL << L"UPDATE detect_path SET "
-      << L" breakpoint=" << (int)(!bBreakType)
-      << L" WHERE path='" << MediaModel::EscapeSQL(sPath) << L"'";
-    MediaDB<>::exec(ssSQL.str());  // update the search path's info
-    
-    if (MediaDB<>::last_changes() != 0)
-      Search(sPath);
-    else
-      bBreakType = !bBreakType;
+    ssSQL << L"SELECT uniqueid, path FROM detect_path WHERE lasttime <="
+          << lasttime
+          << L" ORDER BY merit limit 0, 1";
+    MediaDB<UINT, wstring>::exec(ssSQL.str(), &uniqueid, &sPath);
 
-    if (_Exit_state(0))
+    if (uniqueid && Search(sPath))
+    {
+      ssSQL.str(L"");
+      ssSQL << L"UPDATE detect_path SET "
+            << L" lasttime=" << ::time(0)
+            << L" WHERE uniqueid=" << uniqueid;
+      MediaDB<>::exec(ssSQL.str());
+    }
+
+    if (_Exit_state(m_tSleep * 1000))
     {
       ssSQL.str(L"");
       ssSQL << L"DELETE FROM spider_info";
       MediaDB<>::exec(ssSQL.str());
       return;
     }
-
-    ::Sleep((DWORD)(m_tSleep * 1000));
   }
 }
 
-void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
+BOOL MediaSpiderFolderTree::Search(const std::wstring &sFolder)
 {
   using std::wstring;
   using std::vector;
@@ -143,8 +139,8 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
   using namespace boost::filesystem;
 
   // check if we should spider this folder
-  if (!IsValidPath(sFolder))
-    return;
+  if (0 && !IsValidPath(sFolder))
+    return FALSE;
 
   try
   {
@@ -179,7 +175,7 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
       MediaCenterController::GetInstance()->GetCoverDownload().SetBlockUnit(md);
 
       if (_Exit_state(0))
-        return;
+        return FALSE;
       ::Sleep(300);
     }
 
@@ -188,8 +184,8 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
     directory_iterator itEnd;
     while (it != itEnd)
     {
-      if (_Exit_state(0))
-        return;
+      if (_Exit_state(300))
+        return FALSE;
 
       if (IsSupportExtension(it->path().wstring())
        && !is_directory(it->path())
@@ -201,8 +197,6 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
         md.filename = it->path().filename().wstring();
         m_treeModel.addFile(md);
       }
-
-      ::Sleep(300);
       ++it;
     }
 
@@ -215,5 +209,7 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
   catch (const filesystem_error &err)
   {
     Logging(err.what());
+    return FALSE;
   }
+  return TRUE;
 }

@@ -11,12 +11,12 @@ public:
 
 public:
   void _Thread();
-  void Search(const std::wstring &sFolder);
+  BOOL Search(const std::wstring &sFolder);
 
 private:
   media_tree::model m_treeModel;
 
-  time_t m_tSleep;  // loop time, unit is second
+  int m_tSleep;  // loop time, unit is second
   int m_nSpideInterval;  // record spide interval
   int m_nThreadStartInterval;  //
 };
