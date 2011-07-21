@@ -143,7 +143,7 @@ void MediaSpiderFolderTree::Search(const std::wstring &sFolder)
   using namespace boost::filesystem;
 
   // check if we should spider this folder
-  if (IsExcludePath(sFolder))
+  if (!IsValidPath(sFolder))
     return;
 
   try
