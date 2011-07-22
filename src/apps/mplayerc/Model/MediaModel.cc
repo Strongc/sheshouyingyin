@@ -271,7 +271,6 @@ void MediaModel::Find(MediaDatas& data, const MediaFindCondition& condition,
 
   sql << L" limit " << limit_start << L"," << limit_end;
 
-  OutputDebugString(sql.str().c_str());
   tpdMediaDBDB::exec(sql.str(), &vtUniqueID, &vtPath, &vtFilename, &vtFilmname, &vtThumbnailPath, &vtVideoTime);
 
   for (size_t i = 0; i < vtUniqueID.size(); ++i)

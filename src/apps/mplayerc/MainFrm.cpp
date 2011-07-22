@@ -12682,15 +12682,15 @@ void CMainFrame::OpenCurPlaylistItem(REFERENCE_TIME rtStart)
   }else if(rtStart == -1){
     rtStart = 0;
   }
-  CAutoPtr<OpenMediaData> p(m_wndPlaylistBar.GetCurOMD(rtStart));
 
-  if(p) OpenMedia(p);
   if (MediaCenterController::GetInstance()->GetPlaneState())
   {
     MediaCenterController::GetInstance()->Playback(pli.m_fns.GetHead().GetString());
     ShowToolBar();
   }
 
+  CAutoPtr<OpenMediaData> p(m_wndPlaylistBar.GetCurOMD(rtStart));
+  if(p) OpenMedia(p);
 }
 
 void CMainFrame::AddCurDevToPlaylist()

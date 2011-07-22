@@ -1896,15 +1896,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Controller\MediaSpiderAbstract.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Controller\MediaSpiderFolderTree.cc"
 				>
 			</File>
 			<File
 				RelativePath=".\Controller\MediaSpiderFolderTree.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Controller\MediaSpiderImpl.h"
 				>
 			</File>
 			<File

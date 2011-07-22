@@ -385,7 +385,6 @@ protected:
         toolbox.GetAppDataPath(sPath);
         g_dbMediaSQLite.open(sPath + L"\\mc\\media.db");
 
-        g_dbMediaSQLite << L"CREATE TABLE IF NOT EXISTS spider_info(already_run integer default 0, last_time integer default 0)";
         g_dbMediaSQLite << L"CREATE TABLE IF NOT EXISTS detect_path (" \
           L"uniqueid integer PRIMARY KEY, path text, merit integer default 0, lasttime integer default 0)";
         g_dbMediaSQLite << L"CREATE TABLE IF NOT EXISTS media_data ("
