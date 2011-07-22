@@ -10,8 +10,7 @@
 // Normal part
 MediaSpiderFolderTree::MediaSpiderFolderTree()
 : m_tSleep(1)
-, m_nSpideInterval(5)
-, m_nThreadStartInterval(30)
+, m_spiderinterval(120*60*1000)
 {
   // Init the media type and the exclude folders & files from the database
   // Note: the case is not sensitive, will change it to lowercase before compare
@@ -38,95 +37,41 @@ MediaSpiderFolderTree::~MediaSpiderFolderTree()
 {
 }
 
-//void cDebug(const std::wstring &sDebugInfo, bool bAutoBreak = true)
-//{
-//  if (::GetStdHandle(STD_OUTPUT_HANDLE) == 0)
-//    ::AllocConsole();
-//
-//  HANDLE h = ::GetStdHandle(STD_OUTPUT_HANDLE);
-//
-//  if (bAutoBreak)
-//  {
-//    ::WriteConsole(h, sDebugInfo.c_str(), sDebugInfo.size(), 0, 0);
-//    ::WriteConsole(h, L"\n", 1, 0, 0);
-//  } 
-//  else
-//  {
-//    ::WriteConsole(h, sDebugInfo.c_str(), sDebugInfo.size(), 0, 0);
-//  }
-//}
-
 void MediaSpiderFolderTree::_Thread()
 {
-  using std::wstring;
-  using std::vector;
-  
-  time_t tCur = ::time(0);
-  std::wstringstream ssSQL;
+  UINT uniqueid;
+  std::wstring sPath;
+  wchar_t execsql[500];
+  time_t lasttime, oldlasttime;
 
-  bool bRun = false;
-  time_t tLast = 0;
-  ssSQL.str(L"");
-  ssSQL << L"SELECT already_run, last_time FROM spider_info";
-  MediaDB<bool, time_t>::exec(ssSQL.str(), &bRun, &tLast);
-
-  if (MediaDB<>::last_error() != 0)
-    return;
-
-  if (!bRun)
-  {
-    ssSQL.str(L"");
-    ssSQL << L"INSERT INTO spider_info(already_run, last_time) VALUES(1, " << ::time(0) << L")";
-    MediaDB<>::exec(ssSQL.str());
-
-    if (MediaDB<>::last_error() != 0)
-      return;
-  } 
-  else
-  {
-    if (::time(0) - tLast >= m_nThreadStartInterval)
-    {
-      ssSQL.str(L"");
-      ssSQL << L"UPDATE spider_info SET last_time=" << ::time(0);
-      MediaDB<>::exec(ssSQL.str());
-
-      if (MediaDB<>::last_error() != 0)
-        return;
-    }
-    else
-    {
-      return;
-    }
-  }
+  wchar_t* updatesql = L"UPDATE detect_path SET lasttime=%I64d WHERE uniqueid=%u";
+  wchar_t* selectsql = L"SELECT uniqueid, path, lasttime FROM detect_path WHERE lasttime<=%I64d ORDER BY merit limit 0, 1";
 
   while (true)
   {
-    wstring sPath;
-    UINT uniqueid = 0;
-    time_t lasttime = ::time(0) - m_nThreadStartInterval;
+    sPath = L"";
+    uniqueid = 0;
+    lasttime = ::time(0) - m_spiderinterval;
+    oldlasttime = 0;
 
-    ssSQL.str(L"");
-    ssSQL << L"SELECT uniqueid, path FROM detect_path WHERE lasttime <="
-          << lasttime
-          << L" ORDER BY merit limit 0, 1";
-    MediaDB<UINT, wstring>::exec(ssSQL.str(), &uniqueid, &sPath);
+    wsprintf(execsql, selectsql, lasttime);
+    MediaDB<UINT, std::wstring, time_t>::exec(execsql, &uniqueid, &sPath, &oldlasttime);
 
-    if (uniqueid && Search(sPath))
+    if (uniqueid)
     {
-      ssSQL.str(L"");
-      ssSQL << L"UPDATE detect_path SET "
-            << L" lasttime=" << ::time(0)
-            << L" WHERE uniqueid=" << uniqueid;
-      MediaDB<>::exec(ssSQL.str());
+      
+      wsprintf(execsql, updatesql, ::time(0), uniqueid);
+      MediaDB<>::exec(execsql);
+
+      if (!Search(sPath))
+      {
+        wsprintf(execsql, updatesql, oldlasttime, uniqueid);
+        MediaDB<>::exec(execsql);
+      }
     }
 
     if (_Exit_state(m_tSleep * 1000))
-    {
-      ssSQL.str(L"");
-      ssSQL << L"DELETE FROM spider_info";
-      MediaDB<>::exec(ssSQL.str());
       return;
-    }
   }
 }
 
@@ -139,7 +84,7 @@ BOOL MediaSpiderFolderTree::Search(const std::wstring &sFolder)
   using namespace boost::filesystem;
 
   // check if we should spider this folder
-  if (0 && !IsValidPath(sFolder))
+  if (!IsValidPath(sFolder))
     return FALSE;
 
   try

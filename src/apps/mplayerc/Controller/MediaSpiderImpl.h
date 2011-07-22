@@ -4,7 +4,7 @@
 
 // The spider base class, abstract
 template<class T>
-class MediaSpiderAbstract :
+class MediaSpiderImpl :
   public ThreadHelperImpl<T>
 {
 public:

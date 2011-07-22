@@ -37,7 +37,7 @@ MediaCenterController::~MediaCenterController()
 
 void MediaCenterController::Playback(std::wstring file)
 {
-  if (!m_spider.IsSupportExtension(file))
+  if (!m_spider.IsValidPath(file))
     return;
 
   m_treeModel.addFolder(file, true);

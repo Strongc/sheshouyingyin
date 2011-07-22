@@ -1,9 +1,9 @@
 #pragma once
 
-#include "MediaSpiderAbstract.h"
+#include "MediaSpiderImpl.h"
 #include "..\Model\MediaTreeModel.h"
 
-class MediaSpiderFolderTree : public MediaSpiderAbstract<MediaSpiderFolderTree>
+class MediaSpiderFolderTree : public MediaSpiderImpl<MediaSpiderFolderTree>
 {
 public:
   MediaSpiderFolderTree();
@@ -17,6 +17,5 @@ private:
   media_tree::model m_treeModel;
 
   int m_tSleep;  // loop time, unit is second
-  int m_nSpideInterval;  // record spide interval
-  int m_nThreadStartInterval;  //
+  int m_spiderinterval;
 };
