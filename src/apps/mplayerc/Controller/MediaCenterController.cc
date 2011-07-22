@@ -41,7 +41,7 @@ void MediaCenterController::Playback(std::wstring file)
     return;
 
   m_treeModel.addFolder(file, true);
-  m_treeModel.save2DB();
+  m_treeModel.save2DB(FALSE);
   m_treeModel.delTree();
 }
 

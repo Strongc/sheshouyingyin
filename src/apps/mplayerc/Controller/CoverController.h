@@ -27,7 +27,7 @@ protected:
   BOOL HttpGetResponse(std::string szFileHash, std::wstring szFilePath, std::wstring requesturl, std::string& responsestr);
   BOOL ParseRespondString(std::string& parsestr, std::wstring& title, std::wstring& cover);
   BOOL HttpDownloadCover(std::wstring downloadurl, std::wstring& downloadpath, std::wstring cover);
-  std::wstring GetSnapshot(const MediaData &md, const std::string &szFileHash);
+  std::wstring GetSnapshot(const std::wstring &file);
 
   // For upload
   void UploadCover(const MediaData &md);

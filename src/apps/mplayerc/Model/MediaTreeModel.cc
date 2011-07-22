@@ -150,18 +150,13 @@ void media_tree::model::addFile(const MediaData &md)
       fe.file_data.filename = md.filename;
       fe.file_data.filmname = md.filmname;
       fe.file_data.path = fullFolderPath(itFolder.node());
-      fe.file_data.thumbnailpath = md.thumbnailpath;
-      fe.file_data.hash = MediaCenterController::GetMediaHash(fe.file_data.path + fe.file_data.filename);
       fe.file_data.createtime = (int)::time(0);
       fe.file_data.bHide = md.bHide;
       fe.tFileCreateTime = ::time(0);
       files.push_back(fe);
     }
   }
-  else
-  {
-    // should never go here
-  }
+
   m_cs.unlock();
 }
 
@@ -192,16 +187,13 @@ bool media_tree::model::updateFile(const MediaData &old_md, const MediaData &new
     if (itFiles == files.end())
       ret = false;
   }
-  else
-  {
-    // should never go here
-  }
+
   m_cs.unlock();
 
   return ret;
 }
 
-void media_tree::model::save2DB()
+void media_tree::model::save2DB(BOOL validfolder)
 {
   using namespace boost::filesystem;
 
@@ -213,60 +205,51 @@ void media_tree::model::save2DB()
   {
     MediaTreeFolders::tree_type::pre_order_iterator it = m_lsFolderTree.pre_order_begin();
     std::wstringstream ssSQL;
-    while (it != m_lsFolderTree.pre_order_end())
+    for (; it != m_lsFolderTree.pre_order_end(); ++it)
     {
       // store path info
       std::wstring sFolderPath = fullFolderPath(it.node());
+      BOOL isvalidfolder = FALSE;
 
-      if (exists(sFolderPath))
+      // store file info
+      MediaTreeFiles &files = it->lsFiles;
+      MediaTreeFiles::iterator itFile = files.begin();
+      for (;itFile != files.end(); ++itFile)
       {
-        // store path
-        MediaPath mp;
-        mp.path = sFolderPath;
-        m_model.Add(mp);
-
-        // store file info
-        MediaTreeFiles &files = it->lsFiles;
-        MediaTreeFiles::iterator itFile = files.begin();
-        while (itFile != files.end())
+        if (exists(sFolderPath + itFile->file_data.filename))
         {
-          if (exists(mp.path + itFile->file_data.filename))
-          {
-            MediaData md;
-            md.path = sFolderPath;
-            md.filename = itFile->file_data.filename;
-            md.thumbnailpath = itFile->file_data.thumbnailpath;
-            md.filmname = itFile->file_data.filmname;
-            md.videotime = itFile->file_data.videotime;
-            md.bHide = itFile->file_data.bHide;
-            md.hash = itFile->file_data.hash;
-            md.createtime = itFile->file_data.createtime;
-
-            m_model.Add(md);
-          }
-          else
-          {
-            ssSQL.str(L"");
-            ssSQL << L"DELETE FROM media_data WHERE path='" << mp.path << L"'"
-              << L" and filename='" << itFile->file_data.filename << L"'";
-            MediaDB<>::exec(ssSQL.str());
-          }
-
-          ++itFile;
+          isvalidfolder = TRUE;
+          MediaData md;
+          md.path = sFolderPath;
+          md.filename = itFile->file_data.filename;
+          md.filmname = itFile->file_data.filmname;
+          md.videotime = itFile->file_data.videotime;
+          md.bHide = itFile->file_data.bHide;
+          md.createtime = itFile->file_data.createtime;
+          m_model.Add(md);
+        }
+        else
+        {
+          ssSQL.str(L"");
+          ssSQL << L"DELETE FROM media_data WHERE path='" << sFolderPath << L"'"
+                << L" and filename='" << itFile->file_data.filename << L"'";
+          MediaDB<>::exec(ssSQL.str());
         }
       }
-      else
+
+      // When the film opens, we can add it path to the db(bad)
+      if (!validfolder)
+      {
+        MediaPath mp;
+        mp.path = sFolderPath;
+        m_model.Add(mp);        
+      }
+      else if (!isvalidfolder)
       {
         ssSQL.str(L"");
         ssSQL << L"DELETE FROM detect_path WHERE path='" << sFolderPath << L"'";
-        MediaDB<>::exec(ssSQL.str());
-
-        ssSQL.str(L"");
-        ssSQL << L"DELETE FROM media_data WHERE path='" << sFolderPath << L"'";
-        MediaDB<>::exec(ssSQL.str());
+        MediaDB<>::exec(ssSQL.str());        
       }
-
-      ++it;
     }
   }
   catch (const filesystem_error &err)

@@ -54,17 +54,19 @@ void MediaSpiderFolderTree::_Thread()
     lasttime = ::time(0) - m_spiderinterval;
     oldlasttime = 0;
 
+    memset(execsql, 0, 500);
     wsprintf(execsql, selectsql, lasttime);
     MediaDB<UINT, std::wstring, time_t>::exec(execsql, &uniqueid, &sPath, &oldlasttime);
 
     if (uniqueid)
     {
-      
+      memset(execsql, 0, 500);
       wsprintf(execsql, updatesql, ::time(0), uniqueid);
       MediaDB<>::exec(execsql);
 
       if (!Search(sPath))
       {
+        memset(execsql, 0, 500);
         wsprintf(execsql, updatesql, oldlasttime, uniqueid);
         MediaDB<>::exec(execsql);
       }
@@ -108,16 +110,7 @@ BOOL MediaSpiderFolderTree::Search(const std::wstring &sFolder)
       md.filmname = vtFilmname[i];
       md.bHide = vtHide[i];
 
-      // dynamic get the cover path first
-      // if fail, then use database's thumbnail path
-      md.thumbnailpath = MediaCenterController::GetCoverPath(md.path + md.filename);
-      if (md.thumbnailpath.empty())
-        md.thumbnailpath = vtThumbnailPath[i];
-
       m_treeModel.addFile(md);
-
-      // add media to cover thread to get the cover
-      MediaCenterController::GetInstance()->GetCoverDownload().SetBlockUnit(md);
 
       if (_Exit_state(0))
         return FALSE;

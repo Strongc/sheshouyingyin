@@ -38,101 +38,41 @@ void CoverController::_Thread()
 
   std::wstring requesturl = PlayerPreference::GetInstance()->GetStringVar(STRVAR_COVER_REQUESTURL);
   std::wstring downloadurl = PlayerPreference::GetInstance()->GetStringVar(STRVAR_COVER_DOWNLOADURL);
-  std::list<MediaData>::iterator it;
+
+  UINT uniqueid;
+  std::wstring path;
+  std::wstring filename;
+  wchar_t execsql[500];
+
+  wchar_t* updatesql = L"UPDATE media_data SET thumbnailpath='%s', hash='%s' WHERE uniqueid=%u";
+  wchar_t* selectsql = L"SELECT uniqueid, path, filename FROM media_data WHERE hash='' limit 0,1";
 
   while (true)
   {
-    // see if need to be stop
-    if (_Exit_state(0))
-      return;
+    path = L"";
+    uniqueid = 0;
+    filename = L"";
 
-    // download cover or make a snapshot for media
-    it = m_list.begin();
-    if (it != m_list.end())
+    MediaDB<UINT, std::wstring, std::wstring>::exec(selectsql, &uniqueid, &path, &filename);
+    if (!uniqueid || filename.empty())
     {
-      // common
-      std::wstring szFilePath = it->path + it->filename; 
-      std::string szFileHash = Strings::WStringToUtf8String(HashController::GetInstance()->GetSPHash(szFilePath.c_str()));
-
-      // if already has thumbnail then continue
-      std::wstring thumbnailpath = it->thumbnailpath;
-      try
-      {
-        if (exists(thumbnailpath) && !is_directory(thumbnailpath))
-        {
-          //UploadCover(*it);
-          m_list.pop_front();
-          continue;
-        }
-      }
-      catch (const boost::filesystem::filesystem_error &err)
-      {
-        Logging(err.what());
-      }
-
-      thumbnailpath = MediaCenterController::GetCoverPath(it->path + it->filename);
-      try
-      {
-        if (exists(thumbnailpath) && !is_directory(thumbnailpath))
-        {
-          //UploadCover(*it);
-          m_list.pop_front();
-          continue;
-        }
-      }
-      catch (const boost::filesystem::filesystem_error &err)
-      {
-        Logging(err.what());
-      }
-
-      //url = L"http://jay.webpj.com:8888/api/medias/getinfoBysphash/sphash: \
-      25026521a390357bd1fcf52899268c97;c0c3ddd9b5a1c1d292131a91c9200648;cb72fdc1ff58dfc5cda9943e098c304b;e7752a7553168a73f29b0e36f09a86a8";
-
-      //// Get http response
-      //std::string results("");
-      //BOOL bGet = HttpGetResponse(szFileHash, szFilePath, requesturl, results);
-      //std::wstring cover;
-      std::wstring coverdownloadpath;
-      //if (!bGet || results.empty())
-      {
-        // if no cover on the server, then get the snapshot by ourself
-        coverdownloadpath = GetSnapshot(*it, szFileHash);
-      }
-      //else
-      //{
-      //  // Parse the respond string
-      //  BOOL bParse = ParseRespondString(results, it->filmname, cover);
-      //  if (!bParse || cover.empty())
-      //  {
-      //    // if no cover on the server, then get the snapshot by ourself
-      //    coverdownloadpath = GetSnapshot(*it, szFileHash);
-      //  }
-      //  else
-      //  {
-      //    // Download cover
-      //    coverdownloadpath = MediaCenterController::GetCoverPath(it->path + it->filename);
-      //    BOOL bDownload = HttpDownloadCover(downloadurl, coverdownloadpath, cover);
-      //    if (!bDownload)
-      //    {
-      //      // if no cover on the server, then get the snapshot by ourself
-      //      coverdownloadpath = GetSnapshot(*it, szFileHash);
-      //    }
-      //  }
-      //}
-
-      // see if need to be stop
-      if (_Exit_state(0))
+      if (_Exit_state(15 * 1000))
         return;
-
-      // Upload cover
-      //UploadCover(*it);
-
-      // pop the front media data even if fail to get the cover
-      m_list.pop_front();
+      continue;
     }
 
-    // sleep for a while
-    ::Sleep(300);
+    std::wstring filmfile = path + filename;
+    std::wstring coverpath = GetSnapshot(filmfile);
+    //if (exists(coverpath))
+    {
+      memset(execsql, 0, 500);
+      std::wstring coverhash = MediaCenterController::GetMediaHash(filmfile);
+      wsprintf(execsql, updatesql, coverpath.c_str(), coverhash.c_str(), uniqueid);
+      MediaDB<>::exec(execsql);
+    }
+
+    if (_Exit_state(5 * 1000))
+      return;
   }
 }
 
@@ -230,11 +170,11 @@ BOOL CoverController::HttpDownloadCover(std::wstring downloadurl, std::wstring& 
   return TRUE;
 }
 
-std::wstring CoverController::GetSnapshot(const MediaData &md, const std::string &szFileHash)
+std::wstring CoverController::GetSnapshot(const std::wstring &file)
 {
   CSVPToolBox toolbox;
   std::wstring sPlayerPath = toolbox.GetPlayerPath_STL();
-  std::wstring sParameters = L" /snapshot \"" + md.path + md.filename + L"\"";
+  std::wstring sParameters = L" /snapshot \"" + file + L"\"";
 
   SHELLEXECUTEINFO shExecInfo = {0};
   shExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
@@ -279,7 +219,7 @@ std::wstring CoverController::GetSnapshot(const MediaData &md, const std::string
     ::CloseHandle(shExecInfo.hProcess);
   }
 
-  std::wstring sRet = MediaCenterController::GetCoverPath(md.path + md.filename);
+  std::wstring sRet = MediaCenterController::GetCoverPath(file);
 
   return sRet;
 }
