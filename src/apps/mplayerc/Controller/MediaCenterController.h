@@ -27,7 +27,7 @@ public:
   static void CreateMCFolder();
   static std::wstring GetMCFolder();
 
-  static std::wstring GetCoverPath(const std::wstring &sFilePath);
+  static std::wstring GetCoverPath(const std::wstring &sFilePath, const std::wstring &format);
   static std::wstring GetMediaHash(const std::wstring &sFilePath);
 
 public:

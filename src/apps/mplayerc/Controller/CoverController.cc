@@ -63,7 +63,7 @@ void CoverController::_Thread()
 
     std::wstring filmfile = path + filename;
     std::wstring coverpath = GetSnapshot(filmfile);
-    //if (exists(coverpath))
+    if (exists(coverpath))
     {
       memset(execsql, 0, 500);
       std::wstring coverhash = MediaCenterController::GetMediaHash(filmfile);
@@ -174,7 +174,8 @@ std::wstring CoverController::GetSnapshot(const std::wstring &file)
 {
   CSVPToolBox toolbox;
   std::wstring sPlayerPath = toolbox.GetPlayerPath_STL();
-  std::wstring sParameters = L" /snapshot \"" + file + L"\"";
+  std::wstring sParameters = L" /snapshot \"" + file + L"\" 128_128 5";
+  std::wstring format = L"128_128_5";
 
   SHELLEXECUTEINFO shExecInfo = {0};
   shExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
@@ -219,7 +220,7 @@ std::wstring CoverController::GetSnapshot(const std::wstring &file)
     ::CloseHandle(shExecInfo.hProcess);
   }
 
-  std::wstring sRet = MediaCenterController::GetCoverPath(file);
+  std::wstring sRet = MediaCenterController::GetCoverPath(file, format);
 
   return sRet;
 }
