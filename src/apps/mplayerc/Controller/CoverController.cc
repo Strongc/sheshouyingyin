@@ -62,14 +62,16 @@ void CoverController::_Thread()
     }
 
     std::wstring filmfile = path + filename;
+    std::wstring coverhash = MediaCenterController::GetMediaHash(filmfile);
+
+    // if snapshot success we need record the coverpath and coverhash
+    // otherwise record coverhash
     std::wstring coverpath = GetSnapshot(filmfile);
-    if (exists(coverpath))
-    {
-      memset(execsql, 0, 500);
-      std::wstring coverhash = MediaCenterController::GetMediaHash(filmfile);
-      wsprintf(execsql, updatesql, coverpath.c_str(), coverhash.c_str(), uniqueid);
-      MediaDB<>::exec(execsql);
-    }
+    memset(execsql, 0, 500);
+    if (!exists(coverpath))
+      coverpath = L"";
+    wsprintf(execsql, updatesql, coverpath.c_str(), coverhash.c_str(), uniqueid);
+    MediaDB<>::exec(execsql);
 
     if (_Exit_state(5 * 1000))
       return;
