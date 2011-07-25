@@ -67,6 +67,8 @@ void MediaSpiderFolderTree::_Thread()
       if (!Search(sPath))
       {
         memset(execsql, 0, 500);
+        if (0 == oldlasttime)
+          oldlasttime = ::time(0);
         wsprintf(execsql, updatesql, oldlasttime, uniqueid);
         MediaDB<>::exec(execsql);
       }
