@@ -99,13 +99,13 @@ std::wstring MediaCenterController::GetMCFolder()
   return sPath;
 }
 
-std::wstring MediaCenterController::GetCoverPath(const std::wstring &sFilePath)
+std::wstring MediaCenterController::GetCoverPath(const std::wstring &sFilePath, const std::wstring &format)
 {
-  std::wstring szJpgName = MediaCenterController::GetMediaHash(sFilePath);
+  std::wstring coverhash = MediaCenterController::GetMediaHash(sFilePath);
 
   std::wstring sCoverPath;
   sCoverPath = GetMCFolder();
-  sCoverPath += szJpgName + L".jpg";
+  sCoverPath += coverhash + L"_" + format + L".jpg"; // for example: hashstring_128_128_5.jpg
 
   return sCoverPath;
 }

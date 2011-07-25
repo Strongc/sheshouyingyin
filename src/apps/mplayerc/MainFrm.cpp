@@ -7358,9 +7358,6 @@ void CMainFrame::OnViewOptions()
 
 void CMainFrame::OnPlayPlay()
 {
-  // stop the cover download thread when playing files
-  MediaCenterController::GetInstance()->CoverThreadStop();
-
   // other things
   if(m_iMediaLoadState == MLS_LOADED)
   {
