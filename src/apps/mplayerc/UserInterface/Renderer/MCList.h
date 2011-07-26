@@ -79,7 +79,6 @@ private:
 
   BOOL m_sbardir;
 
-  int m_mousewheelcount;
   BOOL m_mousewheel;
 
   UINT m_blockcount;

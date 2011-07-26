@@ -246,9 +246,10 @@ void MCDBSource::_Thread()
     
         (*it)->m_mediadata = *val;
         (*it)->SetDisplay();
+        if(_Exit_state(20))
+          return;
         val++;
         MediaCenterController::GetInstance()->Render();
-        Sleep(20);
       }
       else
         (*it)->SetDisplay(FALSE);
