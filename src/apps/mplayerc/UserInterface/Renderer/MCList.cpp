@@ -17,7 +17,6 @@ SPMCList::SPMCList():
   m_rowpos(0),
   m_updaterowpos(0),
   m_mousewheel(FALSE),
-  m_mousewheelcount(0),
   m_anispeed(0.f)
 {
   m_dbsource = new MCDBSource;
@@ -178,17 +177,14 @@ BOOL SPMCList::ActMouseWheel(UINT nFlags, short zDelta, CPoint point)
 {
   BOOL ret = TRUE;
 
-  if (!m_mousewheelcount)
-    MediaCenterController::GetInstance()->Update();
-
   m_mousewheel = TRUE;
-  m_mousewheelcount = 7;
-  m_anispeed = 1.2f;
 
   if (zDelta < 0) // move down
     m_sbardir = FALSE;
   else // move up
     m_sbardir = TRUE;
+
+  Update(0);
 
   return ret;
 }
@@ -206,20 +202,23 @@ BOOL SPMCList::ActMouseLeave()
 
 void SPMCList::Update(DWORD deltatime)
 {
-  if (m_mousewheel && --m_mousewheelcount<=0)
-  {
-    m_mousewheel = FALSE;
-    m_rowpos = m_updaterowpos;
-    MediaCenterController::GetInstance()->StopUpdate();
-    m_mousewheelcount = 0;
-    return;
-  }
 
   int status = m_dbsource->GetReaderStatus();
 
   m_lockpaint = TRUE;
 
-  m_rowpos += (m_sbardir?1:-1) * (int)((float)deltatime * m_anispeed);
+  int s;
+  BOOL mousewheel = m_mousewheel;
+
+  if (mousewheel)
+  {
+    m_mousewheel = FALSE;
+    s = 100;
+  }
+  else
+    s = (int)((float)deltatime * m_anispeed);
+
+  m_rowpos += (m_sbardir?1:-1) * s;
 
   if (m_sbardir) // move up
   {
@@ -233,9 +232,11 @@ void SPMCList::Update(DWORD deltatime)
           m_rowpos = m_rowpos - m_fixrowheight;
       }
     }
-    else if (m_rowpos > m_wndsize.cy / 3)
+    else if (mousewheel)
+      m_rowpos = m_blocktop;
+    else if (m_rowpos > m_wndsize.cy / 4)
     {
-      m_rowpos = m_wndsize.cy / 3;
+      m_rowpos = m_wndsize.cy / 4;
       m_updaterowpos = m_blocktop;
     }
   }
@@ -251,9 +252,11 @@ void SPMCList::Update(DWORD deltatime)
           m_rowpos = head;
       }
     }
-    else if (m_rowpos < m_wndsize.cy - m_fixrowheight - (m_fixrowheight*(m_maxrows-1)) - m_wndsize.cy / 3)
+    else if (mousewheel)
+      m_rowpos = m_wndsize.cy - m_fixrowheight - (m_fixrowheight*(m_maxrows-1));
+    else if (m_rowpos < m_wndsize.cy - m_fixrowheight - (m_fixrowheight*(m_maxrows-1)) - m_wndsize.cy / 4)
     {
-      m_rowpos = m_wndsize.cy - m_fixrowheight - (m_fixrowheight*(m_maxrows-1)) - m_wndsize.cy / 3;
+      m_rowpos = m_wndsize.cy - m_fixrowheight - (m_fixrowheight*(m_maxrows-1)) - m_wndsize.cy / 4;
       m_updaterowpos = m_wndsize.cy - m_fixrowheight - (m_fixrowheight*(m_maxrows-1));
     }
   }

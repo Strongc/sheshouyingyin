@@ -606,7 +606,9 @@ BOOL MediaCenterController::ActMouseWheel(UINT nFlags, short zDelta, CPoint poin
   if (!m_planestate)
     return ret;
 
+  Render();
   ret = m_mclist.ActMouseWheel(nFlags, zDelta, point);
+  Render();
   return ret;
 }
 
