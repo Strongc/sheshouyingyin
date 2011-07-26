@@ -37,6 +37,79 @@ MediaSpiderFolderTree::~MediaSpiderFolderTree()
 {
 }
 
+BOOL MediaSpiderFolderTree::SearchPath(const std::wstring &folder)
+{
+  std::stack<std::wstring> tmppack;
+  std::vector<std::wstring> pack;
+  std::vector<std::wstring> detectpaths;
+
+  m_treeModel.splitPath(folder, tmppack);
+
+  while (!tmppack.empty())
+  {
+    pack.push_back(tmppack.top());
+    tmppack.pop();
+  }
+
+  if (pack.size() < 2) // don't search root
+    return FALSE;
+  else if (pack.size() == 2) // driver:\folderA\file.mkv
+  {
+    // the path like: driver:\folderA
+    std::wstring p;
+    p = pack[0] + L"\\" + pack[1] + L"\\";
+
+    // search sub dir
+    boost::filesystem::directory_iterator it(p);
+    boost::filesystem::directory_iterator itEnd;
+    while (it != itEnd)
+    {
+      if (boost::filesystem::is_directory(it->path())
+        && !isHiddenPath(it->path().wstring()))
+        detectpaths.push_back(it->path().wstring());
+    }
+  }
+  else if (pack.size() > 2) // driver:\folderA\folderB\[...]\file.mkv
+  {
+    std::wstring p;
+    // we can get path like this: driver:\folderA
+    for (size_t i=0; i < pack.size()-1; ++i)
+      p += pack[i] + L"\\";
+
+    detectpaths.push_back(p);
+
+    // search sibling dir
+    boost::filesystem::directory_iterator it(p);
+    boost::filesystem::directory_iterator itEnd;
+    while (it != itEnd)
+    {
+      if (boost::filesystem::is_directory(it->path())
+        && !isHiddenPath(it->path().wstring()))
+      {
+        detectpaths.push_back(it->path().wstring());
+        // sub dir
+        boost::filesystem::directory_iterator sit(it->path());
+        boost::filesystem::directory_iterator sitend;
+        while (sit != sitend)
+        {
+          if (boost::filesystem::is_directory(sit->path())
+            && !isHiddenPath(sit->path().wstring()))
+            detectpaths.push_back(sit->path().wstring());
+          ++sit;
+        }
+      } // if
+      ++it;
+    } // while
+  }
+
+  for (size_t i=0; i<detectpaths.size(); ++i)
+  {
+    if (!Search(detectpaths[i]))
+      return FALSE;
+  }
+  return TRUE;
+}
+
 void MediaSpiderFolderTree::_Thread()
 {
   UINT uniqueid;
@@ -64,7 +137,7 @@ void MediaSpiderFolderTree::_Thread()
       wsprintf(execsql, updatesql, ::time(0), uniqueid);
       MediaDB<>::exec(execsql);
 
-      if (!Search(sPath))
+      if (!SearchPath(sPath))
       {
         memset(execsql, 0, 500);
         if (0 == oldlasttime)
@@ -114,9 +187,8 @@ BOOL MediaSpiderFolderTree::Search(const std::wstring &sFolder)
 
       m_treeModel.addFile(md);
 
-      if (_Exit_state(0))
+      if (_Exit_state(100))
         return FALSE;
-      ::Sleep(300);
     }
 
     // Second, search media in the path

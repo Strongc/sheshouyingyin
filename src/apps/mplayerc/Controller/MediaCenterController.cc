@@ -40,9 +40,10 @@ void MediaCenterController::Playback(std::wstring file)
   if (!m_spider.IsValidPath(file))
     return;
 
-  m_treeModel.addFolder(file, true);
-  m_treeModel.save2DB(FALSE);
-  m_treeModel.delTree();
+  std::wstring path = makePathPreferred(file);
+  MediaPath mp;
+  mp.path = path;
+  m_model.Add(mp);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
