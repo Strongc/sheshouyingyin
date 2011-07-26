@@ -99,6 +99,8 @@ public:
 
   void ReleaseList();
 
+  void Reload();
+
 private:
   HWND m_hwnd;
   BOOL m_planestate;
