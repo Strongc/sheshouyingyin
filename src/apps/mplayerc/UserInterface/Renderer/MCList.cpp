@@ -123,6 +123,12 @@ void SPMCList::DoPaint(WTL::CDC& dc, RECT& rcclient)
   }
 }
 
+void SPMCList::Reload()
+{
+  m_dbsource->Reload();
+  m_listempty = m_dbsource->ItemTotal() ? FALSE : TRUE;
+}
+
 void SPMCList::HideData()
 {
   if (m_selblockunit)

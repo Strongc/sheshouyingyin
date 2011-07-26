@@ -609,3 +609,8 @@ BOOL MediaCenterController::ActMouseWheel(UINT nFlags, short zDelta, CPoint poin
   ret = m_mclist.ActMouseWheel(nFlags, zDelta, point);
   return ret;
 }
+
+void MediaCenterController::Reload()
+{
+  m_mclist.Reload();
+}

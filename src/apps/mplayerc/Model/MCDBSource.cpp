@@ -71,8 +71,14 @@ BOOL MCDBSource::PreLoad(UINT nums)
   return TRUE;
 }
 
+UINT MCDBSource::ItemTotal()
+{
+  return m_total;
+}
+
 void MCDBSource::Reload()
 {
+  m_total = m_db.GetCount();
   m_stopdb = FALSE;
 }
 
@@ -218,9 +224,13 @@ void MCDBSource::_Thread()
 
     m_db.Find(m_buffer, sqlwhere, (start < 0 ? 0 : start), m_readnums);
     MediaDatas::iterator val = m_buffer.begin();
-    BUPOINTER it = m_frontbuff.begin();
 
-    for (; val != m_buffer.end(); ++val, ++it)
+    m_sp = m_frontbuff.begin();
+    m_ep = m_frontbuff.end();
+
+    BUPOINTER it = m_sp;
+    
+    for (;it != m_ep; ++it)
     {
       if (m_isadjust)
       {
@@ -228,15 +238,23 @@ void MCDBSource::_Thread()
         m_stopdb = FALSE;
         break;
       }
-      if (val->uniqueid != (*it)->m_mediadata.uniqueid)
-        (*it)->CleanCover();
-
-      (*it)->m_mediadata = *val;
-      (*it)->SetDisplay();
-      MediaCenterController::GetInstance()->Render();
-      Sleep(20);
-    }
+      
+      if (val != m_buffer.end())
+      {
+        if (val->uniqueid != (*it)->m_mediadata.uniqueid)
+          (*it)->CleanCover();
     
+        (*it)->m_mediadata = *val;
+        (*it)->SetDisplay();
+        val++;
+        MediaCenterController::GetInstance()->Render();
+        Sleep(20);
+      }
+      else
+        (*it)->SetDisplay(FALSE);
+      MediaCenterController::GetInstance()->Render();
+    }
+
     m_buffer.clear();
   } while (!_Exit_state(500));
 }

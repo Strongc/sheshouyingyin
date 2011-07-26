@@ -55,7 +55,7 @@ public:
 
   void AdjustRange(UINT nums, UINT columns);
   BOOL IsMoreData();
-
+  UINT ItemTotal();
   int LoadRowDatas(BOOL direction, UINT movenums);
 
   void SetReadNums(UINT nums);

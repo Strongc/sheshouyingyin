@@ -70,6 +70,11 @@ void CoverController::_Thread()
     memset(execsql, 0, 500);
     if (!exists(coverpath))
       coverpath = L"";
+    else
+    {
+      MediaCenterController::GetInstance()->Reload();
+      MediaCenterController::GetInstance()->Render();
+    }
     wsprintf(execsql, updatesql, coverpath.c_str(), coverhash.c_str(), uniqueid);
     MediaDB<>::exec(execsql);
 

@@ -55,7 +55,7 @@ public:
   }
 
   BOOL IsValidPath(const std::wstring& path)
-  {return TRUE;
+  {
     if (path[1] != ':') // for example: c:\\...
       return FALSE;
     
