@@ -1,6 +1,7 @@
 #pragma once
 
 #include <threadhelper.h>
+#include <boost/filesystem.hpp>
 
 // The spider base class, abstract
 template<class T>
@@ -54,10 +55,13 @@ public:
   }
 
   BOOL IsValidPath(const std::wstring& path)
-  {
+  {return TRUE;
     if (path[1] != ':') // for example: c:\\...
       return FALSE;
     
+    if (!boost::filesystem::exists(path))
+      return FALSE;
+
     wchar_t driver[4];;
     wsprintf(driver, L"%c:\\", path[0]);
     if (::GetDriveType(driver) != DRIVE_FIXED)

@@ -12,6 +12,7 @@ public:
 public:
   void _Thread();
   BOOL Search(const std::wstring &sFolder);
+  BOOL SearchPath(const std::wstring &folder);
 
 private:
   media_tree::model m_treeModel;
