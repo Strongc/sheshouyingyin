@@ -181,8 +181,8 @@ std::wstring CoverController::GetSnapshot(const std::wstring &file)
 {
   CSVPToolBox toolbox;
   std::wstring sPlayerPath = toolbox.GetPlayerPath_STL();
-  std::wstring sParameters = L" /snapshot \"" + file + L"\" 128_128 5";
-  std::wstring format = L"128_128_5";
+  std::wstring sParameters = L" /snapshot \"" + file + L"\"";
+  std::wstring format = L"128_128_30";
 
   SHELLEXECUTEINFO shExecInfo = {0};
   shExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
