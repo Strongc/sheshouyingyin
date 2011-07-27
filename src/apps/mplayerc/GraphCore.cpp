@@ -1006,7 +1006,7 @@ void CGraphCore::GetSnapShotSliently(const std::vector<std::wstring> &args)
   // deal arguments
   std::wstring sFilePath = args.front();
   std::pair<int, int> prSnapshotSize;  // e.g: 128 * 128
-  int nSnapshotTime = 5;  // e.g: default is 5 minutes, unit is minute now
+  int nSnapshotTime = 30;  // e.g: default is 30 seconds, unit is second now
 
   wsmatch what;
   wregex pattern(L"(\\d+)_(\\d+)");
@@ -1051,7 +1051,7 @@ void CGraphCore::GetSnapShotSliently(const std::vector<std::wstring> &args)
 
   // set duration
   __int64 rtDur = 0;
-  rtDur = (__int64)nSnapshotTime * 60 * 10000000;
+  rtDur = (__int64)nSnapshotTime * 10000000;
 
   // return if snapshot time greater than media's stop time
   __int64 rtStop = 0;
