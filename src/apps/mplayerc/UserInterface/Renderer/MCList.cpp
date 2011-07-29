@@ -177,6 +177,9 @@ BOOL SPMCList::ActMouseWheel(UINT nFlags, short zDelta, CPoint point)
 {
   BOOL ret = TRUE;
 
+  if (!m_dbsource->IsMoreData())
+    return ret;
+
   m_mousewheel = TRUE;
 
   if (zDelta < 0) // move down
