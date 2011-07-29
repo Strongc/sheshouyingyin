@@ -715,6 +715,19 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
   if(__super::OnCreate(lpCreateStruct) == -1)
     return -1;
 
+  // create a view to occupy the client area of the frame
+  if(!m_wndView.Create(NULL, NULL, AFX_WS_DEFAULT_VIEW,
+    CRect(0, 0, 0, 0), this, AFX_IDW_PANE_FIRST, NULL))
+  {
+    TRACE0("Failed to create view window\n");
+    return -1;
+  }
+
+  AppSettings& s = AfxGetAppSettings();
+
+  if (s.nCLSwitches&CLSW_SNAPSHOT)
+    return 0;
+
 //   TCHAR szModuleFullPath[MAX_PATH];
 //   ::GetModuleFileName(0, szModuleFullPath, MAX_PATH);
 //   TCHAR szDrive[10] = {0};
@@ -729,8 +742,6 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
   SearchSkinFolder();
 
-  AppSettings& s = AfxGetAppSettings();
-
   CDC ScreenDC;
   ScreenDC.CreateIC(_T("DISPLAY"), NULL, NULL, NULL);
   m_nLogDPIY = ScreenDC.GetDeviceCaps(LOGPIXELSY);
@@ -741,14 +752,6 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
   //GetMenu()->ModifyMenu(ID_FAVORITES, MF_BYCOMMAND|MF_STRING, IDR_MAINFRAME, ResStr(IDS_FAVORITES_POPUP));
   //m_mainMenu.LoadMenu(IDR_MAINFRAME);
-
-  // create a view to occupy the client area of the frame
-  if(!m_wndView.Create(NULL, NULL, AFX_WS_DEFAULT_VIEW,
-    CRect(0, 0, 0, 0), this, AFX_IDW_PANE_FIRST, NULL))
-  {
-    TRACE0("Failed to create view window\n");
-    return -1;
-  }
 
   MediaCenterController::GetInstance()->SetFrame(m_wndView.m_hWnd);
 
@@ -2101,7 +2104,10 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 
   cs.dwExStyle &= ~WS_EX_CLIENTEDGE;
   cs.lpszClass = MPC_WND_CLASS_NAME; //AfxRegisterWndClass(0);
-
+  
+  AppSettings& s = AfxGetAppSettings();
+  if (s.nCLSwitches&CLSW_MEDIACENTER)
+    cs.dwExStyle |= WS_EX_TOPMOST;
   return TRUE;
 }
 
@@ -5713,7 +5719,7 @@ void CMainFrame::OnUpdateFileOpen(CCmdUI* pCmdUI)
 
 BOOL CMainFrame::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCDS)
 {
-  if(m_iMediaLoadState == MLS_LOADING || !IsWindow(m_wndPlaylistBar))
+  if(m_iMediaLoadState == MLS_LOADING)
     return FALSE;
 
   if(pCDS->dwData != 0x6ABE51 || pCDS->cbData < sizeof(DWORD))
@@ -5765,9 +5771,12 @@ BOOL CMainFrame::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCDS)
     }
 
     // not safe exit, but save a lot coding, so sue me
-    exit(0);
+    SendMessage(WM_CLOSE);
     return FALSE;
   }
+  
+  if (!IsWindow(m_wndPlaylistBar))
+    return FALSE;
 
   POSITION pos = s.slFilters.GetHeadPosition();
   while(pos)

@@ -2231,6 +2231,7 @@ BOOL CMPlayerCApp::InitInstance()
 
 	AfxEnableControlContainer();
 	CMainFrame* pFrame = new CMainFrame;
+
 	m_pMainWnd = pFrame;
 	pFrame->LoadFrame(IDR_MAINFRAME, WS_OVERLAPPEDWINDOW|FWS_ADDTOTITLE, NULL, NULL);
 	pFrame->SetDefaultWindowRect((m_s.nCLSwitches&CLSW_MONITOR)?m_s.iMonitor:0);
@@ -2250,7 +2251,6 @@ BOOL CMPlayerCApp::InitInstance()
     pFrame->SetFocus();
   }
   pFrame->UpdateWindow();
-
 // 	m_s.WinLircClient.SetHWND(m_pMainWnd->m_hWnd);
 // 	if(m_s.fWinLirc) m_s.WinLircClient.Connect(m_s.WinLircAddr);
 // 	m_s.UIceClient.SetHWND(m_pMainWnd->m_hWnd);
@@ -4550,7 +4550,7 @@ void CMPlayerCApp::Settings::ParseCommandLine(CAtlList<CString>& cmdln)
 			else if(sw == _T("hibernate")) nCLSwitches |= CLSW_HIBERNATE;
 			else if(sw == _T("shutdown")) nCLSwitches |= CLSW_SHUTDOWN;
 			else if(sw == _T("fromdmp")) { nCLSwitches |= CLSW_STARTFROMDMP; /*SVP_LogMsg5(L"dmpfrom %x", nCLSwitches);*/}
-			else if(sw == _T("htpc")) { nCLSwitches |= CLSW_HTPCMODE|CLSW_FULLSCREEN|CLSW_MEDIACENTER; }
+			else if(sw == _T("htpc")) { nCLSwitches |= CLSW_HTPCMODE|CLSW_FULLSCREEN; }
 			else if(sw == _T("logoff")) nCLSwitches |= CLSW_LOGOFF;
 			else if(sw == _T("genui")) {nCLSwitches |= CLSW_GENUIINI;bGenUIINIOnExit = true; }
       else if(sw == _T("creattoolbarbuttonfile")){nCLSwitches |= CLSW_CREATTOOLBARBUTTONFILE;m_bcreattoolbarbuttonflie = true;}
@@ -4568,6 +4568,7 @@ void CMPlayerCApp::Settings::ParseCommandLine(CAtlList<CString>& cmdln)
 			}
       else if(sw == _T("snapshot")) nCLSwitches |= CLSW_SNAPSHOT;
 			else if(sw == _T("monitor") && pos) {iMonitor = _tcstol(cmdln.GetNext(pos), NULL, 10); nCLSwitches |= CLSW_MONITOR;}
+      else if(sw == _T("mc")) nCLSwitches |= CLSW_MEDIACENTER|CLSW_STARTFULL;
 			else nCLSwitches |= CLSW_HELP|CLSW_UNRECOGNIZEDSWITCH;
 		}
     else
