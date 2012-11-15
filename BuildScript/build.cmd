@@ -21,7 +21,7 @@ hg_bin\hg update -c -R ../thirdparty/sinet
 if %ERRORLEVEL% NEQ 0 goto error
 
 
-call "%VS90COMNTOOLS%vsvars32.bat"
+call "%VS110COMNTOOLS%vsvars32.bat"
 
 echo Building sphash project of splayer-pkg ...
 "%DevEnvDir%/devenv.com" ../thirdparty/pkg/trunk/sphash/sphash.sln /build "Release|Win32"
@@ -64,7 +64,7 @@ goto end
 call "pre-build.cmd"
 call "revision.cmd"
 
-call "%VS90COMNTOOLS%vsvars32.bat"
+call "%VS110COMNTOOLS%vsvars32.bat"
 
 echo Building SPlayer project ...
 "%DevEnvDir%/devenv.com" ../splayer.sln  /build "Release Unicode|Win32"
@@ -73,7 +73,7 @@ if %ERRORLEVEL% NEQ 0 goto error
 goto end
 
 :error
-echo ERROR: an error occurred during building 
+echo ERROR: an error occurred during building
 goto finished
 
 :end

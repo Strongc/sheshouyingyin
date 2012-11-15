@@ -27,7 +27,7 @@
 #include <moreuuids.h>
 
 #include <initguid.h>
-#include <d3dx9.h>
+#include <d3d9.h>
 #include <dxva.h>
 #include <dxva2api.h>
 
@@ -2444,7 +2444,8 @@ COLORREF YCrCbToRGB_Rec709(BYTE Y, BYTE Cr, BYTE Cb)
   return RGB (fabs(rp), fabs(gp), fabs(bp));
 }
 
-
+
+
 DWORD YCrCbToRGB_Rec709(BYTE A, BYTE Y, BYTE Cr, BYTE Cb)
 {
 

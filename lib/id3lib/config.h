@@ -140,7 +140,7 @@
 
 #ifdef CXX_HAS_BUGGY_FOR_LOOPS
 /* #undef for */
-#define for if(1) for
+// #define for if(1) for
 #endif
 
 //

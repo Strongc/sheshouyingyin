@@ -14,7 +14,7 @@
 #include "..\..\Thirdparty\pkg\unrar.hpp"
 
 #include <d3d9.h>
-#include <d3dx9.h>
+//#include <d3dx9.h>
 #include <algorithm>
 
 BOOL CALLBACK EnumFamCallBack(LPLOGFONT lplf, LPNEWTEXTMETRIC lpntm, DWORD FontType, LPVOID aFontCount) 

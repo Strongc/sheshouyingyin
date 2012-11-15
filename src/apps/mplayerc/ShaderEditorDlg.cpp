@@ -390,7 +390,8 @@ void CShaderEditorDlg::OnTimer(UINT nIDEvent)
 			if(!m_pPSC) m_pPSC = new CPixelShaderCompiler(NULL);
 
 			CString disasm, errmsg;
-			HRESULT hr = m_pPSC->CompileShader(CStringA(srcdata), "main", CStringA(target), D3DXSHADER_DEBUG, NULL, &disasm, &errmsg); 
+			HRESULT hr = E_FAIL;
+                // m_pPSC->CompileShader(CStringA(srcdata), "main", CStringA(target), D3DXSHADER_DEBUG, NULL, &disasm, &errmsg); 
 
 			if(SUCCEEDED(hr))
 			{

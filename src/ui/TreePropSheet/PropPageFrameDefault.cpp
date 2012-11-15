@@ -31,7 +31,7 @@ namespace TreePropSheet
 
 #ifdef XPSUPPORT
 #include <uxtheme.h>
-#include <tmschema.h>
+//#include <tmschema.h>
 #endif
 
 #ifdef _DEBUG

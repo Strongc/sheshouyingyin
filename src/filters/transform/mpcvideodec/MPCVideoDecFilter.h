@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <d3dx9.h>
+#include <d3d9.h>
 #include <Videoacc.h>		// DXVA1
 #include <dxva.h>
 #include <dxva2api.h>		// DXVA2

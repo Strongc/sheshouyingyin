@@ -70,7 +70,9 @@ HRESULT CPixelShaderCompiler::CompileShader(
 		return E_FAIL;
 
 	HRESULT hr;
-
+    
+    return hr;
+#if 0
 	CComPtr<ID3DXBuffer> pShader, pDisAsm, pErrorMsgs;
 	hr = m_pD3DXCompileShader(pSrcData, strlen(pSrcData), NULL, NULL, pFunctionName, pProfile, Flags, &pShader, &pErrorMsgs, NULL);
 
@@ -106,4 +108,5 @@ HRESULT CPixelShaderCompiler::CompileShader(
 	}
 
 	return S_OK;
+#endif
 }

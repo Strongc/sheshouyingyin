@@ -1,8 +1,9 @@
 #include "stdafx.h"
 #include "MediaTreeModel.h"
 #include <boost/filesystem.hpp>
-#include <boost/lambda/lambda.hpp>
-#include <boost/lambda/bind.hpp>
+// #include <boost/lambda/lambda.hpp>
+#include <functional>
+//#include <boost/lambda/bind.hpp>
 #include <regex>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -28,7 +29,6 @@ MediaTreeFolders MediaTreeModel::mediaTreeFolders() const
 // add media info to the tree and save the info to the database
 void MediaTreeModel::addFolder(const MediaPath &mp)
 {
-  using namespace boost::lambda;
   using std::wstring;
   using std::vector;
 
@@ -42,7 +42,10 @@ void MediaTreeModel::addFolder(const MediaPath &mp)
     // if the path is exist in the list, then return
     MediaTreeFolders::iterator itFind;
     itFind = std::find_if(m_lsFolderTree.begin(), m_lsFolderTree.end(),
-                          bind(&MediaTreeFolder::sFolderPath, _1) == vtSplitPaths[i]);
+                            [&] (const MediaTreeFolder &folder) 
+                            {
+                                return folder.sFolderPath == vtSplitPaths[i];
+                            });
     bool bIsExist = itFind == m_lsFolderTree.end() ? false : true;
 
     // add path
@@ -184,11 +187,13 @@ void MediaTreeModel::splitPath(const std::wstring &sPath, std::vector<std::wstri
 // helper functions
 void MediaTreeModel::assignMerit(const MediaPath &mp)
 {
-  using namespace boost::lambda;
-
   MediaTreeFolders::iterator it;
   it = std::find_if(m_lsFolderTree.begin(), m_lsFolderTree.end(),
-                    bind(&MediaTreeFolder::sFolderPath, _1) == mp.path);
+                    [&] (const MediaTreeFolder &folder)
+                    {
+                        return folder.sFolderPath == mp.path;
+                    });
+
   if (it != m_lsFolderTree.end())
     it->nMerit = mp.merit;
 }

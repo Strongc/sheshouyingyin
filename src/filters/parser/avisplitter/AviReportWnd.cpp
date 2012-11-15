@@ -291,7 +291,7 @@ bool CAviPlotterWnd::Create(CAviFile* pAF, CRect r, CWnd* pParentWnd)
 				pp[n] = p;
 			}
 
-			int dist = abs(cs2min.n - cs2last.n);
+			int dist = abs((int)(cs2min.n - cs2last.n));
 
 			if(cs2last.t >= 0 /*&& dist >= 1000*/)
 			{

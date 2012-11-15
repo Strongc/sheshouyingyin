@@ -23,7 +23,7 @@
 #include <moreuuids.h>
 #include "IPinHook.h"
 #include "DX9AllocatorPresenter.h"
-#include <d3dx9.h>
+#include <d3d9.h>
 #include <dxva.h>
 #include <dxva2api.h>
 #include "../../svplib/svplib.h"

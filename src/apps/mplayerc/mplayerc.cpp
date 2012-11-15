@@ -33,7 +33,6 @@
 #include "revision.h"
 #include <locale.h> 
 #include <d3d9.h>
-#include <d3dx9.h>
 #include "DlgChkUpdater.h"
 #include <dsound.h>
 #include "Controller/Hotkey_Controller.h"

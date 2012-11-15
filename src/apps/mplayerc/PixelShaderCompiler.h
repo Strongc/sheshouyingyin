@@ -23,28 +23,29 @@
 
 #pragma once
 
-#include <d3dx9shader.h>
+#include <d3d9helper.h>
+#include <d3d9.h>
 
 
 class CPixelShaderCompiler
-{
+{ 
 	typedef HRESULT (WINAPI * D3DXCompileShaderPtr) (
 		LPCSTR		pSrcData,
 		UINT		SrcDataLen,
-		CONST D3DXMACRO* pDefines,
-		LPD3DXINCLUDE	pInclude,
+		CONST D3D_SHADER_MACRO* pDefines,
+		ID3DInclude *	pInclude,
 		LPCSTR		pFunctionName,
 		LPCSTR		pProfile,
 		DWORD		Flags,
-		LPD3DXBUFFER*	ppShader,
-		LPD3DXBUFFER*	ppErrorMsgs,
-		LPD3DXCONSTANTTABLE* ppConstantTable);
+		ID3DBlob  *	ppShader,
+		ID3DBlob *	ppErrorMsgs,
+		ID3DBlob * ppConstantTable);
 
 	typedef HRESULT (WINAPI * D3DXDisassembleShaderPtr) (
 		CONST DWORD*	pShader, 
 		bool		EnableColorCode, 
 		LPCSTR		pComments, 
-		LPD3DXBUFFER*	ppDisassembly);
+		ID3DBlob *	ppDisassembly);
 
 	D3DXCompileShaderPtr m_pD3DXCompileShader;
 	D3DXDisassembleShaderPtr m_pD3DXDisassembleShader;

@@ -37,7 +37,7 @@
 
 #include <streams.h>
 #include <dvdmedia.h>
-#include <d3dx9.h>
+#include <d3d9.h>
 #include <evr.h>
 #include <mfapi.h>
 #include <mferror.h>
